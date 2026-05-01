@@ -14,6 +14,6 @@ jobs:
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-          ssh root@${{ secrets.SSH_HOST }} << EOF
+          ssh mytuser@${{ secrets.SSH_HOST }} << EOF
             cd /var/www/myteacher-office
           EOF
