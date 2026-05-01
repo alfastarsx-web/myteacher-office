@@ -31,5 +31,3 @@ http://127.0.0.1:5174/index.html
 ## Notes
 
 This is currently a frontend MVP. Data is stored in browser memory only. For real production usage, connect it to a backend API and database.
-
-CI/CD enabled
