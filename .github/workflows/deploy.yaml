@@ -16,4 +16,5 @@ jobs:
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
           ssh mytuser@${{ secrets.SSH_HOST }} << EOF
             cd /var/www/myteacher-office
+            git pull --force
           EOF
