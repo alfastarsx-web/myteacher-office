@@ -20,24 +20,24 @@ jobs:
             git reset --hard origin/main
 
             if [ ! -f backend/.env ] && [ -n "${{ secrets.DB_HOST }}" ]; then
-              cat > backend/.env << APP_ENV
-HOST=127.0.0.1
-PORT=4000
-
-DB_HOST=${{ secrets.DB_HOST }}
-DB_PORT=${{ secrets.DB_PORT }}
-DB_USERNAME=${{ secrets.DB_USERNAME }}
-DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-DB_NAME=${{ secrets.DB_NAME }}
-
-JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}
-JWT_ACCESS_EXPIRES=15m
-JWT_REFRESH_DAYS=30
-
-TYPEORM_SYNC=true
-TYPEORM_LOGGING=false
-SEED_DEMO=true
-APP_ENV
+              printf '%s\n' \
+                'HOST=127.0.0.1' \
+                'PORT=4000' \
+                '' \
+                'DB_HOST=${{ secrets.DB_HOST }}' \
+                'DB_PORT=${{ secrets.DB_PORT }}' \
+                'DB_USERNAME=${{ secrets.DB_USERNAME }}' \
+                'DB_PASSWORD=${{ secrets.DB_PASSWORD }}' \
+                'DB_NAME=${{ secrets.DB_NAME }}' \
+                '' \
+                'JWT_ACCESS_SECRET=${{ secrets.JWT_ACCESS_SECRET }}' \
+                'JWT_ACCESS_EXPIRES=15m' \
+                'JWT_REFRESH_DAYS=30' \
+                '' \
+                'TYPEORM_SYNC=true' \
+                'TYPEORM_LOGGING=false' \
+                'SEED_DEMO=true' \
+                > backend/.env
             fi
 
             cd backend
