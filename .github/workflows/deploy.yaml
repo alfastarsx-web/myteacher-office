@@ -40,11 +40,23 @@ jobs:
                 > backend/.env
             fi
 
+            if [ ! -f backend/.env ]; then
+              echo "backend/.env topilmadi. GitHub Secrets orqali DB_HOST, DB_PORT, DB_USERNAME, DB_PASSWORD, DB_NAME va JWT_ACCESS_SECRET qo'shing yoki serverda backend/.env yarating."
+              exit 1
+            fi
+
             cd backend
             npm ci
             npm run build
 
             pm2 delete myteacher-office || true
+            pm2 delete myteacher-office-api || true
+            pm2 delete server || true
+            pkill -f /var/www/myteacher-office/server.js || true
+            pkill -f /var/www/myteacher-office/backend/dist/main.js || true
             pm2 start dist/main.js --name myteacher-office --update-env
+            sleep 5
+            pm2 list
+            curl --fail http://127.0.0.1:4000/api/health
             pm2 save
           EOF
