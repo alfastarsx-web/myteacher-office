@@ -1,0 +1,44 @@
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { UserEntity } from '../../users/infrastructure/user.entity';
+
+@Entity('deals')
+export class DealEntity {
+  @PrimaryGeneratedColumn()
+  id: number;
+
+  @Column()
+  customerName: string;
+
+  @Column({ default: '' })
+  dealName: string;
+
+  @Column({ default: '' })
+  phone: string;
+
+  @Column({ type: 'text', array: true, default: '{}' })
+  phones: string[];
+
+  @Column({ default: 'yangi' })
+  stageId: string;
+
+  @Column({ type: 'bigint', default: 0 })
+  price: number;
+
+  @Column({ type: 'text', default: '' })
+  note: string;
+
+  @ManyToOne(() => UserEntity, user => user.deals, { eager: false })
+  owner: UserEntity;
+
+  @Column()
+  ownerId: number;
+
+  @Column()
+  createdBy: number;
+
+  @CreateDateColumn()
+  createdAt: Date;
+
+  @UpdateDateColumn()
+  updatedAt: Date;
+}

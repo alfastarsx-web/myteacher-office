@@ -46,7 +46,18 @@ body{font-family:var(--f);background:var(--bg);color:var(--td);display:flex;heig
 
 /* ── FOOTER ACTION BAR ── */
 .app-footer{height:44px;border-top:1px solid var(--br);background:rgba(255,255,255,.96);backdrop-filter:saturate(140%) blur(10px);display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0 24px;flex-shrink:0;z-index:120}
-.footer-brand{font-size:14px;font-weight:700;color:var(--mu);letter-spacing:.2px}
+.footer-left{display:flex;align-items:center;gap:12px;min-width:0;flex:1}
+.footer-brand{font-size:13px;font-weight:700;color:var(--mu);letter-spacing:.2px;white-space:nowrap}
+.footer-brand strong{color:var(--td)}
+.footer-brand span{font-weight:500;color:var(--mu)}
+.news-ticker{height:28px;min-width:260px;max-width:760px;flex:1;border:1px solid var(--br);border-left:3px solid var(--blue);background:#F8FAFC;display:flex;align-items:center;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
+.news-label{height:100%;width:48px;display:flex;align-items:center;justify-content:center;background:#EEF2FF;color:var(--blue);border-right:1px solid var(--br);font-size:10px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;flex:0 0 48px;position:relative;z-index:2}
+.news-label span{animation:livePulse 1.8s ease-in-out infinite}
+.news-track{min-width:0;display:flex;align-items:center;gap:22px;white-space:nowrap;animation:tickerMove 34s linear infinite;padding-left:18px;font-size:12px;color:var(--tm);font-weight:600}
+.news-item strong{color:var(--td)}
+.news-tip{color:var(--blue)}
+@keyframes tickerMove{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+@keyframes livePulse{0%,100%{opacity:.42}50%{opacity:1}}
 #hdrRight{display:flex;align-items:center;gap:10px}
 .btn-ico{display:flex;align-items:center;gap:6px;padding:8px 14px;border:1px solid var(--br);background:var(--wh);border-radius:8px;font-family:var(--f);font-size:13px;font-weight:600;color:var(--tm);cursor:pointer;white-space:nowrap;transition:all .15s;box-shadow:var(--shadow-sm)}
 .btn-ico:hover{border-color:#CBD5E1;color:var(--td);transform:translateY(-1px)}
@@ -485,6 +496,84 @@ table.crm-t{width:100%;border-collapse:collapse}
 .empty-msg{font-size:14px;font-weight:700;color:var(--td);padding:16px 0}
 
 /* ══════════════════════════════════════
+   PAGE: DOKUMENTATSIYA
+══════════════════════════════════════ */
+.docs-wrap{flex:1;overflow-y:auto;padding:26px 34px;background:linear-gradient(180deg,#F8FAFF 0,#F3F6FB 100%)}
+.docs-hero{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:18px;margin-bottom:18px}
+.docs-intro{background:linear-gradient(135deg,#1D4ED8,#7C3AED);border-radius:14px;padding:24px;color:#fff;box-shadow:0 16px 42px rgba(37,99,235,.18);position:relative;overflow:hidden}
+.docs-intro:after{content:'';position:absolute;right:-46px;top:-58px;width:190px;height:190px;border-radius:50%;background:rgba(255,255,255,.14)}
+.docs-kicker{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.7px;opacity:.84;margin-bottom:8px}
+.docs-title{font-size:28px;font-weight:800;line-height:1.12;margin-bottom:8px}
+.docs-sub{font-size:14px;line-height:1.55;max-width:620px;color:rgba(255,255,255,.84)}
+.docs-admin{background:#fff;border:1px solid var(--br);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm)}
+.docs-admin-title{font-size:14px;font-weight:800;color:var(--td);margin-bottom:4px}
+.docs-admin-sub{font-size:12px;color:var(--mu);line-height:1.45;margin-bottom:12px}
+.doc-form{display:flex;flex-direction:column;gap:8px}
+.doc-form input,.doc-form textarea,.doc-form select{width:100%;border:1px solid var(--br);border-radius:8px;padding:9px 10px;font-family:var(--f);font-size:13px;outline:none;background:#fff}
+.doc-form textarea{min-height:74px;resize:vertical}
+.doc-form input:focus,.doc-form textarea:focus,.doc-form select:focus{border-color:var(--blue)}
+.doc-file{border:1px dashed var(--br);border-radius:9px;padding:10px;background:#F8FAFC;color:var(--tm);font-size:12px}
+.doc-file input{border:0;padding:0;background:transparent;margin-top:6px}
+.docs-readonly{height:100%;display:flex;align-items:center;gap:12px;padding:14px;border-radius:12px;background:#F8FAFC;color:var(--tm);font-size:13px;line-height:1.45}
+.docs-readonly svg{width:28px;height:28px;color:var(--blue);flex-shrink:0}
+.docs-toolbar{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:16px}
+.doc-tabs{display:flex;gap:8px;flex-wrap:wrap}
+.doc-tab{border:1px solid var(--br);background:#fff;color:var(--tm);border-radius:999px;padding:8px 13px;font-family:var(--f);font-size:13px;font-weight:700;cursor:pointer}
+.doc-tab.active{background:var(--td);color:#fff;border-color:var(--td)}
+.docs-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.doc-card{background:#fff;border:1px solid var(--br);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm);min-height:190px;display:flex;flex-direction:column;position:relative;overflow:hidden}
+.doc-card:before{content:'';position:absolute;inset:0 0 auto;height:4px;background:var(--doc-color,#2563EB)}
+.doc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:14px}
+.doc-icon{width:42px;height:42px;border-radius:12px;background:var(--doc-bg,#EFF6FF);color:var(--doc-color,#2563EB);display:flex;align-items:center;justify-content:center}
+.doc-icon svg{width:21px;height:21px}
+.doc-badge{font-size:11px;font-weight:800;color:var(--doc-color,#2563EB);background:var(--doc-bg,#EFF6FF);padding:5px 8px;border-radius:999px}
+.doc-name{font-size:16px;font-weight:800;color:var(--td);line-height:1.28;margin-bottom:7px}
+.doc-desc{font-size:13px;color:var(--tm);line-height:1.5;flex:1}
+.doc-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;font-size:12px;color:var(--mu)}
+.doc-read{border:none;background:var(--blue);color:#fff;border-radius:8px;padding:7px 12px;font-family:var(--f);font-size:12px;font-weight:700;cursor:pointer}
+.doc-read:hover{background:#1D4ED8}
+.doc-empty{grid-column:1/-1;background:#fff;border:1px dashed var(--br);border-radius:14px;padding:30px;text-align:center;color:var(--mu);font-size:14px}
+.doc-view-modal{width:min(920px,calc(100vw - 34px));height:min(760px,calc(100vh - 34px));display:flex;flex-direction:column;overflow:hidden}
+.doc-view-body{padding:0;flex:1;display:flex;min-height:0;background:#F8FAFC}
+.doc-frame{width:100%;height:100%;border:0;background:#fff}
+.doc-text-view{padding:24px;font-size:15px;line-height:1.7;color:var(--tm);overflow:auto;width:100%;white-space:pre-wrap}
+.doc-pdf-name{font-size:12px;color:var(--mu);margin-top:3px}
+
+/* ══════════════════════════════════════
+   PAGE: PAYMENTS
+══════════════════════════════════════ */
+.pay-wrap{flex:1;overflow-y:auto;padding:26px 34px;background:#F6F8FC}
+.pay-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:18px}
+.pay-title{font-size:24px;font-weight:800;color:var(--td)}
+.pay-sub{font-size:13px;color:var(--mu);margin-top:5px}
+.pay-period{display:flex;align-items:center;gap:8px;background:#fff;border:1px solid var(--br);border-radius:10px;padding:9px 12px;color:var(--tm);font-size:13px;font-weight:700}
+.pay-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.pay-stat{background:#fff;border:1px solid var(--br);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm)}
+.pay-stat-label{font-size:12px;color:var(--mu);font-weight:700;margin-bottom:8px}
+.pay-stat-value{font-size:22px;font-weight:800;color:var(--td);line-height:1.15}
+.pay-stat.good .pay-stat-value{color:#16A34A}
+.pay-stat.warn .pay-stat-value{color:#F59E0B}
+.pay-stat.bad .pay-stat-value{color:#EF4444}
+.pay-layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px}
+.pay-panel{background:#fff;border:1px solid var(--br);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden}
+.pay-panel-head{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:15px 16px;border-bottom:1px solid var(--br);background:#FBFCFE}
+.pay-panel-title{font-size:15px;font-weight:800;color:var(--td)}
+.pay-table{width:100%;border-collapse:collapse}
+.pay-table th{font-size:11px;text-transform:uppercase;letter-spacing:.35px;color:var(--mu);text-align:left;background:#F8FAFC;padding:11px 14px;border-bottom:1px solid var(--br)}
+.pay-table td{padding:13px 14px;border-bottom:1px solid var(--brl);font-size:13px;color:var(--tm)}
+.pay-table tr:last-child td{border-bottom:0}
+.pay-money{font-weight:800;color:var(--td)}
+.pay-income{color:#16A34A;font-weight:800}
+.pay-side{display:flex;flex-direction:column;gap:12px}
+.pay-card{background:#fff;border:1px solid var(--br);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm)}
+.pay-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--brl);font-size:13px;color:var(--tm)}
+.pay-row:last-child{border-bottom:0}
+.pay-row strong{color:var(--td)}
+.pay-badge{display:inline-flex;align-items:center;border-radius:999px;padding:5px 9px;font-size:11px;font-weight:800;background:#EFF6FF;color:var(--blue)}
+.pay-progress{height:10px;background:#E5E7EB;border-radius:999px;overflow:hidden;margin-top:12px}
+.pay-progress span{display:block;height:100%;background:linear-gradient(90deg,#22C55E,#2563EB);border-radius:999px}
+
+/* ══════════════════════════════════════
    MODAL (shared)
 ══════════════════════════════════════ */
 .ovl{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:none;align-items:center;justify-content:center}
@@ -501,6 +590,13 @@ table.crm-t{width:100%;border-collapse:collapse}
 .fi{padding:9px 12px;border:1px solid var(--br);border-radius:8px;font-family:var(--f);font-size:13px;color:var(--td);outline:none;transition:border-color .15s}
 .fi:focus{border-color:var(--blue)}
 .fi.err{border-color:var(--red)}
+.phone-list{display:flex;flex-direction:column;gap:6px}
+.phone-item{display:flex;gap:6px;align-items:center}
+.phone-item .fi{flex:1}
+.phone-remove{width:34px;height:34px;border:1px solid var(--br);border-radius:8px;background:#F8FAFC;color:var(--mu);cursor:pointer}
+.phone-add{align-self:flex-start;padding:5px 0}
+.phone-stack{display:flex;flex-direction:column;gap:6px;flex:1}
+.phone-line{font-size:13px;color:var(--tm);font-weight:500}
 .fw{display:flex;align-items:center;border:1px solid var(--br);border-radius:8px;overflow:hidden}
 .fw:focus-within{border-color:var(--blue)}
 .fw input{flex:1;min-width:0;padding:9px 12px;border:none;font-family:var(--f);font-size:13px;outline:none}
@@ -609,6 +705,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .si.on::before{display:none}
   .main{height:calc(100vh - 58px)}
   .app-footer{height:auto;min-height:44px;padding:8px 14px;flex-wrap:wrap}
+  .footer-left{width:100%;flex-wrap:wrap}
+  .news-ticker{max-width:none;width:100%;flex-basis:100%}
   #hdrRight{flex-wrap:wrap;justify-content:flex-end}
   .tabs-row{padding:0 14px;overflow-x:auto}
   .toolbar{padding:10px 14px}
@@ -621,6 +719,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .set-content{padding:22px 18px}
   .frow{flex-direction:column}
   .team-layout{grid-template-columns:1fr}
+  .pay-wrap{padding:18px 14px}
+  .pay-grid,.pay-layout{grid-template-columns:1fr}
+  .pay-head{flex-direction:column}
+  .docs-wrap{padding:18px 14px}
+  .docs-hero,.docs-grid{grid-template-columns:1fr}
+  .docs-toolbar{align-items:stretch;flex-direction:column}
   .detail-grid,.permission-list{grid-template-columns:1fr}
   .channel-row{grid-template-columns:1fr}
   .dash-grid,.dash-main{grid-template-columns:1fr}
@@ -651,8 +755,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
         <button class="auth-tab" onclick="showOnboarding('register')">Ro'yxatdan o'tish</button>
       </div>
       <div class="auth-form">
-        <div class="auth-field"><label>Email</label><input class="auth-input" value="diyorashomamatova@gmail.com"></div>
-        <div class="auth-field" id="loginPasswordField"><label>Parol</label><div class="auth-input-wrap"><input class="auth-input" type="password" value="12345678"><svg class="auth-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20C7 20 2.73 16.89 1 12a18.45 18.45 0 014.06-5.94M9.9 4.24A10.45 10.45 0 0112 4c5 0 9.27 3.11 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M14.12 14.12A3 3 0 019.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="auth-help" id="loginHelp">8 ta belgidan ko'p bo'lishi shart!</div></div>
+        <div class="auth-field"><label>Email</label><input class="auth-input" id="loginEmail" value="admin@myteacher.uz"></div>
+        <div class="auth-field" id="loginPasswordField"><label>Parol</label><div class="auth-input-wrap"><input class="auth-input" id="loginPassword" type="password" value="admin12345"><svg class="auth-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20C7 20 2.73 16.89 1 12a18.45 18.45 0 014.06-5.94M9.9 4.24A10.45 10.45 0 0112 4c5 0 9.27 3.11 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M14.12 14.12A3 3 0 019.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="auth-help" id="loginHelp">8 ta belgidan ko'p bo'lishi shart!</div></div>
         <button class="auth-submit" onclick="finishOnboarding()">Kirish</button>
       </div>
     </div>
@@ -706,17 +810,16 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <circle cx="20" cy="24" r="8" fill="#FBBF24"/>
     </svg>
   </div>
-  <div class="si" title="Chatlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div>
-  <div class="si" title="Kontaktlar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 2v4M16 2v4M3 10h18"/></svg></div>
+  <div class="si" id="sbDash" title="Dashboard" onclick="goPage('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
+  <div class="si" id="sbPayments" title="Payments and Earnings" onclick="goPage('payments')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
   <div class="si on" id="sbCRM" title="CRM" onclick="goPage('shartnomalar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
   <div class="si" id="sbTeam" title="Jamoa" onclick="goPage('jamoa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+  <div class="si" id="sbDocs" title="Dokumentatsiya" onclick="goPage('docs')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg></div>
   <div class="sp"></div>
   <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 13.5a19.79 19.79 0 01-3.07-8.67A2 2 0 012 2.84h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 10.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></div>
   <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5.5" cy="11.5" r="4.5"/><circle cx="18.5" cy="11.5" r="4.5"/><line x1="5.5" y1="16" x2="18.5" y2="16"/></svg></div>
   <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-  <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
   <div class="si" id="sbSettings" title="Sozlamalar" onclick="goPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
-  <div class="si" id="sbDash" title="Dashboard" onclick="goPage('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
   <div class="tgl" onclick="this.classList.toggle('off')"></div>
 </nav>
 
@@ -1082,6 +1185,58 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     </div>
   </div>
 
+  <!-- ═══ PAGE: PAYMENTS AND EARNINGS ═══ -->
+  <div class="page" id="page-payments">
+    <div class="pay-wrap">
+      <div class="pay-head">
+        <div><div class="pay-title">Payments and Earnings</div><div class="pay-sub">Xodimning sotuvdan ishlagan puli, bonuslari, jarimalari, oylik chiqarilishi va joriy balansi</div></div>
+        <div class="pay-period">May 2026 <span class="pay-badge" id="payRoleBadge">Menejer</span></div>
+      </div>
+      <div class="pay-grid" id="payStats"></div>
+      <div class="pay-layout">
+        <section class="pay-panel">
+          <div class="pay-panel-head"><div class="pay-panel-title">Sotuvlar bo'yicha daromad</div><span class="pay-badge">10% komissiya</span></div>
+          <table class="pay-table">
+            <thead><tr><th>Sana</th><th>Mijoz</th><th>Shartnoma</th><th>Sotuv</th><th>Ishlagani</th></tr></thead>
+            <tbody id="payRows"></tbody>
+          </table>
+        </section>
+        <aside class="pay-side">
+          <div class="pay-card">
+            <div class="pay-panel-title">Bonus va jarimalar</div>
+            <div id="payAdjustments"></div>
+          </div>
+          <div class="pay-card">
+            <div class="pay-panel-title">Oylik holati</div>
+            <div class="pay-row"><span>Hisoblangan</span><strong id="payGross">0 UZS</strong></div>
+            <div class="pay-row"><span>Chiqarilgan</span><strong id="payPaid">0 UZS</strong></div>
+            <div class="pay-row"><span>Hozirgi balans</span><strong id="payBalance">0 UZS</strong></div>
+            <div class="pay-progress"><span id="payProgress" style="width:0%"></span></div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ PAGE: DOKUMENTATSIYA ═══ -->
+  <div class="page" id="page-docs">
+    <div class="docs-wrap">
+      <div class="docs-hero">
+        <section class="docs-intro">
+          <div class="docs-kicker">Ichki bilimlar markazi</div>
+          <div class="docs-title">Dokumentatsiya</div>
+          <div class="docs-sub">Yo'riqnomalar, sotuv skriptlari, resume namunalari va jamoaga kerakli hujjatlar shu yerda jamlanadi. Admin hujjat qo'shadi, menejerlar esa faqat o'qiydi.</div>
+        </section>
+        <section class="docs-admin" id="docsAdminPanel"></section>
+      </div>
+      <div class="docs-toolbar">
+        <div class="doc-tabs" id="docTabs"></div>
+        <div class="search-box" style="min-width:240px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input id="docSearch" placeholder="Hujjat qidirish..." oninput="renderDocsPage()"></div>
+      </div>
+      <div class="docs-grid" id="docsGrid"></div>
+    </div>
+  </div>
+
   <!-- ═══ PAGE: SETTINGS ═══ -->
   <div class="page" id="page-settings">
     <div class="set-wrap">
@@ -1111,7 +1266,13 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   </div>
 
   <div class="app-footer">
-    <div class="footer-brand">CRM</div>
+    <div class="footer-left">
+      <div class="footer-brand" id="footerBrand"><strong>CRM</strong> <span>| Sardor Xudoyberdiyev — maslahatchi mutaxassis</span></div>
+      <div class="news-ticker" aria-label="Haftalik natijalar">
+        <div class="news-label"><span>Live</span></div>
+        <div class="news-track" id="footerTicker"></div>
+      </div>
+    </div>
     <div id="hdrRight"></div>
   </div>
 
@@ -1204,8 +1365,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
         </div>
         <div class="deal-side-section">
           <div class="deal-section-head"><span>Kontaktlar</span><span>1⌃</span></div>
-          <div class="deal-side-card"><div class="deal-info-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 13.5"/></svg><span id="dwPhone">Telefon yo'q</span></div></div>
-          <button class="link-btn deal-side-card"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Yangi telefon yoki email qo'shish</button>
+          <div class="deal-side-card"><div class="deal-info-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 13.5"/></svg><div class="phone-stack" id="dwPhones"><div class="phone-line">Telefon yo'q</div></div></div></div>
+          <button class="link-btn deal-side-card" onclick="addWorkspacePhone()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Yangi telefon qo'shish</button>
         </div>
         <div class="deal-side-section">
           <div class="deal-section-head"><span>Yashash manzil</span><span>1⌃</span></div>
@@ -1223,7 +1384,13 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     <div class="mbody">
       <div class="frow">
         <div class="fg"><label>Mijoz nomi</label><input class="fi" id="mC" placeholder="Mijoz ismi"></div>
-        <div class="fg"><label>Telefon raqami</label><input class="fi" id="mPh" inputmode="tel" placeholder="+998 90 123 45 67"></div>
+        <div class="fg">
+          <label>Telefon raqamlari</label>
+          <div class="phone-list" id="mPhoneList">
+            <div class="phone-item"><input class="fi phone-input" id="mPh" inputmode="tel" placeholder="+998 90 123 45 67"></div>
+          </div>
+          <button class="link-btn phone-add" type="button" onclick="addModalPhoneInput()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Telefon qo'shish</button>
+        </div>
         <div class="fg"><label>Shartnoma nomi</label><input class="fi" id="mN" placeholder="Masalan: Sovg'a #5"></div>
         <div class="fg"><label>Narxi</label><div class="fw"><input type="number" id="mP" placeholder="0"><span>UZS</span></div></div>
       </div>
@@ -1264,6 +1431,17 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <div class="toast" id="toast"></div>
 <div class="hint">💡</div>
 
+<!-- ═══ MODAL: Dokument ko'rish ═══ -->
+<div class="ovl" id="docViewerOvl" onclick="if(event.target===this)closeDocViewer()">
+  <div class="modal doc-view-modal" onclick="event.stopPropagation()">
+    <div class="mhdr">
+      <div><h3 id="docViewerTitle">Hujjat</h3><div class="doc-pdf-name" id="docViewerMeta"></div></div>
+      <button class="mx" onclick="closeDocViewer()">✕</button>
+    </div>
+    <div class="mbody doc-view-body" id="docViewerBody"></div>
+  </div>
+</div>
+
 <script>
 // ════════════════════════════════════════
 //  DATA
@@ -1294,9 +1472,9 @@ const BAR_DATA = [
 ];
 
 let deals = [
-  {id:1,customerName:'John Smith',dealName:"Sovg'a #5",phone:'+998 90 123 45 67',col:'yangi',   price:4990000,date:'16 okt',note:''},
-  {id:2,customerName:'Test Chat', dealName:'Shartnoma 2',phone:'+998 95 255 25 66',col:'yangi',   price:1250000,date:'17 okt',note:''},
-  {id:3,customerName:'Test Chat', dealName:'Shartnoma 3',phone:'',col:'malakali',price:0,  date:'17 okt',note:''},
+  {id:1,customerName:'John Smith',dealName:"Sovg'a #5",phone:'+998 90 123 45 67',phones:['+998 90 123 45 67'],col:'yangi',   price:4990000,date:'16 okt',note:''},
+  {id:2,customerName:'Test Chat', dealName:'Shartnoma 2',phone:'+998 95 255 25 66',phones:['+998 95 255 25 66'],col:'yangi',   price:1250000,date:'17 okt',note:''},
+  {id:3,customerName:'Test Chat', dealName:'Shartnoma 3',phone:'',phones:[],col:'malakali',price:0,  date:'17 okt',note:''},
 ];
 let managers = [
   {id:1,name:'Admin',email:'admin@crm.uz',role:'admin',status:'Online',deals:8,tasks:4,customers:32,avatar:'AD',color:'linear-gradient(135deg,#2563eb,#1d4ed8)'},
@@ -1305,16 +1483,156 @@ let managers = [
 ];
 let currentManagerId=1, selectedTeamManagerId=1;
 let nid=4, curView='kanban', editId=null, dragId=null, workspaceDealId=null, composerMode='chat';
+let apiToken=localStorage.getItem('mtcrm_token') || '';
+let refreshToken=localStorage.getItem('mtcrm_refresh_token') || '';
+let apiOnline=false;
+let docFilter='all';
+const paymentAdjustments=[
+  {label:'Plan 75% dan oshgani uchun bonus',amount:1200000,type:'bonus'},
+  {label:'2 ta kechiktirilgan follow-up',amount:-250000,type:'penalty'},
+  {label:'Yangi guruh ochilgani uchun bonus',amount:800000,type:'bonus'}
+];
+let documents=[
+  {id:1,type:'guide',title:'Yangi menejer uchun yo‘riqnoma',description:'CRMga kirish, mijoz kartochkasi, vazifa va shartnoma bilan ishlash tartibi.',author:'Admin',updatedAt:'2026-05-02'},
+  {id:2,type:'script',title:'Birinchi qo‘ng‘iroq skripti',description:'Ota-ona bilan salomlashish, ehtiyojni aniqlash va darsga yozishga olib keladigan suhbat oqimi.',author:'Admin',updatedAt:'2026-05-02'},
+  {id:3,type:'resume',title:'Maslahatchi mutaxassis resume namunasi',description:'Ishga qabul qilishda ishlatiladigan qisqa, toza va MyTeacher uslubidagi resume shakli.',author:'Admin',updatedAt:'2026-05-02'}
+];
 
 function currentUser(){ return managers.find(m=>m.id===currentManagerId) || managers[0]; }
 function isAdmin(){ return currentUser().role==='admin'; }
 function customerTitle(d){ return d.customerName || d.sub || 'Nomsiz mijoz'; }
 function dealTitle(d){ return d.dealName || d.name || 'Shartnoma nomi yo‘q'; }
+function dealPhones(d){ return [...new Set([...(Array.isArray(d.phones)?d.phones:[]), d.phone].map(v=>String(v||'').trim()).filter(Boolean))]; }
+function currentUserDeals(){ const u=currentUser(); return isAdmin()?deals:deals.filter(d=>d.ownerId===u.id || d.createdBy===u.id); }
+function apiBase(){
+  if(location.protocol.startsWith('http'))return location.origin;
+  return 'http://127.0.0.1:4000';
+}
+async function api(path,options={}){
+  const headers={...(options.headers||{})};
+  if(options.body && !headers['Content-Type'])headers['Content-Type']='application/json';
+  if(apiToken)headers.Authorization='Bearer '+apiToken;
+  const res=await fetch(apiBase()+path,{...options,headers,body:options.body && typeof options.body!=='string'?JSON.stringify(options.body):options.body});
+  const data=await res.json().catch(()=>({}));
+  if(res.status===401 && !options.skipRefresh && await refreshAccessToken()){
+    return api(path,{...options,skipRefresh:true});
+  }
+  if(!res.ok){
+    if(res.status===401)clearSession(true);
+    throw new Error(data.error || 'API xatolik');
+  }
+  apiOnline=true;
+  return data;
+}
+function dealFromApi(d){
+  const date=d.createdAt?formatDealDate(d.createdAt):'Bugun';
+  const phones=dealPhones(d);
+  return {id:d.id,customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,note:d.note || '',ownerId:d.ownerId,createdBy:d.createdBy};
+}
+function dealToApiPayload(d){
+  const phones=dealPhones(d);
+  return {customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,stageId:d.col,price:d.price,note:d.note,ownerId:d.ownerId};
+}
+function formatDealDate(iso){
+  const dt=new Date(iso);
+  if(Number.isNaN(dt.getTime()))return 'Bugun';
+  const mn=['yan','fev','mar','apr','may','iyn','iyl','avg','sen','okt','noy','dek'];
+  return `${dt.getDate()} ${mn[dt.getMonth()]}`;
+}
+async function apiLogin(email,password){
+  const data=await api('/api/auth/login',{method:'POST',body:{email,password},skipRefresh:true});
+  apiToken=data.accessToken || data.token;
+  refreshToken=data.refreshToken || '';
+  localStorage.setItem('mtcrm_token',apiToken);
+  if(refreshToken)localStorage.setItem('mtcrm_refresh_token',refreshToken);
+  if(data.user){
+    currentManagerId=data.user.id;
+    selectedTeamManagerId=data.user.id;
+  }
+  await loadApiData();
+  return data;
+}
+async function refreshAccessToken(){
+  if(!refreshToken)return false;
+  try{
+    const res=await fetch(apiBase()+'/api/auth/refresh',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({refreshToken})
+    });
+    const data=await res.json().catch(()=>({}));
+    if(!res.ok || !(data.accessToken || data.token))throw new Error(data.error || 'Refresh failed');
+    apiToken=data.accessToken || data.token;
+    refreshToken=data.refreshToken || refreshToken;
+    localStorage.setItem('mtcrm_token',apiToken);
+    if(data.refreshToken)localStorage.setItem('mtcrm_refresh_token',refreshToken);
+    return true;
+  }catch{
+    clearSession(true);
+    return false;
+  }
+}
+function clearSession(openLogin=false){
+  apiToken='';
+  refreshToken='';
+  localStorage.removeItem('mtcrm_token');
+  localStorage.removeItem('mtcrm_refresh_token');
+  if(openLogin)showOnboarding('login');
+}
+async function logout(){
+  const token=refreshToken;
+  clearSession(false);
+  if(token){
+    fetch(apiBase()+'/api/auth/logout',{
+      method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({refreshToken:token})
+    }).catch(()=>{});
+  }
+  showToast('Tizimdan chiqdingiz');
+  showOnboarding('login');
+}
+async function loadApiData(){
+  if(!apiToken)return false;
+  try{
+    const [stageData,teamData,dealData,taskData,docData]=await Promise.all([
+      api('/api/stages'),
+      api('/api/team'),
+      api('/api/deals'),
+      api('/api/tasks'),
+      api('/api/docs')
+    ]);
+    COLS.splice(0,COLS.length,...stageData.stages);
+    Object.keys(SC).forEach(k=>delete SC[k]);
+    COLS.forEach(c=>SC[c.id]=c.color);
+    const taskCounts={};
+    (taskData.tasks||[]).forEach(t=>{taskCounts[t.ownerId]=(taskCounts[t.ownerId]||0)+1;});
+    managers=(teamData.users||[]).map(u=>{
+      const ownedDeals=(dealData.deals||[]).filter(d=>d.ownerId===u.id);
+      return {...u,deals:ownedDeals.length,tasks:taskCounts[u.id]||0,customers:ownedDeals.length,avatar:u.avatar||u.name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase(),color:u.color||'linear-gradient(135deg,#93c5fd,#3b82f6)'};
+    });
+    deals=(dealData.deals||[]).map(dealFromApi);
+    documents=docData.docs || documents;
+    nid=Math.max(0,...deals.map(d=>d.id))+1;
+    renderHdrRight(curPage);
+    if(curPage==='shartnomalar')renderCurrentDeals();
+    if(curPage==='jamoa')renderTeamPage();
+    if(curPage==='dashboard')renderDashboard();
+    if(curPage==='docs')renderDocsPage();
+    if(curPage==='payments')renderPaymentsPage();
+    renderFooterTicker();
+    return true;
+  }catch(err){
+    apiOnline=false;
+    console.warn('API fallback:',err.message);
+    return false;
+  }
+}
 function getDealQuery(){ return document.getElementById('dealSearch')?.value.trim().toLowerCase() || ''; }
 function visibleDeals(){
   const q=getDealQuery();
   if(!q)return deals;
-  return deals.filter(d=>[customerTitle(d),dealTitle(d),d.phone,d.date].some(v=>String(v||'').toLowerCase().includes(q)));
+  return deals.filter(d=>[customerTitle(d),dealTitle(d),...dealPhones(d),d.date].some(v=>String(v||'').toLowerCase().includes(q)));
 }
 function renderCurrentDeals(){ curView==='list'?renderList():renderKanban(); }
 function esc(v){return String(v ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
@@ -1354,6 +1672,8 @@ function goPage(p){
   if(p==='shartnomalar') setView(curView);
   if(p==='dashboard') renderDashboard();
   if(p==='jamoa') renderTeamPage();
+  if(p==='docs') renderDocsPage();
+  if(p==='payments') renderPaymentsPage();
   if(p==='settings') renderSetContent('crmsoz');
 }
 
@@ -1362,7 +1682,9 @@ function goTab(t){ goPage(t); }
 function renderSidebarState(p){
   document.querySelectorAll('.sb .si').forEach(i=>i.classList.remove('on'));
   if(PAGE_TABS.includes(p))document.getElementById('sbCRM')?.classList.add('on');
+  if(p==='payments')document.getElementById('sbPayments')?.classList.add('on');
   if(p==='jamoa')document.getElementById('sbTeam')?.classList.add('on');
+  if(p==='docs')document.getElementById('sbDocs')?.classList.add('on');
   if(p==='settings')document.getElementById('sbSettings')?.classList.add('on');
   if(p==='dashboard')document.getElementById('sbDash')?.classList.add('on');
 }
@@ -1370,13 +1692,41 @@ function renderSidebarState(p){
 function renderHdrRight(p){
   const r = document.getElementById('hdrRight');
   if(p==='shartnomalar'){
-    r.innerHTML=`<button class="btn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Eksport</button>`;
+    r.innerHTML=`<button class="btn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Eksport</button><button class="btn-ico" onclick="logout()">Chiqish</button>`;
   } else if(p==='mijozlar'){
     r.innerHTML=`<button class="btn-ico" onclick="showOnboarding('user')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Yangi foydalanuvchi</button>
     <div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input placeholder="Qidirish..."></div>`;
   } else if(p==='jamoa'){
-    r.innerHTML='';
+    r.innerHTML=`<button class="btn-ico" onclick="logout()">Chiqish</button>`;
+  } else if(p==='docs'){
+    r.innerHTML=isAdmin()?`<button class="btn-ico btn-primary" onclick="document.getElementById('docTitle')?.focus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Hujjat qo'shish</button>`:'';
+  } else if(p==='payments'){
+    r.innerHTML=`<button class="btn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Hisobot</button>`;
   } else { r.innerHTML=''; }
+}
+
+function renderFooterTicker(){
+  const el=document.getElementById('footerTicker');
+  if(!el)return;
+  const rows=currentUserDeals();
+  const total=rows.reduce((sum,d)=>sum+Number(d.price||0),0);
+  const avg=rows.length?Math.round(total/rows.length):0;
+  const salary=Math.round(total*.10);
+  const missed=Math.max(0,1500000000-total);
+  const tips=[
+    "Maslahat: har bir yangi leadga 5 daqiqa ichida javob bering",
+    "Bugun 3 ta follow-up yopilsa konversiya sezilarli oshadi",
+    "Skriptni qisqa saqlang: savol, ehtiyoj, taklif, kelishuv",
+    "Issiq mijozlarga to'lov linkini suhbat ichida yuboring"
+  ];
+  const items=[
+    `Sizning bu haftadagi sotgan summangiz: <strong>${formatMoney(total)}</strong>`,
+    `O'rta chek: <strong>${formatMoney(avg)}</strong>`,
+    `Ishlangan maosh: <strong>${formatMoney(salary)}</strong>`,
+    `Erishilmay qolgan bitimlar: <strong>${formatMoney(missed)}</strong>`,
+    `<span class="news-tip">${tips[new Date().getDay()%tips.length]}</span>`
+  ];
+  el.innerHTML=[...items,...items].map(text=>`<span class="news-item">${text}</span>`).join('');
 }
 
 // ════════════════════════════════════════
@@ -1385,6 +1735,7 @@ function renderHdrRight(p){
 function setView(v){
   curView=v;
   renderDealStats();
+  renderFooterTicker();
   const isK = v==='kanban';
   document.getElementById('btnKanban').classList.toggle('active',isK);
   document.getElementById('btnList').classList.toggle('active',!isK);
@@ -1417,6 +1768,24 @@ function renderDealStats(){
       <div class="stat-sub">${sub}</div>
     </div>
   `).join('');
+  refreshDashboardSummary();
+}
+
+async function refreshDashboardSummary(){
+  if(!apiToken)return;
+  try{
+    const data=await api('/api/dashboard/summary');
+    const s=data.summary;
+    const cards=document.querySelectorAll('#dealStats .stat-card');
+    if(cards.length>=4){
+      cards[0].querySelector('.stat-value').textContent=formatMoney(s.todayCash);
+      cards[1].querySelector('.stat-value').textContent=formatMoney(s.todaySalary);
+      cards[2].querySelector('.stat-value').textContent=formatMoney(s.monthlySalary);
+      cards[3].querySelector('.stat-value').textContent=formatMoney(s.missedDealAmount);
+    }
+  }catch(err){
+    console.warn('dashboard summary fallback:',err.message);
+  }
 }
 
 // ════════════════════════════════════════
@@ -1514,6 +1883,9 @@ function bindDrag(){
       const d=deals.find(x=>x.id===dragId);
       const target=zone.dataset.col;
       if(d && d.col!==target){
+        if(apiToken){
+          api(`/api/deals/${d.id}`,{method:'PATCH',body:{stageId:target}}).catch(err=>showToast(err.message));
+        }
         d.col=target;
         showToast(`"${customerTitle(d)}" → ${COLS.find(c=>c.id===target)?.label}`);
         renderKanban();
@@ -1531,7 +1903,7 @@ function openModal(id=null,defCol='yangi'){
   const d=id?deals.find(x=>x.id===id):null;
   document.getElementById('mTitle').textContent=d?'Shartnoma tafsilotlari':'Yangi shartnoma';
   document.getElementById('mC').value=d?customerTitle(d):'';
-  document.getElementById('mPh').value=d?(d.phone || ''):'';
+  renderModalPhones(d?dealPhones(d):[]);
   document.getElementById('mN').value=d?dealTitle(d):'';
   document.getElementById('mP').value=d?d.price:'';
   document.getElementById('mNt').value=d?d.note:'';
@@ -1544,9 +1916,31 @@ function openModal(id=null,defCol='yangi'){
 }
 function closeModal(){document.getElementById('dealOvl').classList.remove('show');editId=null;}
 function updS(sel){sel.style.background=SC[sel.value]||'#2563EB';sel.style.color='#fff';sel.style.fontWeight='700';}
-function saveDeal(){
+function renderModalPhones(phones=[]){
+  const list=document.getElementById('mPhoneList');
+  const values=phones.length?phones:[''];
+  list.innerHTML=values.map((phone,i)=>`
+    <div class="phone-item">
+      <input class="fi phone-input" ${i===0?'id="mPh"':''} inputmode="tel" placeholder="+998 90 123 45 67" value="${esc(phone)}">
+      ${i>0?'<button class="phone-remove" type="button" onclick="this.parentElement.remove()">−</button>':''}
+    </div>
+  `).join('');
+}
+function addModalPhoneInput(value=''){
+  const list=document.getElementById('mPhoneList');
+  const row=document.createElement('div');
+  row.className='phone-item';
+  row.innerHTML=`<input class="fi phone-input" inputmode="tel" placeholder="+998 90 123 45 67" value="${esc(value)}"><button class="phone-remove" type="button" onclick="this.closest('.phone-item').remove()">−</button>`;
+  list.appendChild(row);
+  row.querySelector('input').focus();
+}
+function collectModalPhones(){
+  return [...document.querySelectorAll('#mPhoneList .phone-input')].map(i=>i.value.trim()).filter(Boolean);
+}
+async function saveDeal(){
   const customerName=document.getElementById('mC').value.trim();
-  const phone=document.getElementById('mPh').value.trim();
+  const phones=collectModalPhones();
+  const phone=phones[0] || '';
   const dealName=document.getElementById('mN').value.trim();
   const price=parseInt(document.getElementById('mP').value)||0;
   const note=document.getElementById('mNt').value.trim();
@@ -1554,14 +1948,36 @@ function saveDeal(){
   if(!customerName){document.getElementById('mC').classList.add('err');document.getElementById('mC').focus();return;}
   document.getElementById('mC').classList.remove('err');
   document.getElementById('mN').classList.remove('err');
-  if(editId){const d=deals.find(x=>x.id===editId);if(d)Object.assign(d,{customerName,phone,dealName,price,col,note});showToast('Saqlandi ✓');}
-  else{const now=new Date();const mn=['yan','fev','mar','apr','may','iyn','iyl','avg','sen','okt','noy','dek'];deals.push({id:nid++,customerName,phone,dealName,col,price,note,date:`${now.getDate()} ${mn[now.getMonth()]}`});showToast("Qo'shildi ✓");}
+  const payload={customerName,phone,phones,dealName,price,col,note,ownerId:currentManagerId};
+  if(apiToken){
+    try{
+      if(editId){
+        const data=await api(`/api/deals/${editId}`,{method:'PATCH',body:dealToApiPayload(payload)});
+        const i=deals.findIndex(x=>x.id===editId);
+        if(i>=0)deals[i]=dealFromApi(data.deal);
+      }else{
+        const data=await api('/api/deals',{method:'POST',body:dealToApiPayload(payload)});
+        deals.push(dealFromApi(data.deal));
+      }
+      showToast('Saqlandi ✓');
+      renderFooterTicker();
+    }catch(err){showToast(err.message);return;}
+  }else if(editId){
+    const d=deals.find(x=>x.id===editId);if(d)Object.assign(d,payload);showToast('Saqlandi ✓');
+  }else{
+    const now=new Date();const mn=['yan','fev','mar','apr','may','iyn','iyl','avg','sen','okt','noy','dek'];deals.push({id:nid++,...payload,date:`${now.getDate()} ${mn[now.getMonth()]}`});showToast("Qo'shildi ✓");
+  }
+  renderFooterTicker();
   closeModal();
   curView==='list'?renderList():renderKanban();
 }
-function delDeal(){
+async function delDeal(){
   if(!editId)return;
   const d=deals.find(x=>x.id===editId);
+  if(apiToken){
+    try{await api(`/api/deals/${editId}`,{method:'DELETE'});}
+    catch(err){showToast(err.message);return;}
+  }
   deals=deals.filter(x=>x.id!==editId);
   showToast(`"${d ? customerTitle(d) : ''}" o'chirildi`);
   closeModal();
@@ -1597,12 +2013,30 @@ function renderDealWorkspace(){
   document.getElementById('dwUserName').textContent=customerTitle(d);
   document.getElementById('dwSideDeal').textContent=dealTitle(d);
   document.getElementById('dwSideDate').textContent=d.date;
-  document.getElementById('dwPhone').textContent=d.phone || 'Telefon yo‘q';
+  document.getElementById('dwPhones').innerHTML=(dealPhones(d).length?dealPhones(d):['Telefon yo‘q']).map(p=>`<div class="phone-line">${esc(p)}</div>`).join('');
   document.getElementById('dwPrice').value=d.price ? formatMoney(d.price) : '';
   document.getElementById('dwDealNote').value=d.note || '';
   document.getElementById('dwStage').innerHTML=COLS.map(c=>`<option value="${c.id}" ${c.id===d.col?'selected':''}>${c.label}</option>`).join('');
   renderWorkspaceTimeline(d);
   renderWorkspaceTasks(d);
+}
+async function addWorkspacePhone(){
+  const d=currentWorkspaceDeal();
+  if(!d)return;
+  const phone=prompt('Yangi telefon raqamni kiriting', '+998 ');
+  if(!phone || !phone.trim())return;
+  const phones=[...dealPhones(d), phone.trim()];
+  d.phones=[...new Set(phones)];
+  d.phone=d.phones[0] || '';
+  if(apiToken){
+    try{
+      const data=await api(`/api/deals/${d.id}`,{method:'PATCH',body:{phone:d.phone,phones:d.phones}});
+      Object.assign(d,dealFromApi(data.deal));
+    }catch(err){showToast(err.message);return;}
+  }
+  renderDealWorkspace();
+  renderCurrentDeals();
+  showToast('Telefon qo‘shildi ✓');
 }
 function renderWorkspaceTimeline(d){
   const taskCards=(d.tasks||[]).map(t=>`
@@ -1666,7 +2100,12 @@ function sendWorkspaceItem(){
   if(!text){document.getElementById('dwComposerText').focus();return;}
   ensureDealActivity(d);
   if(composerMode==='task'){
-    d.tasks.push({title:text,due:document.getElementById('dwTaskDue').value.trim()||'Bugun',owner:document.getElementById('dwTaskOwner').value.trim()||'Admin',done:false});
+    const due=document.getElementById('dwTaskDue').value.trim()||'Bugun';
+    const owner=document.getElementById('dwTaskOwner').value.trim()||'Admin';
+    d.tasks.push({title:text,due,owner,done:false});
+    if(apiToken){
+      api('/api/tasks',{method:'POST',body:{dealId:d.id,title:text,due,ownerId:currentManagerId}}).catch(err=>showToast(err.message));
+    }
     showToast('Vazifa qo‘shildi ✓');
   }else{
     d.messages.push({type:composerMode==='comment'?'comment':'chat',from:'Admin',admin:true,time:'Hozir',text});
@@ -1679,6 +2118,9 @@ function saveWorkspaceStage(col){
   const d=currentWorkspaceDeal();
   if(!d)return;
   d.col=col;
+  if(apiToken){
+    api(`/api/deals/${d.id}`,{method:'PATCH',body:{stageId:col}}).catch(err=>showToast(err.message));
+  }
   curView==='list'?renderList():renderKanban();
   showToast('Bosqich yangilandi ✓');
 }
@@ -1686,6 +2128,9 @@ function saveWorkspacePrice(){
   const d=currentWorkspaceDeal();
   if(!d)return;
   d.price=parseInt(document.getElementById('dwPrice').value.replace(/[^\d]/g,''))||0;
+  if(apiToken){
+    api(`/api/deals/${d.id}`,{method:'PATCH',body:{price:d.price}}).catch(err=>showToast(err.message));
+  }
   renderDealWorkspace();
   curView==='list'?renderList():renderKanban();
 }
@@ -1693,6 +2138,9 @@ function saveWorkspaceNote(){
   const d=currentWorkspaceDeal();
   if(!d)return;
   d.note=document.getElementById('dwDealNote').value.trim();
+  if(apiToken){
+    api(`/api/deals/${d.id}`,{method:'PATCH',body:{note:d.note}}).catch(err=>showToast(err.message));
+  }
 }
 function openModalFromWorkspace(){
   const id=workspaceDealId;
@@ -1754,6 +2202,134 @@ function renderDashboard(){
 }
 
 // ════════════════════════════════════════
+//  PAYMENTS AND EARNINGS
+// ════════════════════════════════════════
+function paymentDeals(){
+  return currentUserDeals();
+}
+function renderPaymentsPage(){
+  const rows=paymentDeals();
+  const salesTotal=rows.reduce((sum,d)=>sum+Number(d.price||0),0);
+  const commission=Math.round(salesTotal*.10);
+  const bonuses=paymentAdjustments.filter(x=>x.amount>0).reduce((s,x)=>s+x.amount,0);
+  const penalties=Math.abs(paymentAdjustments.filter(x=>x.amount<0).reduce((s,x)=>s+x.amount,0));
+  const gross=commission+bonuses-penalties;
+  const paid=Math.min(gross,Math.round(gross*.62));
+  const balance=Math.max(0,gross-paid);
+  const statData=[
+    ['Sotuvlardan ishlagani',formatMoney(commission),'good'],
+    ['Bonuslar',formatMoney(bonuses),'good'],
+    ['Jarimalar',formatMoney(penalties),'bad'],
+    ['Hozirgi balans',formatMoney(balance),'warn']
+  ];
+  document.getElementById('payRoleBadge').textContent=roleLabel(currentUser().role);
+  document.getElementById('payStats').innerHTML=statData.map(s=>`<div class="pay-stat ${s[2]}"><div class="pay-stat-label">${s[0]}</div><div class="pay-stat-value">${s[1]}</div></div>`).join('');
+  document.getElementById('payRows').innerHTML=rows.length?rows.map(d=>{
+    const income=Math.round(Number(d.price||0)*.10);
+    return `<tr><td>${esc(d.date||'Bugun')}</td><td>${esc(customerTitle(d))}</td><td>${esc(dealTitle(d))}</td><td class="pay-money">${formatMoney(d.price)}</td><td class="pay-income">${formatMoney(income)}</td></tr>`;
+  }).join(''):`<tr><td colspan="5" style="text-align:center;color:var(--mu);padding:28px">Hali sotuv yo'q</td></tr>`;
+  document.getElementById('payAdjustments').innerHTML=paymentAdjustments.map(item=>`
+    <div class="pay-row"><span>${esc(item.label)}</span><strong style="color:${item.amount<0?'var(--red)':'var(--green)'}">${item.amount<0?'-':'+'}${formatMoney(Math.abs(item.amount))}</strong></div>
+  `).join('');
+  document.getElementById('payGross').textContent=formatMoney(gross);
+  document.getElementById('payPaid').textContent=formatMoney(paid);
+  document.getElementById('payBalance').textContent=formatMoney(balance);
+  document.getElementById('payProgress').style.width=gross?`${Math.min(100,Math.round(paid/gross*100))}%`:'0%';
+}
+
+// ════════════════════════════════════════
+//  DOKUMENTATSIYA
+// ════════════════════════════════════════
+const DOC_TYPES={
+  all:{label:'Barchasi',color:'#111827',bg:'#F3F4F6'},
+  guide:{label:"Yo'riqnoma",color:'#2563EB',bg:'#EFF6FF'},
+  script:{label:'Skript',color:'#16A34A',bg:'#ECFDF5'},
+  resume:{label:'Resume',color:'#F59E0B',bg:'#FFFBEB'}
+};
+function docIcon(){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg>`;
+}
+function renderDocsPage(){
+  const adminPanel=document.getElementById('docsAdminPanel');
+  if(!adminPanel)return;
+  adminPanel.innerHTML=isAdmin()?`
+    <div class="docs-admin-title">Yangi hujjat qo'shish</div>
+    <div class="docs-admin-sub">Admin yo'riqnoma, skript yoki resume namunasini jamoa kutubxonasiga qo'sha oladi.</div>
+    <div class="doc-form">
+      <select id="docType"><option value="guide">Yo'riqnoma</option><option value="script">Skript</option><option value="resume">Resume</option></select>
+      <input id="docTitle" placeholder="Hujjat nomi">
+      <textarea id="docDesc" placeholder="Qisqa izoh yoki hujjat mazmuni..."></textarea>
+      <label class="doc-file">PDF fayl yuklash
+        <input id="docPdf" type="file" accept="application/pdf">
+      </label>
+      <button class="btn-ico btn-primary" onclick="addDocument()">${docIcon()}Qo'shish</button>
+    </div>`:`
+    <div class="docs-readonly">${docIcon()}<div><b>O'qish rejimi</b><br>Admin hujjat qo'shadi. Siz bu yerda yo'riqnomalar, skriptlar va resume namunalarini o'qib borasiz.</div></div>`;
+  document.getElementById('docTabs').innerHTML=Object.entries(DOC_TYPES).map(([key,t])=>`<button class="doc-tab ${docFilter===key?'active':''}" onclick="docFilter='${key}';renderDocsPage()">${t.label}</button>`).join('');
+  const q=document.getElementById('docSearch')?.value.trim().toLowerCase() || '';
+  const filtered=documents.filter(d=>(docFilter==='all'||d.type===docFilter) && (!q || [d.title,d.description,DOC_TYPES[d.type]?.label].some(v=>String(v||'').toLowerCase().includes(q))));
+  document.getElementById('docsGrid').innerHTML=filtered.length?filtered.map(d=>{
+    const t=DOC_TYPES[d.type]||DOC_TYPES.guide;
+    return `<article class="doc-card" style="--doc-color:${t.color};--doc-bg:${t.bg}">
+      <div class="doc-top"><div class="doc-icon">${docIcon()}</div><span class="doc-badge">${t.label}</span></div>
+      <div class="doc-name">${esc(d.title)}</div>
+      <div class="doc-desc">${esc(d.description)}</div>
+      <div class="doc-meta"><span>${esc(d.author||'Admin')} · ${esc(d.updatedAt||'Bugun')}</span><button class="doc-read" onclick="openDocument(${d.id})">O'qish</button></div>
+    </article>`;
+  }).join(''):`<div class="doc-empty">Bu filterda hujjat topilmadi</div>`;
+}
+async function addDocument(){
+  if(!isAdmin()){showToast('Hujjat qo‘shish faqat Admin uchun');return;}
+  const type=document.getElementById('docType').value;
+  const title=document.getElementById('docTitle').value.trim();
+  const description=document.getElementById('docDesc').value.trim();
+  const file=document.getElementById('docPdf')?.files?.[0];
+  if(!title){document.getElementById('docTitle').focus();return;}
+  let fileData='', fileName='';
+  if(file){
+    if(file.type!=='application/pdf'){showToast('Faqat PDF fayl yuklang');return;}
+    fileData=await readFileDataUrl(file);
+    fileName=file.name;
+  }
+  const payload={type,title,description,author:currentUser().name,fileName,fileData};
+  if(apiToken){
+    try{
+      const data=await api('/api/docs',{method:'POST',body:payload});
+      documents.unshift(data.doc);
+    }catch(err){showToast(err.message);return;}
+  }else{
+    documents.unshift({id:Date.now(),...payload,updatedAt:new Date().toISOString().slice(0,10)});
+  }
+  document.getElementById('docTitle').value='';
+  document.getElementById('docDesc').value='';
+  if(document.getElementById('docPdf'))document.getElementById('docPdf').value='';
+  renderDocsPage();
+  showToast('Hujjat qo‘shildi ✓');
+}
+function readFileDataUrl(file){
+  return new Promise((resolve,reject)=>{
+    const reader=new FileReader();
+    reader.onload=()=>resolve(reader.result);
+    reader.onerror=()=>reject(reader.error);
+    reader.readAsDataURL(file);
+  });
+}
+function openDocument(id){
+  const doc=documents.find(d=>d.id===id);
+  if(!doc)return;
+  document.getElementById('docViewerTitle').textContent=doc.title;
+  document.getElementById('docViewerMeta').textContent=doc.fileName ? `PDF: ${doc.fileName}` : `${DOC_TYPES[doc.type]?.label || 'Hujjat'} · ${doc.author || 'Admin'}`;
+  document.getElementById('docViewerBody').innerHTML=doc.fileData
+    ? `<iframe class="doc-frame" src="${esc(doc.fileData)}" title="${esc(doc.title)}"></iframe>`
+    : `<div class="doc-text-view">${esc(doc.description || 'Bu hujjat uchun hali PDF yuklanmagan.')}</div>`;
+  document.getElementById('docViewerOvl').classList.add('show');
+}
+function closeDocViewer(){
+  document.getElementById('docViewerOvl').classList.remove('show');
+  document.getElementById('docViewerBody').innerHTML='';
+}
+
+// ════════════════════════════════════════
 //  ONBOARDING / AUTH
 // ════════════════════════════════════════
 function showOnboarding(mode='login'){
@@ -1767,9 +2343,17 @@ function closeOnboarding(){
   document.querySelectorAll('.auth-field.error').forEach(f=>f.classList.remove('error'));
   document.querySelectorAll('.auth-help.error').forEach(h=>h.classList.remove('error'));
 }
-function finishOnboarding(){
-  closeOnboarding();
-  showToast('CRM ga kirdingiz');
+async function finishOnboarding(){
+  const email=document.getElementById('loginEmail')?.value.trim() || 'admin@myteacher.uz';
+  const password=document.getElementById('loginPassword')?.value || 'admin12345';
+  try{
+    await apiLogin(email,password);
+    closeOnboarding();
+    showToast('CRM ga kirdingiz');
+  }catch(err){
+    showToast(err.message || 'Login amalga oshmadi');
+    document.getElementById('loginPasswordField')?.classList.add('error');
+  }
 }
 function showRegisterError(){
   document.querySelectorAll('#authRegister .auth-field').forEach((f,i)=>{
@@ -1778,13 +2362,21 @@ function showRegisterError(){
   document.querySelectorAll('#authRegister .auth-help').forEach(h=>h.classList.add('error'));
   showToast('Parol kamida 8 ta belgi bo‘lishi kerak');
 }
-function createOnboardingUser(){
+async function createOnboardingUser(){
   const name=document.getElementById('newUserName').value.trim() || 'Yangi Menejer';
   const email=document.getElementById('newUserEmail').value.trim() || 'manager@crm.uz';
   const initials=name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
   const id=Date.now();
-  managers.push({id,name,email,role:'manager',status:'Offline',deals:0,tasks:0,customers:0,avatar:initials,color:'linear-gradient(135deg,#86efac,#22c55e)'});
-  selectedTeamManagerId=id;
+  if(apiToken && isAdmin()){
+    try{
+      const data=await api('/api/team',{method:'POST',body:{name,email,role:'manager',password:'manager12345'}});
+      managers.push({...data.user,deals:0,tasks:0,customers:0,avatar:data.user.avatar||initials,color:data.user.color||'linear-gradient(135deg,#86efac,#22c55e)'});
+      selectedTeamManagerId=data.user.id;
+    }catch(err){showToast(err.message);return;}
+  }else{
+    managers.push({id,name,email,role:'manager',status:'Offline',deals:0,tasks:0,customers:0,avatar:initials,color:'linear-gradient(135deg,#86efac,#22c55e)'});
+    selectedTeamManagerId=id;
+  }
   closeOnboarding();
   if(curPage==='jamoa')renderTeamPage();
   renderHdrRight(curPage);
@@ -1890,6 +2482,9 @@ function updateManagerField(id,key,value){
   if(!m)return;
   m[key]=value.trim ? value.trim() : value;
   if(key==='name')m.avatar=m.name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
+  if(apiToken && isAdmin()){
+    api(`/api/team/${id}`,{method:'PATCH',body:{[key]:m[key]}}).catch(err=>showToast(err.message));
+  }
   renderTeamPage();
   renderHdrRight(curPage);
 }
@@ -1897,6 +2492,9 @@ function deactivateManager(id){
   const m=managers.find(x=>x.id===id);
   if(!m || m.id===currentManagerId)return;
   m.status='Offline';
+  if(apiToken && isAdmin()){
+    api(`/api/team/${id}`,{method:'PATCH',body:{status:'Offline'}}).catch(err=>showToast(err.message));
+  }
   showToast(`${m.name} faolsizlantirildi`);
   renderTeamPage();
 }
@@ -1905,6 +2503,9 @@ function changeManagerRole(id,role){
   const m=managers.find(x=>x.id===id);
   if(!m || m.id===currentManagerId)return;
   m.role=role;
+  if(apiToken){
+    api(`/api/team/${id}`,{method:'PATCH',body:{role}}).catch(err=>showToast(err.message));
+  }
   showToast(`${m.name}: ${roleLabel(role)} roli berildi`);
   renderTeamPage();
   renderHdrRight('jamoa');
@@ -1942,6 +2543,10 @@ function toggleSec(hdr){
 // ════════════════════════════════════════
 let setTags=['teg nomi'];
 function setNavItem(el,key){
+  if(key==='chiqish' || key==='danchiqish'){
+    logout();
+    return;
+  }
   document.querySelectorAll('.nav-item').forEach(i=>i.classList.remove('active'));
   el.classList.add('active');
   renderSetContent(key);
@@ -2112,7 +2717,19 @@ document.addEventListener('click',e=>{
 });
 
 // ── INIT ──
-goPage('shartnomalar');
+async function initApp(){
+  goPage('shartnomalar');
+  if(apiToken){
+    const ok=await loadApiData();
+    if(ok)return;
+    apiToken='';
+    localStorage.removeItem('mtcrm_token');
+  }
+  apiOnline=false;
+  renderFooterTicker();
+  showOnboarding('login');
+}
+initApp();
 </script>
 </body>
 </html>

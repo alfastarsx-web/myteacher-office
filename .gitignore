@@ -1,0 +1,25 @@
+# macOS
+.DS_Store
+
+# Local preview/crop images used during design analysis
+team-preview.png
+team-crop-*.png
+team-left-forms.png
+team-right-screens.png
+team-top-flow.png
+test-crop.png
+
+# Logs / editor noise
+*.log
+.vscode/
+.idea/
+
+# Backend local JSON database
+backend/data/*.json
+backend/.env
+backend/node_modules/
+backend/dist/
+MyTeacher-CRM-GitHub/backend/node_modules/
+MyTeacher-CRM-GitHub/backend/dist/
+MyTeacher-CRM-GitHub/backend/data/*.json
+MyTeacher-CRM-GitHub/backend/.env
