@@ -1706,8 +1706,12 @@ async function loadApiData(){
 function getDealQuery(){ return document.getElementById('dealSearch')?.value.trim().toLowerCase() || ''; }
 function visibleDeals(){
   const q=getDealQuery();
-  if(!q)return deals;
-  return deals.filter(d=>[customerTitle(d),dealTitle(d),...dealPhones(d),d.date].some(v=>String(v||'').toLowerCase().includes(q)));
+  const base=isAdmin()?deals:deals.filter(d=>d.col!=='yutqazilgan');
+  if(!q)return base;
+  return base.filter(d=>[customerTitle(d),dealTitle(d),...dealPhones(d),d.date].some(v=>String(v||'').toLowerCase().includes(q)));
+}
+function visibleStages(){
+  return isAdmin()?COLS:COLS.filter(c=>c.id!=='yutqazilgan');
 }
 function renderCurrentDeals(){ curView==='list'?renderList():renderKanban(); }
 function esc(v){return String(v ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
@@ -1720,12 +1724,14 @@ function ensureDealActivity(d){
 // ════════════════════════════════════════
 //  NAVIGATION
 // ════════════════════════════════════════
-let curPage = 'shartnomalar';
+let curPage = localStorage.getItem('mtcrm_page') || 'shartnomalar';
 const PAGE_TABS = ['shartnomalar','vazifalar','mijozlar'];
 const TAB_IDS = {shartnomalar:'tabS',vazifalar:'tabV',mijozlar:'tabM'};
 
 function goPage(p){
+  if(!document.getElementById('page-'+p))p='shartnomalar';
   curPage = p;
+  localStorage.setItem('mtcrm_page',p);
   document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
   document.getElementById('page-'+p).classList.add('active');
   // tabs row: show only for CRM pages
@@ -1951,7 +1957,7 @@ function renderList(){
   document.getElementById('dealCount').textContent=rows.length;
   [...selectedDealIds].forEach(id=>{ if(!deals.some(d=>d.id===id))selectedDealIds.delete(id); });
   document.getElementById('sListBody').innerHTML=rows.map(d=>{
-    const col=COLS.find(c=>c.id===d.col);
+    const col=COLS.find(c=>c.id===d.col) || {label:'Bosqich',color:'#6B7280'};
     const owner=managerById(d.ownerId);
     const checked=selectedDealIds.has(d.id)?'checked':'';
     const disabled=isAdmin()?'':'disabled';
@@ -2033,7 +2039,7 @@ async function bulkAssignDeals(){
 function renderKanban(){
   renderDealStats();
   const rows=visibleDeals();
-  document.getElementById('sBoard').innerHTML=COLS.map(col=>{
+  document.getElementById('sBoard').innerHTML=visibleStages().map(col=>{
     const cd=rows.filter(d=>d.col===col.id);
     const tot=cd.reduce((s,d)=>s+d.price,0);
     return `<div class="col">
@@ -2089,6 +2095,7 @@ async function prepareStageTransition(deal,target,priceInput){
   return {price,closePassword};
 }
 async function moveDealToStage(deal,target,options={}){
+  if(target==='yutqazilgan' && !isAdmin()){showToast('Yutqazilgan bosqichi faqat Admin uchun');return false;}
   const prepared=await prepareStageTransition(deal,target,options.priceInput);
   if(!prepared)return false;
   const prev={col:deal.col,price:deal.price};
@@ -2173,7 +2180,7 @@ function openModal(id=null,defCol='yangi'){
   document.getElementById('mLearningGoal').value=d?d.learningGoal || '':'';
   document.getElementById('mNt').value=d?d.note:'';
   const sel=document.getElementById('mS');
-  sel.innerHTML=COLS.map(c=>`<option value="${c.id}">${esc(c.label).toUpperCase()}</option>`).join('');
+  sel.innerHTML=visibleStages().map(c=>`<option value="${c.id}">${esc(c.label).toUpperCase()}</option>`).join('');
   sel.value=d?d.col:defCol;
   updS(sel);
   renderDealOwnerSelect(d);
@@ -2311,7 +2318,7 @@ function renderDealWorkspace(){
   document.getElementById('dwLeadChannel').textContent=d.leadChannel || '—';
   document.getElementById('dwLearningGoal').textContent=d.learningGoal || '—';
   document.getElementById('dwDealNote').value=d.note || '';
-  document.getElementById('dwStage').innerHTML=COLS.map(c=>`<option value="${c.id}" ${c.id===d.col?'selected':''}>${c.label}</option>`).join('');
+  document.getElementById('dwStage').innerHTML=visibleStages().map(c=>`<option value="${c.id}" ${c.id===d.col?'selected':''}>${c.label}</option>`).join('');
   renderWorkspaceTimeline(d);
   renderWorkspaceTasks(d);
 }
@@ -3325,7 +3332,7 @@ setInterval(checkIdleState,1000);
 
 // ── INIT ──
 async function initApp(){
-  goPage('shartnomalar');
+  goPage(curPage);
   if(apiToken){
     const ok=await loadApiData();
     if(ok)return;
