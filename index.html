@@ -1587,10 +1587,14 @@ const COLS = [
   {id:'malakali',    label:'Malakali',         color:'#A855F7'},
   {id:'taklif',      label:'Taklif berilgan',  color:'#F59E0B'},
   {id:'muzokaralar', label:'Muzokaralar',      color:'#22C55E'},
+  {id:'sotib_olishga_rozi', label:'Sotib olishga rozi', color:'#0EA5E9'},
   {id:'yutqazilgan', label:'Yutqazilgan',      color:'#EF4444'},
-  {id:'yutgan',      label:'Yutgan',           color:'#10B981'},
+  {id:'yutgan',      label:'Muvaffaqiyatli',   color:'#10B981'},
 ];
-const SC = {yangi:'#2563EB',malakali:'#A855F7',muzokaralar:'#0EA5E9',taklif:'#F59E0B',yutgan:'#22C55E',yutqazilgan:'#EF4444'};
+const STAGE_AGREED='sotib_olishga_rozi';
+const STAGE_WON='yutgan';
+const REQUIRED_STAGE_IDS=[STAGE_AGREED,STAGE_WON];
+const SC = {yangi:'#2563EB',malakali:'#A855F7',muzokaralar:'#22C55E',taklif:'#F59E0B',sotib_olishga_rozi:'#0EA5E9',yutgan:'#22C55E',yutqazilgan:'#EF4444'};
 const DASH_ROWS = [
   ['Elyor Tirkashev','ET','120 000 000 UZS','90 000 000 UZS','15 000 000 UZS','green','75%'],
   ['Ibrohim Boltaboyev','IB','120 000 000 UZS','90 000 000 UZS','15 000 000 UZS','red','25%'],
@@ -1707,6 +1711,22 @@ function currentUserDeals(){ const u=currentUser(); return hasPerm('all',u)?deal
 function managerById(id){ return managers.find(m=>String(m.id)===String(id)); }
 function managerInitials(m){ return (m?.avatar || m?.name?.split(' ').map(x=>x[0]).join('') || '—').slice(0,2).toUpperCase(); }
 function dealOwnerLabel(d){ const m=managerById(d.ownerId); return m ? m.name : 'Taqsimlanmagan'; }
+function ensureRequiredStages(){
+  const required=[
+    {id:STAGE_AGREED,label:'Sotib olishga rozi',color:'#0EA5E9'},
+    {id:STAGE_WON,label:'Muvaffaqiyatli',color:'#10B981'}
+  ];
+  required.forEach(stage=>{
+    const existing=COLS.find(c=>c.id===stage.id);
+    if(existing){
+      existing.label=stage.label;
+      existing.color=stage.color;
+    }else{
+      COLS.splice(Math.max(COLS.length-1,0),0,stage);
+    }
+    SC[stage.id]=stage.color;
+  });
+}
 function apiBase(){
   if(location.protocol.startsWith('http'))return location.origin;
   return 'http://127.0.0.1:4000';
@@ -1734,7 +1754,12 @@ function dealFromApi(d){
 }
 function dealToApiPayload(d){
   const phones=dealPhones(d);
-  return {customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,stageId:d.col,price:d.price,note:d.note,ownerId:d.ownerId ?? null};
+  const payload={customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,stageId:d.col,price:d.price,note:d.note,ownerId:d.ownerId ?? null};
+  if(d.closePassword)payload.closePassword=d.closePassword;
+  return payload;
+}
+function parseMoneyInput(value){
+  return parseInt(String(value||'').replace(/[^\d]/g,''),10)||0;
 }
 function formatDealDate(iso){
   const dt=new Date(iso);
@@ -1807,6 +1832,7 @@ async function loadApiData(){
       api('/api/docs')
     ]);
     COLS.splice(0,COLS.length,...stageData.stages);
+    ensureRequiredStages();
     Object.keys(SC).forEach(k=>delete SC[k]);
     COLS.forEach(c=>SC[c.id]=c.color);
     const taskCounts={};
@@ -1964,16 +1990,16 @@ function formatMoney(value){
 }
 
 function renderDealStats(){
-  const totalValue = deals.reduce((sum,d)=>sum+d.price,0);
-  const activeDeals = deals.filter(d=>!['yutgan','yutqazilgan'].includes(d.col));
-  const todaySalary = Math.round(totalValue * 0.1);
+  const wonValue = deals.filter(d=>d.col===STAGE_WON).reduce((sum,d)=>sum+d.price,0);
+  const activeDeals = deals.filter(d=>![STAGE_WON,'yutqazilgan'].includes(d.col));
+  const todaySalary = Math.round(wonValue * 0.1);
   const monthSalary = managers.reduce((sum,m)=>sum+(m.role==='admin'?15000000:10000000),0);
-  const missedValue = Math.max(0,1500000000 - totalValue);
+  const missedValue = deals.filter(d=>d.col===STAGE_AGREED).reduce((sum,d)=>sum+d.price,0);
   const stats = [
-    ['Bugungi Kassa',formatMoney(totalValue),`${deals.length} ta shartnoma`],
+    ['Bugungi Kassa',formatMoney(wonValue),`${deals.filter(d=>d.col===STAGE_WON).length} ta muvaffaqiyatli`],
     ['Bugungi maosh',formatMoney(todaySalary),`${activeDeals.length} ta aktiv jarayon`],
     ['Bu oydagi maosh',formatMoney(monthSalary),'Menejerlar bo‘yicha'],
-    ['Erishilmay qolgan bitim summasi',formatMoney(missedValue),'Maqsadgacha qolgan']
+    ['Erishilmay qolgan bitim summasi',formatMoney(missedValue),'Sotib olishga rozi bosqichi']
   ];
   document.getElementById('dealStats').innerHTML = stats.map(([label,value,sub])=>`
     <div class="stat-card">
@@ -2124,6 +2150,54 @@ function renderKanban(){
   bindDrag();
 }
 
+async function prepareStageTransition(deal,target,priceInput){
+  const targetLabel=COLS.find(c=>c.id===target)?.label || 'Bosqich';
+  let price=Number(deal.price||0);
+  if([STAGE_AGREED,STAGE_WON].includes(target) && price<=0){
+    const entered=prompt(`${targetLabel} bosqichiga o'tish uchun shartnoma summasini kiriting`, priceInput?.value || '');
+    if(entered===null)return null;
+    price=parseMoneyInput(entered);
+    if(price<=0){
+      showToast('Shartnoma summasi majburiy');
+      priceInput?.focus();
+      return null;
+    }
+    if(priceInput)priceInput.value=price;
+  }
+  let closePassword='';
+  if(target===STAGE_WON && deal.col!==STAGE_WON){
+    closePassword=prompt('Muvaffaqiyatli bosqichiga o‘tish uchun parolingizni kiriting') || '';
+    if(!closePassword){
+      showToast('Parol kiritilmadi');
+      return null;
+    }
+  }
+  return {price,closePassword};
+}
+async function moveDealToStage(deal,target,options={}){
+  const prepared=await prepareStageTransition(deal,target,options.priceInput);
+  if(!prepared)return false;
+  const prev={col:deal.col,price:deal.price};
+  deal.col=target;
+  deal.price=prepared.price;
+  try{
+    if(apiToken){
+      const body={stageId:target,price:prepared.price};
+      if(prepared.closePassword)body.closePassword=prepared.closePassword;
+      const data=await api(`/api/deals/${deal.id}`,{method:'PATCH',body});
+      Object.assign(deal,dealFromApi(data.deal));
+    }
+    renderFooterTicker();
+    if(target===STAGE_WON)showSalePopup(customerTitle(deal),formatMoney(deal.price),managerInitials(managerById(deal.ownerId)) || 'MT');
+    showToast(`"${customerTitle(deal)}" → ${COLS.find(c=>c.id===target)?.label}`);
+    return true;
+  }catch(err){
+    Object.assign(deal,prev);
+    showToast(err.message || 'Bosqich o‘zgarmadi');
+    return false;
+  }
+}
+
 // ════════════════════════════════════════
 //  DRAG & DROP
 // ════════════════════════════════════════
@@ -2153,19 +2227,14 @@ function bindDrag(){
     zone.addEventListener('dragleave',e=>{
       if(!zone.contains(e.relatedTarget)) zone.classList.remove('over');
     });
-    zone.addEventListener('drop',e=>{
+    zone.addEventListener('drop',async e=>{
       e.preventDefault();
       document.querySelectorAll('.col-body').forEach(z=>z.classList.remove('over'));
       if(dragId===null) return;
       const d=deals.find(x=>x.id===dragId);
       const target=zone.dataset.col;
       if(d && d.col!==target){
-        if(apiToken){
-          api(`/api/deals/${d.id}`,{method:'PATCH',body:{stageId:target}}).catch(err=>showToast(err.message));
-        }
-        d.col=target;
-        showToast(`"${customerTitle(d)}" → ${COLS.find(c=>c.id===target)?.label}`);
-        renderKanban();
+        if(await moveDealToStage(d,target))renderKanban();
       }
       dragId=null;
     });
@@ -2185,6 +2254,7 @@ function openModal(id=null,defCol='yangi'){
   document.getElementById('mP').value=d?d.price:'';
   document.getElementById('mNt').value=d?d.note:'';
   const sel=document.getElementById('mS');
+  sel.innerHTML=COLS.map(c=>`<option value="${c.id}">${esc(c.label).toUpperCase()}</option>`).join('');
   sel.value=d?d.col:defCol;
   updS(sel);
   renderDealOwnerSelect(d);
@@ -2229,7 +2299,8 @@ async function saveDeal(){
   const phones=collectModalPhones();
   const phone=phones[0] || '';
   const dealName=document.getElementById('mN').value.trim();
-  const price=parseInt(document.getElementById('mP').value)||0;
+  const priceInput=document.getElementById('mP');
+  const price=parseMoneyInput(priceInput.value);
   const note=document.getElementById('mNt').value.trim();
   const col=document.getElementById('mS').value;
   if(!customerName){document.getElementById('mC').classList.add('err');document.getElementById('mC').focus();return;}
@@ -2237,7 +2308,10 @@ async function saveDeal(){
   document.getElementById('mN').classList.remove('err');
   const ownerSelect=document.getElementById('mOwner');
   const ownerId=isAdmin()?(ownerSelect?.value || null):currentManagerId;
-  const payload={customerName,phone,phones,dealName,price,col,note,ownerId};
+  const existing=editId?deals.find(x=>x.id===editId):null;
+  const prepared=await prepareStageTransition(existing || {price,col:null},col,priceInput);
+  if(!prepared)return;
+  const payload={customerName,phone,phones,dealName,price:prepared.price,col,note,ownerId,closePassword:prepared.closePassword};
   if(apiToken){
     try{
       if(editId){
@@ -2403,20 +2477,18 @@ function sendWorkspaceItem(){
   document.getElementById('dwComposerText').value='';
   renderDealWorkspace();
 }
-function saveWorkspaceStage(col){
+async function saveWorkspaceStage(col){
   const d=currentWorkspaceDeal();
   if(!d)return;
-  d.col=col;
-  if(apiToken){
-    api(`/api/deals/${d.id}`,{method:'PATCH',body:{stageId:col}}).catch(err=>showToast(err.message));
-  }
-  curView==='list'?renderList():renderKanban();
-  showToast('Bosqich yangilandi ✓');
+  if(d.col===col)return;
+  const ok=await moveDealToStage(d,col,{priceInput:document.getElementById('dwPrice')});
+  renderDealWorkspace();
+  if(ok)curView==='list'?renderList():renderKanban();
 }
 function saveWorkspacePrice(){
   const d=currentWorkspaceDeal();
   if(!d)return;
-  d.price=parseInt(document.getElementById('dwPrice').value.replace(/[^\d]/g,''))||0;
+  d.price=parseMoneyInput(document.getElementById('dwPrice').value);
   if(apiToken){
     api(`/api/deals/${d.id}`,{method:'PATCH',body:{price:d.price}}).catch(err=>showToast(err.message));
   }
@@ -3164,17 +3236,19 @@ function renderPipelineStages(){
   if(!list)return;
   list.innerHTML=COLS.map(col=>{
     const count=deals.filter(d=>d.col===col.id).length;
-    const locked=count>0 || COLS.length<=1;
+    const required=REQUIRED_STAGE_IDS.includes(col.id);
+    const locked=required || count>0 || COLS.length<=1;
     return `<div class="pl-item">
       <span class="stage-color" style="background:${col.color}"></span>
-      <input class="stage-input" data-stage-input="${col.id}" value="${esc(col.label)}" ${isAdmin()?'':'disabled'} onchange="renamePipelineStage('${col.id}',this.value)">
-      <span class="stage-count">${count} ta shartnoma</span>
+      <input class="stage-input" data-stage-input="${col.id}" value="${esc(col.label)}" ${isAdmin() && !required?'':'disabled'} onchange="renamePipelineStage('${col.id}',this.value)">
+      <span class="stage-count">${required?'Majburiy · ':''}${count} ta shartnoma</span>
       <button class="stage-del" title="${locked?'Ichida shartnoma bor':'Bosqichni o‘chirish'}" ${isAdmin() && !locked?'':'disabled'} onclick="deletePipelineStage('${col.id}')">×</button>
     </div>`;
   }).join('');
 }
 function renamePipelineStage(id,value){
   if(!isAdmin())return;
+  if(REQUIRED_STAGE_IDS.includes(id)){showToast('Bu bosqich qat’iy, nomi o‘zgarmaydi');return;}
   const col=COLS.find(c=>c.id===id);
   if(!col)return;
   col.label=value.trim() || col.label;
@@ -3183,6 +3257,7 @@ function renamePipelineStage(id,value){
 }
 function deletePipelineStage(id){
   if(!isAdmin())return;
+  if(REQUIRED_STAGE_IDS.includes(id)){showToast('Bu bosqich qat’iy, o‘chirilmaydi');return;}
   const hasDeals=deals.some(d=>d.col===id);
   if(hasDeals){showToast('Oldin bu bosqichdagi shartnomalarni ko‘chiring');return;}
   const idx=COLS.findIndex(c=>c.id===id);

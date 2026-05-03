@@ -13,9 +13,9 @@ export class DashboardService {
 
   async summary(user: UserEntity) {
     const deals = await this.deals.list(user);
-    const today = new Date().toISOString().slice(0, 10);
+    const today = this.todayKey();
     const todayCash = deals
-      .filter(deal => String(deal.createdAt || '').slice(0, 10) === today)
+      .filter(deal => deal.stageId === 'yutgan' && this.dayKey(deal.updatedAt) === today)
       .reduce((sum, deal) => sum + Number(deal.price || 0), 0);
     const allCash = deals.reduce((sum, deal) => sum + Number(deal.price || 0), 0);
     const activeDeals = deals.filter(deal => !['yutgan', 'yutqazilgan'].includes(deal.stageId));
@@ -25,17 +25,29 @@ export class DashboardService {
     const monthlySalary = user.role === UserRole.Admin
       ? team.reduce((sum, item: any) => sum + (item.role === UserRole.Admin ? 15000000 : 10000000), 0)
       : 10000000;
-    const target = 1500000000;
     return {
       todayCash,
       todaySalary,
       monthlySalary,
-      missedDealAmount: Math.max(0, target - allCash),
+      missedDealAmount: deals.filter(deal => deal.stageId === 'sotib_olishga_rozi').reduce((sum, deal) => sum + Number(deal.price || 0), 0),
       allCash,
       wonCash,
-      target,
+      target: 1500000000,
       activeDeals: activeDeals.length,
       dealCount: deals.length
     };
+  }
+
+  private dayKey(value: Date | string | null | undefined) {
+    return this.todayKey(value ? new Date(value) : new Date());
+  }
+
+  private todayKey(value = new Date()) {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Tashkent',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(value);
   }
 }

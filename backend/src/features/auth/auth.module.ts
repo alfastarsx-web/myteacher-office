@@ -14,6 +14,6 @@ import { JwtAuthGuard } from './presentation/jwt-auth.guard';
   imports: [JwtModule.register({}), TypeOrmModule.forFeature([RefreshTokenEntity]), UsersModule],
   controllers: [AuthController],
   providers: [AuthService, JwtAuthGuard, AdminGuard, PasswordService],
-  exports: [AuthService, JwtAuthGuard, AdminGuard]
+  exports: [AuthService, JwtAuthGuard, AdminGuard, PasswordService]
 })
 export class AuthModule {}

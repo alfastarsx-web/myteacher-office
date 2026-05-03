@@ -60,8 +60,9 @@ export class SeedService implements OnApplicationBootstrap {
       { id: 'malakali', label: 'Malakali', color: '#A855F7', sortOrder: 2 },
       { id: 'taklif', label: 'Taklif berilgan', color: '#F59E0B', sortOrder: 3 },
       { id: 'muzokaralar', label: 'Muzokaralar', color: '#22C55E', sortOrder: 4 },
-      { id: 'yutqazilgan', label: 'Yutqazilgan', color: '#EF4444', sortOrder: 5 },
-      { id: 'yutgan', label: 'Yutgan', color: '#10B981', sortOrder: 6 }
+      { id: 'sotib_olishga_rozi', label: 'Sotib olishga rozi', color: '#0EA5E9', sortOrder: 5 },
+      { id: 'yutqazilgan', label: 'Yutqazilgan', color: '#EF4444', sortOrder: 6 },
+      { id: 'yutgan', label: 'Muvaffaqiyatli', color: '#10B981', sortOrder: 7 }
     ]);
   }
 

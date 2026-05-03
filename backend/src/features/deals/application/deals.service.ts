@@ -1,13 +1,20 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
+import { PasswordService } from '../../../common/crypto/password.service';
 import { UserRole } from '../../users/domain/user-role.enum';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { DealEntity } from '../infrastructure/deal.entity';
 
+const AGREED_STAGE_ID = 'sotib_olishga_rozi';
+const WON_STAGE_ID = 'yutgan';
+
 @Injectable()
 export class DealsService {
-  constructor(@InjectRepository(DealEntity) private readonly deals: Repository<DealEntity>) {}
+  constructor(
+    @InjectRepository(DealEntity) private readonly deals: Repository<DealEntity>,
+    private readonly passwords: PasswordService
+  ) {}
 
   canSee(user: UserEntity, deal: DealEntity) {
     return user.role === UserRole.Admin || user.permissions?.all === true || deal.ownerId === user.id;
@@ -27,6 +34,7 @@ export class DealsService {
     const customerName = String(body.customerName || '').trim();
     if (!customerName) throw new BadRequestException('Mijoz nomi kerak');
     const phones = this.normalizePhones(body);
+    this.assertStageRules(body.stageId || 'yangi', Number(body.price || 0), body, user, null);
     const deal = this.deals.create({
       customerName,
       dealName: String(body.dealName || '').trim(),
@@ -45,6 +53,9 @@ export class DealsService {
     this.assertCrmAccess(user);
     const deal = await this.deals.findOne({ where: { id } });
     if (!deal || !this.canSee(user, deal)) throw new NotFoundException('Shartnoma topilmadi');
+    const nextStageId = body.stageId !== undefined ? String(body.stageId) : deal.stageId;
+    const nextPrice = body.price !== undefined ? Number(body.price || 0) : Number(deal.price || 0);
+    this.assertStageRules(nextStageId, nextPrice, body, user, deal);
     ['customerName', 'dealName', 'stageId', 'note'].forEach(key => {
       if (body[key] !== undefined) deal[key] = String(body[key]);
     });
@@ -93,6 +104,19 @@ export class DealsService {
   private assertCrmAccess(user: UserEntity) {
     if (user.role !== UserRole.Admin && user.permissions?.crm === false) {
       throw new ForbiddenException('CRM ruxsati yopilgan');
+    }
+  }
+
+  private assertStageRules(stageId: string, price: number, body: any, user: UserEntity, deal: DealEntity | null) {
+    if ([AGREED_STAGE_ID, WON_STAGE_ID].includes(stageId) && price <= 0) {
+      throw new BadRequestException('Bu bosqichga o‘tish uchun shartnoma summasini kiriting');
+    }
+    const isNewWon = stageId === WON_STAGE_ID && deal?.stageId !== WON_STAGE_ID;
+    if (isNewWon) {
+      const password = String(body.closePassword || '');
+      if (!password || !this.passwords.verify(password, user.passwordHash)) {
+        throw new ForbiddenException('Muvaffaqiyatli bosqichga o‘tish uchun parol noto‘g‘ri');
+      }
     }
   }
 }
