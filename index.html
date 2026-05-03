@@ -722,10 +722,14 @@ table.crm-t{width:100%;border-collapse:collapse}
 .mini-edit:hover{color:var(--td);background:var(--br)}
 .task-mini{display:flex;align-items:center;gap:10px;border:1px solid var(--br);border-radius:8px;padding:9px 10px;background:var(--wh);color:var(--red);font-size:12px}
 .task-mini-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:600}
-.workspace-task-form{display:none;grid-template-columns:1fr 130px;gap:8px;margin-bottom:10px}
+.workspace-task-form{display:none;grid-template-columns:1fr 115px 150px;gap:8px;margin-bottom:10px}
 .workspace-task-form.show{display:grid}
-.workspace-task-form input{border:1px solid var(--br);border-radius:8px;padding:9px 10px;font-family:var(--f);font-size:13px}
-.workspace-task-form input:focus{outline:0;border-color:var(--blue)}
+.workspace-task-form input,.workspace-task-form select{border:1px solid var(--br);border-radius:8px;padding:9px 10px;font-family:var(--f);font-size:13px;background:#fff}
+.workspace-task-form input:focus,.workspace-task-form select:focus{outline:0;border-color:var(--blue)}
+.composer-hint{display:none;font-size:12px;color:var(--mu);margin:-2px 0 10px}
+.composer-hint.show{display:block}
+.task-due-chip{display:inline-flex;align-items:center;gap:5px;background:#EFF6FF;color:#1D4ED8;border-radius:999px;padding:4px 8px;font-size:11px;font-weight:800}
+.task-done{text-decoration:line-through;color:var(--mu)}
 .msg-system{align-self:center;background:var(--bg);border:1px solid var(--br);border-radius:20px;padding:6px 12px;font-size:11px;color:var(--mu)}
 
 /* Toast */
@@ -1291,9 +1295,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
             <button class="composer-tab" onclick="switchComposer(this,'task')">Vazifa</button>
           </div>
           <div class="composer-body">
+            <div class="composer-hint" id="dwComposerHint"></div>
             <div class="workspace-task-form" id="dwTaskForm">
-              <input id="dwTaskDue" placeholder="Muddat: bugun, 18:00">
-              <input id="dwTaskOwner" value="Admin">
+              <input id="dwTaskDate" type="date">
+              <input id="dwTaskTime" type="time">
+              <select id="dwTaskOwner"></select>
             </div>
             <textarea class="composer-input" id="dwComposerText" placeholder="Mijozga xabar yozing..."></textarea>
             <div class="composer-tools">
@@ -1577,13 +1583,17 @@ async function api(path,options={}){
 function dealFromApi(d){
   const date=d.createdAt?formatDealDate(d.createdAt):'Bugun';
   const phones=dealPhones(d);
-  return {id:d.id,customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',ownerId:d.ownerId ?? null,createdBy:d.createdBy};
+  return {id:d.id,customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,createdBy:d.createdBy};
 }
 function dealToApiPayload(d){
   const phones=dealPhones(d);
-  const payload={customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,stageId:d.col,price:d.price,note:d.note,adSource:d.adSource,registeredAt:d.registeredAt,age:d.age,learningGoal:d.learningGoal,leadChannel:d.leadChannel,ownerId:d.ownerId ?? null};
+  const payload={customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,stageId:d.col,price:d.price,note:d.note,adSource:d.adSource,registeredAt:d.registeredAt,age:d.age,learningGoal:d.learningGoal,leadChannel:d.leadChannel,comments:d.comments,ownerId:d.ownerId ?? null};
   if(d.closePassword)payload.closePassword=d.closePassword;
   return payload;
+}
+function taskFromApi(t){
+  const owner=managers.find(m=>String(m.id)===String(t.ownerId));
+  return {id:t.id,title:t.title || 'Vazifa',due:t.due || 'Bugun',owner:owner?.name || 'Admin',ownerId:t.ownerId,done:Boolean(t.done)};
 }
 function parseMoneyInput(value){
   return parseInt(String(value||'').replace(/[^\d]/g,''),10)||0;
@@ -1663,13 +1673,17 @@ async function loadApiData(){
     Object.keys(SC).forEach(k=>delete SC[k]);
     COLS.forEach(c=>SC[c.id]=c.color);
     const taskCounts={};
-    (taskData.tasks||[]).forEach(t=>{taskCounts[t.ownerId]=(taskCounts[t.ownerId]||0)+1;});
+    const tasksByDeal={};
+    (taskData.tasks||[]).forEach(t=>{
+      taskCounts[t.ownerId]=(taskCounts[t.ownerId]||0)+1;
+      if(t.dealId)(tasksByDeal[t.dealId] ||= []).push(t);
+    });
     managers=(teamData.users||[]).map(u=>{
       const ownedDeals=(dealData.deals||[]).filter(d=>d.ownerId===u.id);
       return {...u,deals:ownedDeals.length,tasks:taskCounts[u.id]||0,customers:ownedDeals.length,avatar:u.avatar||u.name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase(),color:u.color||'linear-gradient(135deg,#93c5fd,#3b82f6)'};
     });
     if(!managers.some(m=>String(m.id)===String(selectedCareerManagerId)))selectedCareerManagerId=currentManagerId;
-    deals=(dealData.deals||[]).map(dealFromApi);
+    deals=(dealData.deals||[]).map(deal=>({...dealFromApi(deal),tasks:(tasksByDeal[deal.id]||[]).map(taskFromApi)}));
     documents=docData.docs || [];
     nid=Math.max(0,...deals.map(d=>d.id))+1;
     renderHdrRight(curPage);
@@ -1699,6 +1713,7 @@ function renderCurrentDeals(){ curView==='list'?renderList():renderKanban(); }
 function esc(v){return String(v ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function ensureDealActivity(d){
   if(!d.messages)d.messages=[];
+  if(!d.comments)d.comments=[];
   if(!d.tasks)d.tasks=[];
 }
 
@@ -2323,13 +2338,22 @@ function renderWorkspaceTimeline(d){
     <div class="task-card">
       <div class="task-card-hdr">
         <div class="task-card-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
-        <div><div class="task-card-title">${esc(t.title)}</div><div class="task-card-meta">${esc(t.due)} · ${esc(t.owner)}</div></div>
+        <div><div class="task-card-title ${t.done?'task-done':''}">${esc(t.title)}</div><div class="task-card-meta"><span class="task-due-chip">📅 ${esc(t.due)}</span> · ${esc(t.owner)}</div></div>
       </div>
-      <div class="task-card-btns"><button class="btn-toldirish">To'ldirish</button><button class="btn-tahrirlash">Tahrirlash</button></div>
+      <div class="task-card-btns"><button class="btn-toldirish" onclick="toggleWorkspaceTask(${t.id || 0})">${t.done?'Qaytarish':"To'ldirish"}</button></div>
+    </div>
+  `).join('');
+  const commentCards=(d.comments||[]).map(c=>`
+    <div class="msg-row">
+      <div class="msg-av adm">🧑</div>
+      <div class="msg-b">
+        <div class="msg-meta"><span class="msg-name adm">${esc(c.from || 'Admin')}</span><span class="msg-lbl">Commented</span><span class="msg-time">${esc(c.time || 'Hozir')}</span></div>
+        <div class="msg-comment">${esc(c.text)}</div>
+      </div>
     </div>
   `).join('');
   document.getElementById('dwTimeline').innerHTML=`
-    <div class="chat-divider">17 oktabr, 2024</div>
+    <div class="chat-divider">Shartnoma tarixi</div>
     ${d.messages.map(m=>`
       <div class="msg-row">
         <div class="msg-av ${m.admin?'adm':''}">${m.admin?'🧑':''}</div>
@@ -2338,10 +2362,11 @@ function renderWorkspaceTimeline(d){
           ${m.type==='comment'?`<div class="msg-comment">${esc(m.text)}</div>`:`<div class="msg-txt">${esc(m.text)}</div>`}
         </div>
       </div>`).join('')}
+    ${commentCards}
     <div class="msg-row">
       <div class="msg-av"></div>
       <div class="msg-b">
-        <div class="msg-meta"><span class="msg-name">${esc(customerTitle(d))} task yaratdi</span><span class="msg-time">19:01</span></div>
+        <div class="msg-meta"><span class="msg-name">Vazifalar</span><span class="msg-time">Hozir</span></div>
         ${taskCards || '<div class="msg-system">Hozircha vazifa yo‘q</div>'}
       </div>
     </div>`;
@@ -2352,9 +2377,9 @@ function renderWorkspaceTasks(d){
   document.getElementById('dwTaskList').innerHTML=tasks.map(t=>`
     <div class="task-mini">
       <input type="checkbox" ${t.done?'checked':''} style="accent-color:var(--red)">
-      <span class="task-mini-name">${esc(t.title)}</span>
+      <span class="task-mini-name ${t.done?'task-done':''}">${esc(t.title)}</span>
       <span>${esc(t.due)}</span>
-      <button class="mini-edit">✎</button>
+      <button class="mini-edit" onclick="toggleWorkspaceTask(${t.id || 0})">✓</button>
     </div>
   `).join('');
 }
@@ -2364,34 +2389,83 @@ function switchComposer(el,mode){
   el.classList.add('active');
   const form=document.getElementById('dwTaskForm');
   const input=document.getElementById('dwComposerText');
+  const hint=document.getElementById('dwComposerHint');
   form.classList.toggle('show',mode==='task');
   const placeholders={chat:'Mijozga xabar yozing...',sms:'SMS matnini kiriting...',comment:'Ichki comment yozing...',task:'Vazifa nomini kiriting...'};
+  const hints={chat:'Chat xabari hozircha faqat tarixda ko‘rinadi.',sms:'SMS integratsiya keyin ulanadi, hozir matn tarixga yoziladi.',comment:'Comment faqat jamoa ichida ko‘rinadi va shartnomaga saqlanadi.',task:'Kalendar orqali muddatni tanlang, mas’ulni belgilang va vazifa yarating.'};
   input.placeholder=placeholders[mode];
+  hint.textContent=hints[mode] || '';
+  hint.classList.toggle('show',mode==='task' || mode==='comment');
+  if(mode==='task')prepareWorkspaceTaskForm();
   input.focus();
 }
 function switchWorkspaceToTask(){
   const btn=[...document.querySelectorAll('#dealWorkspaceOvl .composer-tab')].find(x=>x.textContent.trim()==='Vazifa');
   if(btn)switchComposer(btn,'task');
 }
-function sendWorkspaceItem(){
+function prepareWorkspaceTaskForm(){
+  const date=document.getElementById('dwTaskDate');
+  const time=document.getElementById('dwTaskTime');
+  const owner=document.getElementById('dwTaskOwner');
+  if(date && !date.value)date.value=new Date().toISOString().slice(0,10);
+  if(time && !time.value)time.value='18:00';
+  if(owner){
+    const selected=String(currentWorkspaceDeal()?.ownerId || currentManagerId || '');
+    owner.innerHTML=managers.map(m=>`<option value="${m.id}" ${String(m.id)===selected?'selected':''}>${esc(m.name)}</option>`).join('');
+  }
+}
+function formatTaskDue(date,time){
+  if(!date)return 'Bugun';
+  const dt=new Date(`${date}T${time || '18:00'}`);
+  if(Number.isNaN(dt.getTime()))return `${date} ${time || ''}`.trim();
+  const mn=['yan','fev','mar','apr','may','iyn','iyl','avg','sen','okt','noy','dek'];
+  return `${dt.getDate()} ${mn[dt.getMonth()]}, ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+}
+async function sendWorkspaceItem(){
   const d=currentWorkspaceDeal();
   if(!d)return;
   const text=document.getElementById('dwComposerText').value.trim();
   if(!text){document.getElementById('dwComposerText').focus();return;}
   ensureDealActivity(d);
   if(composerMode==='task'){
-    const due=document.getElementById('dwTaskDue').value.trim()||'Bugun';
-    const owner=document.getElementById('dwTaskOwner').value.trim()||'Admin';
-    d.tasks.push({title:text,due,owner,done:false});
+    const date=document.getElementById('dwTaskDate').value;
+    const time=document.getElementById('dwTaskTime').value || '18:00';
+    const ownerId=Number(document.getElementById('dwTaskOwner').value || currentManagerId);
+    const owner=managers.find(m=>m.id===ownerId)?.name || 'Admin';
+    const due=formatTaskDue(date,time);
+    const localTask={id:Date.now(),title:text,due,owner,ownerId,done:false};
+    d.tasks.push(localTask);
     if(apiToken){
-      api('/api/tasks',{method:'POST',body:{dealId:d.id,title:text,due,ownerId:currentManagerId}}).catch(err=>showToast(err.message));
+      try{
+        const data=await api('/api/tasks',{method:'POST',body:{dealId:d.id,title:text,due,ownerId}});
+        Object.assign(localTask,taskFromApi(data.task));
+      }catch(err){showToast(err.message);return;}
     }
     showToast('Vazifa qo‘shildi ✓');
+  }else if(composerMode==='comment'){
+    d.comments.push({from:footerDisplayName(),time:'Hozir',text});
+    if(apiToken){
+      try{await api(`/api/deals/${d.id}`,{method:'PATCH',body:{comments:d.comments}});}
+      catch(err){showToast(err.message);return;}
+    }
+    showToast('Comment qo‘shildi ✓');
   }else{
-    d.messages.push({type:composerMode==='comment'?'comment':'chat',from:'Admin',admin:true,time:'Hozir',text});
-    showToast(composerMode==='comment'?'Comment qo‘shildi ✓':'Xabar qo‘shildi ✓');
+    d.messages.push({type:'chat',from:footerDisplayName(),admin:true,time:'Hozir',text});
+    showToast('Xabar qo‘shildi ✓');
   }
   document.getElementById('dwComposerText').value='';
+  renderDealWorkspace();
+}
+async function toggleWorkspaceTask(id){
+  const d=currentWorkspaceDeal();
+  if(!d)return;
+  const task=d.tasks.find(t=>String(t.id)===String(id));
+  if(!task)return;
+  task.done=!task.done;
+  if(apiToken){
+    try{await api(`/api/tasks/${task.id}`,{method:'PATCH',body:{done:task.done}});}
+    catch(err){task.done=!task.done;showToast(err.message);return;}
+  }
   renderDealWorkspace();
 }
 async function saveWorkspaceStage(col){

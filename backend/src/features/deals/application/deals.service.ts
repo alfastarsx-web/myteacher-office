@@ -91,6 +91,7 @@ export class DealsService {
     ['customerName', 'dealName', 'stageId', 'note', 'adSource', 'registeredAt', 'learningGoal', 'leadChannel'].forEach(key => {
       if (body[key] !== undefined) deal[key] = String(body[key]);
     });
+    if (Array.isArray(body.comments)) deal.comments = body.comments;
     if (body.age !== undefined) deal.age = body.age === null || body.age === '' ? null : Number(body.age);
     if (body.phone !== undefined || body.phones !== undefined) {
       const phones = this.normalizePhones(body);

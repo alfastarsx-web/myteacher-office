@@ -42,6 +42,9 @@ export class DealEntity {
   @Column({ default: '' })
   leadChannel: string;
 
+  @Column({ type: 'jsonb', default: () => "'[]'" })
+  comments: Array<{ text: string; from: string; time: string }>;
+
   @ManyToOne(() => UserEntity, user => user.deals, { eager: false, nullable: true })
   owner: UserEntity;
 
