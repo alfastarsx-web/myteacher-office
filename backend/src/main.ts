@@ -14,7 +14,7 @@ async function bootstrap() {
   app.enableCors({
     origin: true,
     methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    allowedHeaders: ['Content-Type', 'Authorization', 'x-webhook-secret']
   });
   app.use(json({ limit: '25mb' }));
   app.use(urlencoded({ limit: '25mb', extended: true }));
