@@ -1661,13 +1661,19 @@ async function logout(){
 async function loadApiData(){
   if(!apiToken)return false;
   try{
-    const [stageData,teamData,dealData,taskData,docData]=await Promise.all([
+    const [meData,stageData,teamData,dealData,taskData,docData]=await Promise.all([
+      api('/api/auth/me'),
       api('/api/stages'),
       api('/api/team'),
       api('/api/deals'),
       api('/api/tasks'),
       api('/api/docs')
     ]);
+    if(meData.user){
+      currentManagerId=meData.user.id;
+      selectedTeamManagerId=selectedTeamManagerId || meData.user.id;
+      selectedCareerManagerId=selectedCareerManagerId || meData.user.id;
+    }
     COLS.splice(0,COLS.length,...stageData.stages);
     ensureRequiredStages();
     Object.keys(SC).forEach(k=>delete SC[k]);
