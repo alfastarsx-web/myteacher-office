@@ -53,6 +53,14 @@ body{font-family:var(--f);background:var(--bg);color:var(--td);display:flex;heig
 .footer-brand{font-size:13px;font-weight:700;color:var(--mu);letter-spacing:.2px;white-space:nowrap}
 .footer-brand strong{color:var(--td)}
 .footer-brand span{font-weight:500;color:var(--mu)}
+.work-status{display:flex;align-items:center;gap:8px;border-left:1px solid var(--br);padding-left:12px;white-space:nowrap}
+.work-dot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px rgba(239,68,68,.10)}
+.work-dot.on{background:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.12)}
+.work-time{font-size:12px;color:var(--mu)}
+.work-time strong{color:var(--td);font-weight:700}
+.work-toggle{height:28px;border:1px solid var(--br);border-radius:6px;background:var(--wh);font-family:var(--f);font-size:12px;font-weight:700;color:var(--tm);padding:0 10px;cursor:pointer}
+.work-toggle.on{border-color:#BBF7D0;background:#F0FDF4;color:#15803D}
+.work-toggle.off{border-color:#FECACA;background:#FEF2F2;color:#B91C1C}
 .news-ticker{height:28px;min-width:260px;max-width:760px;flex:1;border:1px solid var(--br);border-left:3px solid var(--blue);background:#F8FAFC;display:flex;align-items:center;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
 .news-label{height:100%;width:48px;display:flex;align-items:center;justify-content:center;background:#EEF2FF;color:var(--blue);border-right:1px solid var(--br);font-size:10px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;flex:0 0 48px;position:relative;z-index:2}
 .news-label span{animation:livePulse 1.8s ease-in-out infinite}
@@ -673,6 +681,12 @@ table.crm-t{width:100%;border-collapse:collapse}
 /* Toast */
 .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:#111827;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;font-weight:500;transition:transform .3s;z-index:999;pointer-events:none;white-space:nowrap}
 .toast.show{transform:translateX(-50%) translateY(0)}
+.idle-ovl{position:fixed;inset:0;background:rgba(15,23,42,.35);display:none;align-items:center;justify-content:center;z-index:2100;padding:24px}
+.idle-ovl.show{display:flex}
+.idle-card{width:min(430px,100%);background:var(--wh);border:1px solid var(--br);border-radius:10px;box-shadow:0 24px 70px rgba(15,23,42,.22);padding:22px}
+.idle-title{font-size:20px;font-weight:800;color:var(--td);margin-bottom:8px}
+.idle-text{font-size:13px;line-height:1.55;color:var(--tm);margin-bottom:16px}
+.idle-actions{display:flex;justify-content:flex-end;gap:8px}
 .hint{position:fixed;bottom:22px;right:22px;font-size:22px;cursor:pointer;z-index:100}
 
 /* Sale success popup */
@@ -1277,6 +1291,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <div class="app-footer">
     <div class="footer-left">
       <div class="footer-brand" id="footerBrand"><strong>CRM</strong> <span>| Sardor Xudoyberdiyev — admin</span></div>
+      <div class="work-status" id="footerWorkStatus"></div>
       <div class="news-ticker" aria-label="Haftalik natijalar">
         <div class="news-label"><span>Live</span></div>
         <div class="news-track" id="footerTicker"></div>
@@ -1438,6 +1453,16 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="idle-ovl" id="idleOvl">
+  <div class="idle-card">
+    <div class="idle-title">Faollik ko‘rinmayapti</div>
+    <div class="idle-text" id="idleText">Siz 10 daqiqadan beri CRMda hech nima qilmayapsiz. Ishni davom ettiring, bo‘lmasa siz offline rejimga o‘tasiz va ish vaqtingiz tizimda yozilmay qoladi.</div>
+    <div class="idle-actions">
+      <button class="btn-ico" onclick="setMyWorkStatus('Offline')">Offline bo‘lish</button>
+      <button class="btn-ico btn-primary" onclick="continueWorkSession()">Ishni davom ettirish</button>
+    </div>
+  </div>
+</div>
 <div class="hint">💡</div>
 
 <!-- ═══ MODAL: Dokument ko'rish ═══ -->
@@ -1497,6 +1522,9 @@ let apiToken=localStorage.getItem('mtcrm_token') || '';
 let refreshToken=localStorage.getItem('mtcrm_refresh_token') || '';
 let apiOnline=false;
 let docFilter='all';
+let lastActivityAt=Date.now();
+let idleWarningShown=false;
+let idleAutoOfflineAt=null;
 const paymentAdjustments=[
   {label:'Plan 75% dan oshgani uchun bonus',amount:1200000,type:'bonus'},
   {label:'2 ta kechiktirilgan follow-up',amount:-250000,type:'penalty'},
@@ -1524,6 +1552,31 @@ function renderFooterBrand(){
   if(!el)return;
   const user=currentUser();
   el.innerHTML=`<strong>CRM</strong> <span>| ${esc(footerDisplayName(user))} — ${esc(footerRoleTitle(user))}</span>`;
+}
+function userOnlineSeconds(user=currentUser()){
+  const base=Number(user.todayOnlineSeconds||0);
+  if(user.status!=='Online' || !user.onlineStartedAt)return base;
+  const started=new Date(user.onlineStartedAt).getTime();
+  if(Number.isNaN(started))return base;
+  return base + Math.max(0,Math.floor((Date.now()-started)/1000));
+}
+function formatDuration(seconds){
+  const total=Math.max(0,Math.floor(Number(seconds)||0));
+  const h=Math.floor(total/3600);
+  const m=Math.floor((total%3600)/60);
+  const s=total%60;
+  return h?`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${m}:${String(s).padStart(2,'0')}`;
+}
+function renderWorkStatus(){
+  const el=document.getElementById('footerWorkStatus');
+  if(!el)return;
+  const user=currentUser();
+  const online=user.status==='Online';
+  el.innerHTML=`
+    <span class="work-dot ${online?'on':''}"></span>
+    <span class="work-time">Onlayn vaqtingiz: <strong>${formatDuration(userOnlineSeconds(user))}</strong></span>
+    <button class="work-toggle ${online?'off':'on'}" onclick="setMyWorkStatus('${online?'Offline':'Online'}')">${online?'Offline':'Ishni boshlash'}</button>
+  `;
 }
 function customerTitle(d){ return d.customerName || d.sub || 'Nomsiz mijoz'; }
 function dealTitle(d){ return d.dealName || d.name || 'Shartnoma nomi yo‘q'; }
@@ -1649,6 +1702,7 @@ async function loadApiData(){
     if(curPage==='docs')renderDocsPage();
     if(curPage==='payments')renderPaymentsPage();
     renderFooterBrand();
+    renderWorkStatus();
     renderFooterTicker();
     return true;
   }catch(err){
@@ -1720,6 +1774,7 @@ function renderSidebarState(p){
 
 function renderHdrRight(p){
   renderFooterBrand();
+  renderWorkStatus();
   const r = document.getElementById('hdrRight');
   if(p==='shartnomalar'){
     r.innerHTML=`<button class="btn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Eksport</button><button class="btn-ico" onclick="logout()">Chiqish</button>`;
@@ -2498,6 +2553,57 @@ async function createOnboardingUser(){
 // ════════════════════════════════════════
 //  JAMOA / ROLES
 // ════════════════════════════════════════
+async function setMyWorkStatus(status){
+  const user=currentUser();
+  if(!user)return;
+  const next=status==='Online'?'Online':'Offline';
+  try{
+    let updated={...user,status:next};
+    if(apiToken){
+      const data=await api('/api/team/me/status',{method:'PATCH',body:{status:next}});
+      updated=data.user || updated;
+    }else{
+      const now=new Date().toISOString();
+      if(next==='Online' && user.status!=='Online')updated.onlineStartedAt=now;
+      if(next==='Offline')updated.onlineStartedAt=null;
+    }
+    const idx=managers.findIndex(m=>m.id===user.id);
+    if(idx>=0)managers[idx]={...managers[idx],...updated};
+    idleWarningShown=false;
+    idleAutoOfflineAt=null;
+    document.getElementById('idleOvl')?.classList.remove('show');
+    renderWorkStatus();
+    if(curPage==='jamoa')renderTeamPage();
+    showToast(next==='Online'?'Ish vaqti boshlandi':'Offline rejimga o‘tdingiz');
+  }catch(err){
+    showToast(err.message || 'Status o‘zgarmadi');
+  }
+}
+function markUserActivity(){
+  lastActivityAt=Date.now();
+  if(idleWarningShown)continueWorkSession();
+}
+function continueWorkSession(){
+  lastActivityAt=Date.now();
+  idleWarningShown=false;
+  idleAutoOfflineAt=null;
+  document.getElementById('idleOvl')?.classList.remove('show');
+  renderWorkStatus();
+}
+function checkIdleState(){
+  const user=currentUser();
+  renderWorkStatus();
+  if(!apiToken || !user || user.status!=='Online')return;
+  const idleMs=Date.now()-lastActivityAt;
+  if(!idleWarningShown && idleMs>=10*60*1000){
+    idleWarningShown=true;
+    idleAutoOfflineAt=Date.now()+60*1000;
+    document.getElementById('idleOvl')?.classList.add('show');
+  }
+  if(idleWarningShown && idleAutoOfflineAt && Date.now()>=idleAutoOfflineAt){
+    setMyWorkStatus('Offline');
+  }
+}
 function roleLabel(role){return role==='admin'?'Admin':'Menejer';}
 function renderTeamPage(query=''){
   const q=String(query || '').trim().toLowerCase();
@@ -2511,17 +2617,18 @@ function renderTeamPage(query=''){
   document.getElementById('teamCountText').textContent=`${visible.length} / ${base.length} ta foydalanuvchi`;
   document.getElementById('teamGrid').innerHTML=`
     <table class="team-table">
-      <thead><tr><th>Menejer</th><th>Rol</th><th>Status</th><th>Faollik</th><th>Mijozlar</th></tr></thead>
+      <thead><tr><th>Menejer</th><th>Rol</th><th>Status</th><th>Bugungi online</th><th>Faollik</th><th>Mijozlar</th></tr></thead>
       <tbody>
         ${visible.map(m=>`
           <tr class="${m.id===selectedTeamManagerId?'active':''}" onclick="selectTeamManager(${m.id})">
             <td><div class="team-user-cell"><div class="team-avatar" style="background:${m.color}">${esc(m.avatar)}</div><div><div class="team-name">${esc(m.name)}</div><div class="team-email">${esc(m.email)}</div></div></div></td>
             <td><span class="role-badge ${m.role==='admin'?'role-admin':'role-manager'}">${roleLabel(m.role)}</span></td>
             <td><span class="status-pill ${m.status==='Online'?'sp-online':'sp-offline'}">${esc(m.status)}</span></td>
+            <td><strong>${formatDuration(userOnlineSeconds(m))}</strong></td>
             <td><div class="team-mini-metrics"><span class="team-mini-metric"><strong>${m.deals}</strong>Shart.</span><span class="team-mini-metric"><strong>${m.tasks}</strong>Vaz.</span></div></td>
             <td><strong>${m.customers}</strong></td>
           </tr>
-        `).join('') || `<tr><td colspan="5" style="color:var(--mu);padding:22px;text-align:center">Menejer topilmadi</td></tr>`}
+        `).join('') || `<tr><td colspan="6" style="color:var(--mu);padding:22px;text-align:center">Menejer topilmadi</td></tr>`}
       </tbody>
     </table>`;
   renderTeamDetail();
@@ -2530,6 +2637,7 @@ function renderTeamDetail(){
   const m=managers.find(x=>x.id===selectedTeamManagerId) || currentUser();
   const adminMode=isAdmin();
   const canEdit=adminMode || m.id===currentManagerId;
+  const statusChange=m.id===currentManagerId ? 'setMyWorkStatus(this.value)' : `updateManagerField(${m.id},'status',this.value)`;
   const permissions=[
     ['crm','CRMni ko‘rish','Shartnomalar, mijozlar va vazifalarni ochish',hasPerm('crm',m),true],
     ['own','O‘z mijozlari','Faqat o‘ziga biriktirilgan mijozlar bilan ishlash',hasPerm('own',m),true],
@@ -2552,7 +2660,7 @@ function renderTeamDetail(){
     <div class="team-meta" style="margin-bottom:14px">
       <div class="team-stat"><strong>${m.deals}</strong><span>Shartnoma</span></div>
       <div class="team-stat"><strong>${m.tasks}</strong><span>Vazifa</span></div>
-      <div class="team-stat"><strong>${m.customers}</strong><span>Mijoz</span></div>
+      <div class="team-stat"><strong>${formatDuration(userOnlineSeconds(m))}</strong><span>Bugungi online</span></div>
     </div>
     <div class="detail-section">
       <div class="detail-title">Profil ma'lumotlari</div>
@@ -2560,7 +2668,7 @@ function renderTeamDetail(){
         <div class="detail-field"><label>Ism familiya</label><input class="detail-input" value="${esc(m.name)}" ${canEdit?'':'disabled'} onchange="updateManagerField(${m.id},'name',this.value)"></div>
         <div class="detail-field"><label>Email</label><input class="detail-input" value="${esc(m.email)}" ${canEdit?'':'disabled'} onchange="updateManagerField(${m.id},'email',this.value)"></div>
         <div class="detail-field"><label>Rol</label><select class="detail-input" ${adminMode && m.id!==currentManagerId?'':'disabled'} onchange="changeManagerRole(${m.id},this.value)"><option value="admin" ${m.role==='admin'?'selected':''}>Admin</option><option value="manager" ${m.role==='manager'?'selected':''}>Menejer</option></select></div>
-        <div class="detail-field"><label>Status</label><select class="detail-input" ${adminMode?'':'disabled'} onchange="updateManagerField(${m.id},'status',this.value)"><option ${m.status==='Online'?'selected':''}>Online</option><option ${m.status==='Offline'?'selected':''}>Offline</option></select></div>
+        <div class="detail-field"><label>Status</label><select class="detail-input" ${adminMode || m.id===currentManagerId?'':'disabled'} onchange="${statusChange}"><option ${m.status==='Online'?'selected':''}>Online</option><option ${m.status==='Offline'?'selected':''}>Offline</option></select></div>
       </div>
     </div>
     <div class="detail-section">
@@ -2599,6 +2707,10 @@ function selectTeamManager(id){
 function updateManagerField(id,key,value){
   const m=managers.find(x=>x.id===id);
   if(!m)return;
+  if(key==='status' && id===currentManagerId){
+    setMyWorkStatus(value);
+    return;
+  }
   m[key]=value.trim ? value.trim() : value;
   if(key==='name')m.avatar=m.name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
   if(apiToken && isAdmin()){
@@ -2874,6 +2986,10 @@ document.addEventListener('click',e=>{
   if(!e.target.closest('.ddw')&&!e.target.closest('.btn-pl'))
     document.querySelectorAll('.ddm').forEach(m=>m.classList.remove('open'));
 });
+['click','keydown','mousemove','scroll','touchstart'].forEach(evt=>{
+  document.addEventListener(evt,markUserActivity,{passive:true});
+});
+setInterval(checkIdleState,1000);
 
 // ── INIT ──
 async function initApp(){
@@ -2885,6 +3001,7 @@ async function initApp(){
     localStorage.removeItem('mtcrm_token');
   }
   apiOnline=false;
+  renderWorkStatus();
   renderFooterTicker();
   showOnboarding('login');
 }

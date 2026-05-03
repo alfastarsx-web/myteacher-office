@@ -12,6 +12,9 @@ export interface User {
   status: string;
   avatar: string;
   color: string;
+  todayOnlineSeconds?: number;
+  onlineDay?: string | null;
+  onlineStartedAt?: Date | null;
 }
 
 export interface Stage {

@@ -20,6 +20,12 @@ export class UsersController {
     return { user: await this.users.create(body) };
   }
 
+  @Patch('me/status')
+  @UseGuards(JwtAuthGuard)
+  async updateOwnStatus(@Body() body: any, @Req() req: AuthedRequest) {
+    return { user: await this.users.updateOwnStatus(req.user, String(body.status || 'Offline')) };
+  }
+
   @Patch(':id')
   @UseGuards(AdminGuard)
   async update(@Param('id') id: string, @Body() body: any, @Req() req: AuthedRequest) {

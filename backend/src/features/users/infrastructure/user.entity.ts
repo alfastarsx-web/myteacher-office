@@ -33,6 +33,15 @@ export class UserEntity {
   @Column({ type: 'jsonb', default: () => "'{}'" })
   permissions: Record<string, boolean>;
 
+  @Column({ type: 'int', default: 0 })
+  todayOnlineSeconds: number;
+
+  @Column({ type: 'varchar', length: 10, nullable: true })
+  onlineDay: string | null;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  onlineStartedAt: Date | null;
+
   @OneToMany(() => DealEntity, deal => deal.owner)
   deals: DealEntity[];
 
