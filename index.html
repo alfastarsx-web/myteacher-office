@@ -840,11 +840,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
         <button class="auth-tab active" onclick="showOnboarding('login')">Kirish</button>
         <button class="auth-tab" onclick="showOnboarding('register')">Ro'yxatdan o'tish</button>
       </div>
-      <div class="auth-form">
-        <div class="auth-field"><label>Email</label><input class="auth-input" id="loginEmail" value="admin@myteacher.uz"></div>
-        <div class="auth-field" id="loginPasswordField"><label>Parol</label><div class="auth-input-wrap"><input class="auth-input" id="loginPassword" type="password" value="admin12345"><svg class="auth-eye" onclick="togglePasswordEye(this)" role="button" aria-label="Parolni ko'rsatish" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20C7 20 2.73 16.89 1 12a18.45 18.45 0 014.06-5.94M9.9 4.24A10.45 10.45 0 0112 4c5 0 9.27 3.11 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M14.12 14.12A3 3 0 019.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="auth-help" id="loginHelp">8 ta belgidan ko'p bo'lishi shart!</div></div>
-        <button class="auth-submit" onclick="finishOnboarding()">Kirish</button>
-      </div>
+      <form class="auth-form" autocomplete="on" onsubmit="finishOnboarding(event)">
+        <div class="auth-field"><label>Email</label><input class="auth-input" id="loginEmail" name="email" type="email" autocomplete="username" placeholder="Emailingizni kiriting"></div>
+        <div class="auth-field" id="loginPasswordField"><label>Parol</label><div class="auth-input-wrap"><input class="auth-input" id="loginPassword" name="password" type="password" autocomplete="current-password" placeholder="Parolingizni kiriting"><svg class="auth-eye" onclick="togglePasswordEye(this)" role="button" aria-label="Parolni ko'rsatish" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20C7 20 2.73 16.89 1 12a18.45 18.45 0 014.06-5.94M9.9 4.24A10.45 10.45 0 0112 4c5 0 9.27 3.11 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M14.12 14.12A3 3 0 019.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="auth-help" id="loginHelp">8 ta belgidan ko'p bo'lishi shart!</div></div>
+        <button class="auth-submit" type="submit">Kirish</button>
+      </form>
     </div>
     <div class="auth-divider">OR</div>
     <div class="social-row"><button class="social-btn social-google">G</button><button class="social-btn social-apple">●</button><button class="social-btn social-facebook">f</button></div>
@@ -2830,9 +2830,14 @@ function closeOnboarding(){
   document.querySelectorAll('.auth-field.error').forEach(f=>f.classList.remove('error'));
   document.querySelectorAll('.auth-help.error').forEach(h=>h.classList.remove('error'));
 }
-async function finishOnboarding(){
-  const email=document.getElementById('loginEmail')?.value.trim() || 'admin@myteacher.uz';
-  const password=document.getElementById('loginPassword')?.value || 'admin12345';
+async function finishOnboarding(event){
+  event?.preventDefault();
+  const email=document.getElementById('loginEmail')?.value.trim() || '';
+  const password=document.getElementById('loginPassword')?.value || '';
+  if(!email || !password){
+    showToast('Email va parolni kiriting');
+    return;
+  }
   try{
     await apiLogin(email,password);
     closeOnboarding();
