@@ -18,6 +18,11 @@ export class DealsController {
     return { deal: await this.deals.create(body, req.user) };
   }
 
+  @Patch('bulk/owner')
+  async bulkAssignOwner(@Body() body: any, @Req() req: AuthedRequest) {
+    return { deals: await this.deals.bulkAssignOwner(body, req.user) };
+  }
+
   @Patch(':id')
   async update(@Param('id') id: string, @Body() body: any, @Req() req: AuthedRequest) {
     return { deal: await this.deals.update(Number(id), body, req.user) };

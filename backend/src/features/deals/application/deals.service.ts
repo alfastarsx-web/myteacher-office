@@ -1,6 +1,6 @@
 import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { UserRole } from '../../users/domain/user-role.enum';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { DealEntity } from '../infrastructure/deal.entity';
@@ -56,6 +56,20 @@ export class DealsService {
     if (body.price !== undefined) deal.price = Number(body.price || 0);
     if (body.ownerId !== undefined && user.role === UserRole.Admin) deal.ownerId = this.parseOwnerId(body.ownerId);
     return this.deals.save(deal);
+  }
+
+  async bulkAssignOwner(body: any, user: UserEntity) {
+    this.assertCrmAccess(user);
+    if (user.role !== UserRole.Admin) throw new ForbiddenException('Faqat Admin shartnomalarni taqsimlay oladi');
+    const ids = [...new Set((Array.isArray(body.ids) ? body.ids : [])
+      .map(item => Number(item))
+      .filter(id => Number.isInteger(id) && id > 0))];
+    if (!ids.length) throw new BadRequestException('Shartnomalarni tanlang');
+    const ownerId = this.parseOwnerId(body.ownerId);
+    const rows = await this.deals.find({ where: { id: In(ids) }, order: { id: 'ASC' } });
+    if (!rows.length) throw new NotFoundException('Shartnomalar topilmadi');
+    rows.forEach(deal => { deal.ownerId = ownerId; });
+    return this.deals.save(rows);
   }
 
   async delete(id: number, user: UserEntity) {

@@ -119,6 +119,12 @@ body{font-family:var(--f);background:var(--bg);color:var(--td);display:flex;heig
 /* Count bar */
 .cbar{font-size:12px;color:var(--mu);padding:10px 24px;border-bottom:1px solid var(--brl);background:var(--bg);flex-shrink:0}
 .cbar strong{color:var(--td)}
+.list-cbar{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.bulk-actions{display:flex;align-items:center;gap:8px}
+.bulk-actions select{height:32px;border:1px solid var(--br);border-radius:7px;background:var(--wh);font-family:var(--f);font-size:12px;color:var(--td);padding:0 9px;min-width:190px}
+.bulk-actions .btn-ico{height:32px;padding:6px 11px;font-size:12px;box-shadow:none}
+.bulk-actions .btn-ico:disabled{opacity:.45;cursor:not-allowed;transform:none}
+.bulk-muted{color:var(--mu);font-size:12px}
 
 /* Table */
 .ca{flex:1;overflow:auto}
@@ -871,9 +877,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     <div class="deal-stats" id="dealStats"></div>
     <!-- List -->
     <div id="sListView" style="display:none;flex:1;overflow:auto">
-      <div class="cbar">Jami: <strong id="dealCount">0</strong> ta shartnoma</div>
+      <div class="cbar list-cbar">
+        <div>Jami: <strong id="dealCount">0</strong> ta shartnoma</div>
+        <div class="bulk-actions" id="bulkDealActions"></div>
+      </div>
       <table class="crm-t"><thead><tr>
-        <th style="width:40px"><input type="checkbox" style="width:15px;height:15px;accent-color:var(--blue)"></th>
+        <th style="width:40px"><input id="dealSelectAll" type="checkbox" onchange="toggleAllVisibleDeals(this.checked)" style="width:15px;height:15px;accent-color:var(--blue)"></th>
         <th>Mijoz / Shartnoma</th><th>Bosqich</th><th>Agent</th><th>Narxi</th><th>Darjasi</th><th>Izohlar</th><th>Sana</th>
       </tr></thead><tbody id="sListBody"></tbody></table>
     </div>
@@ -1482,6 +1491,7 @@ let managers = [
 ];
 let currentManagerId=1, selectedTeamManagerId=1;
 let nid=4, curView='kanban', editId=null, dragId=null, workspaceDealId=null, composerMode='chat';
+let selectedDealIds=new Set();
 let apiToken=localStorage.getItem('mtcrm_token') || '';
 let refreshToken=localStorage.getItem('mtcrm_refresh_token') || '';
 let apiOnline=false;
@@ -1518,6 +1528,9 @@ function customerTitle(d){ return d.customerName || d.sub || 'Nomsiz mijoz'; }
 function dealTitle(d){ return d.dealName || d.name || 'Shartnoma nomi yo‘q'; }
 function dealPhones(d){ return [...new Set([...(Array.isArray(d.phones)?d.phones:[]), d.phone].map(v=>String(v||'').trim()).filter(Boolean))]; }
 function currentUserDeals(){ const u=currentUser(); return hasPerm('all',u)?deals:deals.filter(d=>d.ownerId===u.id); }
+function managerById(id){ return managers.find(m=>String(m.id)===String(id)); }
+function managerInitials(m){ return (m?.avatar || m?.name?.split(' ').map(x=>x[0]).join('') || '—').slice(0,2).toUpperCase(); }
+function dealOwnerLabel(d){ const m=managerById(d.ownerId); return m ? m.name : 'Taqsimlanmagan'; }
 function apiBase(){
   if(location.protocol.startsWith('http'))return location.origin;
   return 'http://127.0.0.1:4000';
@@ -1811,19 +1824,82 @@ function renderList(){
   renderDealStats();
   const rows=visibleDeals();
   document.getElementById('dealCount').textContent=rows.length;
+  [...selectedDealIds].forEach(id=>{ if(!deals.some(d=>d.id===id))selectedDealIds.delete(id); });
   document.getElementById('sListBody').innerHTML=rows.map(d=>{
     const col=COLS.find(c=>c.id===d.col);
+    const owner=managerById(d.ownerId);
+    const checked=selectedDealIds.has(d.id)?'checked':'';
+    const disabled=isAdmin()?'':'disabled';
     return `<tr onclick="openModal(${d.id})">
-      <td><input type="checkbox" onclick="event.stopPropagation()" style="width:15px;height:15px;accent-color:var(--blue)"></td>
+      <td><input type="checkbox" ${checked} ${disabled} onclick="event.stopPropagation()" onchange="toggleDealSelection(${d.id},this.checked)" style="width:15px;height:15px;accent-color:var(--blue)"></td>
       <td><div class="dn">${customerTitle(d)}</div><div class="ds">${dealTitle(d)}</div></td>
       <td><span class="badge" style="background:${col.color}">${col.label}</span></td>
-      <td><div class="ac"><div class="av">DS</div>Diyora Shomamatova</div></td>
+      <td><div class="ac"><div class="av">${owner?esc(managerInitials(owner)):'—'}</div>${esc(dealOwnerLabel(d))}</div></td>
       <td>${d.price?formatMoney(d.price):'—'}</td>
       <td><span class="badge" style="background:var(--yellow)">Badge</span></td>
       <td><span class="vlink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/></svg>Vazifa yo'q</span></td>
       <td>${d.date}</td>
     </tr>`;
   }).join('');
+  renderBulkDealActions(rows);
+}
+
+function toggleDealSelection(id,checked){
+  checked ? selectedDealIds.add(id) : selectedDealIds.delete(id);
+  renderBulkDealActions(visibleDeals());
+}
+function toggleAllVisibleDeals(checked){
+  if(!isAdmin())return;
+  visibleDeals().forEach(d=>checked ? selectedDealIds.add(d.id) : selectedDealIds.delete(d.id));
+  renderList();
+}
+function renderBulkDealActions(rows=visibleDeals()){
+  const box=document.getElementById('bulkDealActions');
+  const all=document.getElementById('dealSelectAll');
+  if(!box)return;
+  if(!isAdmin()){
+    box.innerHTML='';
+    if(all)all.disabled=true;
+    return;
+  }
+  const visibleIds=rows.map(d=>d.id);
+  const selectedVisible=visibleIds.filter(id=>selectedDealIds.has(id));
+  if(all){
+    all.disabled=!rows.length;
+    all.checked=rows.length>0 && selectedVisible.length===rows.length;
+    all.indeterminate=selectedVisible.length>0 && selectedVisible.length<rows.length;
+  }
+  const managerOptions=managers.filter(m=>m.role!=='admin').map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
+  box.innerHTML=`
+    <span class="bulk-muted">${selectedDealIds.size ? `${selectedDealIds.size} ta tanlandi` : 'Shartnomalarni belgilang'}</span>
+    <select id="bulkOwnerSelect">
+      <option value="">Taqsimlanmagan · faqat Admin</option>
+      ${managerOptions}
+    </select>
+    <button class="btn-ico btn-primary" ${selectedDealIds.size?'':'disabled'} onclick="bulkAssignDeals()">Menejerga o'tkazish</button>
+  `;
+}
+async function bulkAssignDeals(){
+  if(!isAdmin() || !selectedDealIds.size)return;
+  const ownerId=document.getElementById('bulkOwnerSelect')?.value || null;
+  const ids=[...selectedDealIds];
+  try{
+    if(apiToken){
+      const data=await api('/api/deals/bulk/owner',{method:'PATCH',body:{ids,ownerId}});
+      (data.deals||[]).forEach(item=>{
+        const row=deals.find(d=>d.id===item.id);
+        if(row)row.ownerId=item.ownerId ?? null;
+      });
+      await loadApiData();
+    }else{
+      deals.forEach(d=>{ if(selectedDealIds.has(d.id))d.ownerId=ownerId?Number(ownerId):null; });
+    }
+    selectedDealIds.clear();
+    renderList();
+    showToast('Tanlangan shartnomalar o‘tkazildi');
+  }catch(err){
+    showToast(err.message || 'Shartnomalar o‘tkazilmadi');
+  }
 }
 
 // ════════════════════════════════════════
