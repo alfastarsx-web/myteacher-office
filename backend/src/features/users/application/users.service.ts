@@ -20,6 +20,10 @@ export class UsersService {
     return this.users.findOne({ where: { id } });
   }
 
+  async findFirstAdmin() {
+    return this.users.findOne({ where: { role: UserRole.Admin }, order: { id: 'ASC' } });
+  }
+
   publicUser(user: UserEntity) {
     const { passwordHash: _passwordHash, ...safe } = user;
     safe.permissions = this.effectivePermissions(user);

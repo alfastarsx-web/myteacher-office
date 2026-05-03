@@ -5,6 +5,7 @@ import { AuthModule } from './features/auth/auth.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
 import { DealsModule } from './features/deals/deals.module';
 import { DocsModule } from './features/docs/docs.module';
+import { IntegrationsModule } from './features/integrations/integrations.module';
 import { StagesModule } from './features/stages/stages.module';
 import { TasksModule } from './features/tasks/tasks.module';
 import { UsersModule } from './features/users/users.module';
@@ -18,6 +19,7 @@ import { SeedModule } from './seed/seed.module';
     UsersModule,
     StagesModule,
     DealsModule,
+    IntegrationsModule,
     TasksModule,
     DocsModule,
     DashboardModule,
