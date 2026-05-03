@@ -588,6 +588,59 @@ table.crm-t{width:100%;border-collapse:collapse}
 .pay-progress span{display:block;height:100%;background:linear-gradient(90deg,#22C55E,#2563EB);border-radius:999px}
 
 /* ══════════════════════════════════════
+   PAGE: MTC CAREER
+══════════════════════════════════════ */
+.career-wrap{flex:1;overflow-y:auto;padding:26px 34px;background:linear-gradient(180deg,#F8FAFC 0,#F2F6FC 100%)}
+.career-top{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:16px;margin-bottom:16px}
+.career-hero{background:#fff;border:1px solid var(--br);border-radius:14px;padding:18px;box-shadow:var(--shadow-sm);display:grid;grid-template-columns:132px minmax(0,1fr);gap:18px;align-items:center;position:relative;overflow:hidden}
+.career-hero:before{content:'';position:absolute;inset:0 0 auto;height:4px;background:linear-gradient(90deg,#2563EB,#22C55E,#F59E0B)}
+.career-avatar-ring{--ring:#2563EB;width:116px;height:116px;border-radius:50%;padding:4px;background:conic-gradient(from 0deg,var(--ring),#fff,var(--ring),#22C55E,#F59E0B,var(--ring));box-shadow:0 0 0 8px rgba(37,99,235,.05);animation:careerRing 4.5s linear infinite}
+.career-avatar-photo{width:100%;height:100%;border-radius:50%;display:flex;align-items:center;justify-content:center;border:4px solid #fff;color:#fff;font-size:30px;font-weight:900;background:linear-gradient(135deg,#60A5FA,#2563EB)}
+@keyframes careerRing{50%{filter:hue-rotate(28deg) saturate(1.18);box-shadow:0 0 0 8px rgba(37,99,235,.05),0 0 24px rgba(37,99,235,.18)}}
+.career-name{font-size:26px;font-weight:900;color:var(--td);line-height:1.12}
+.career-role{font-size:13px;color:var(--mu);margin-top:5px}
+.career-level{display:inline-flex;align-items:center;gap:8px;margin-top:12px;border:1px solid #DBEAFE;background:#EFF6FF;color:#1D4ED8;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:900}
+.career-level-dot{width:9px;height:9px;border-radius:50%;background:var(--ring,#2563EB);box-shadow:0 0 0 4px rgba(37,99,235,.12)}
+.career-contact{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.career-chip{display:inline-flex;align-items:center;gap:7px;border:1px solid var(--br);background:#F8FAFC;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:700;color:var(--tm)}
+.career-chip svg{width:14px;height:14px;color:var(--blue)}
+.career-status-panel{background:#fff;border:1px solid var(--br);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm)}
+.career-section-title{font-size:15px;font-weight:900;color:var(--td);margin-bottom:10px}
+.career-stage-list{display:flex;flex-direction:column;gap:8px}
+.career-stage{display:flex;align-items:center;gap:9px;padding:9px 10px;border:1px solid var(--br);border-radius:10px;background:#FBFCFE;color:var(--mu);font-size:12px;font-weight:800}
+.career-stage.active{background:#ECFDF5;border-color:#BBF7D0;color:#15803D}
+.career-stage i{width:10px;height:10px;border-radius:50%;background:#CBD5E1}
+.career-stage.active i{background:#22C55E;box-shadow:0 0 0 4px rgba(34,197,94,.12)}
+.career-metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-bottom:16px}
+.career-stat{background:#fff;border:1px solid var(--br);border-radius:14px;padding:15px;box-shadow:var(--shadow-sm)}
+.career-stat-label{font-size:11px;color:var(--mu);font-weight:800;text-transform:uppercase;letter-spacing:.3px;margin-bottom:8px}
+.career-stat-value{font-size:21px;font-weight:900;color:var(--td)}
+.career-stat-note{font-size:12px;color:var(--mu);margin-top:5px}
+.career-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(320px,.75fr);gap:16px}
+.career-panel{background:#fff;border:1px solid var(--br);border-radius:14px;box-shadow:var(--shadow-sm);overflow:hidden}
+.career-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:15px 16px;border-bottom:1px solid var(--br);background:#FBFCFE}
+.career-panel-title{font-size:15px;font-weight:900;color:var(--td)}
+.career-bars{padding:16px;display:flex;flex-direction:column;gap:14px}
+.career-bar-row{display:grid;grid-template-columns:130px minmax(0,1fr) 48px;gap:12px;align-items:center;font-size:13px;color:var(--tm)}
+.career-bar{height:10px;background:#E5E7EB;border-radius:999px;overflow:hidden}
+.career-bar span{display:block;height:100%;border-radius:999px;background:linear-gradient(90deg,#2563EB,#22C55E)}
+.career-timeline{padding:14px 16px;display:flex;flex-direction:column;gap:12px}
+.career-time-item{display:grid;grid-template-columns:28px minmax(0,1fr);gap:10px;align-items:start}
+.career-time-dot{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#EFF6FF;color:var(--blue);font-size:13px;font-weight:900}
+.career-time-title{font-size:13px;font-weight:900;color:var(--td)}
+.career-time-sub{font-size:12px;color:var(--mu);line-height:1.45;margin-top:2px}
+.career-finance{padding:14px 16px}
+.career-fin-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--brl);font-size:13px;color:var(--tm)}
+.career-fin-row:last-child{border-bottom:0}
+.career-fin-row strong{color:var(--td)}
+.career-fin-row.good strong{color:#16A34A}
+.career-fin-row.bad strong{color:#EF4444}
+.career-team-strip{display:flex;gap:8px;overflow-x:auto;margin-bottom:14px}
+.career-person-pill{display:flex;align-items:center;gap:8px;min-width:max-content;border:1px solid var(--br);background:#fff;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:800;color:var(--tm);cursor:pointer}
+.career-person-pill.active{background:var(--td);border-color:var(--td);color:#fff}
+.career-mini-av{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:900}
+
+/* ══════════════════════════════════════
    MODAL (shared)
 ══════════════════════════════════════ */
 .ovl{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:600;display:none;align-items:center;justify-content:center}
@@ -716,6 +769,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .deal-stats{grid-template-columns:repeat(2,minmax(150px,1fr))}
   .p-right{display:none}
   .detail-panel.show{position:absolute;right:0;top:0;bottom:0;z-index:80;box-shadow:var(--shadow-md)}
+  .career-top,.career-layout{grid-template-columns:1fr}
+  .career-metrics{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 
 @media (max-width: 760px){
@@ -742,6 +797,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .pay-wrap{padding:18px 14px}
   .pay-grid,.pay-layout{grid-template-columns:1fr}
   .pay-head{flex-direction:column}
+  .career-wrap{padding:18px 14px}
+  .career-hero{grid-template-columns:1fr;text-align:center}
+  .career-avatar-ring{margin:0 auto}
+  .career-contact{justify-content:center}
+  .career-metrics{grid-template-columns:1fr}
+  .career-bar-row{grid-template-columns:1fr}
   .docs-wrap{padding:18px 14px}
   .docs-hero,.docs-grid{grid-template-columns:1fr}
   .docs-toolbar{align-items:stretch;flex-direction:column}
@@ -831,6 +892,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <div class="si" id="sbPayments" title="Payments and Earnings" onclick="goPage('payments')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
   <div class="si on" id="sbCRM" title="CRM" onclick="goPage('shartnomalar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>
   <div class="si" id="sbTeam" title="Jamoa" onclick="goPage('jamoa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
+  <div class="si" id="sbCareer" title="MTC Career" onclick="goPage('career')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.47 6.03.88-4.36 4.25 1.03 6-5.4-2.84-5.4 2.84 1.03-6-4.36-4.25 6.03-.88L12 3z"/></svg></div>
   <div class="si" id="sbDocs" title="Dokumentatsiya" onclick="goPage('docs')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg></div>
   <div class="sp"></div>
   <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 13.5a19.79 19.79 0 01-3.07-8.67A2 2 0 012 2.84h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L6.09 10.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg></div>
@@ -1205,6 +1267,49 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     </div>
   </div>
 
+  <!-- ═══ PAGE: MTC CAREER ═══ -->
+  <div class="page" id="page-career">
+    <div class="career-wrap">
+      <div class="career-team-strip" id="careerPeople"></div>
+      <div class="career-top">
+        <section class="career-hero">
+          <div class="career-avatar-ring" id="careerRing">
+            <div class="career-avatar-photo" id="careerAvatar">MT</div>
+          </div>
+          <div>
+            <div class="career-name" id="careerName">MyTeacher xodimi</div>
+            <div class="career-role" id="careerRole">Maslahatchi mutaxassis</div>
+            <div class="career-level" id="careerLevel"><span class="career-level-dot"></span><span>O'rganuvchi</span></div>
+            <div class="career-contact" id="careerContacts"></div>
+          </div>
+        </section>
+        <aside class="career-status-panel">
+          <div class="career-section-title">Karyera pog'onasi</div>
+          <div class="career-stage-list" id="careerStages"></div>
+        </aside>
+      </div>
+      <div class="career-metrics" id="careerMetrics"></div>
+      <div class="career-layout">
+        <section class="career-panel">
+          <div class="career-panel-head"><div class="career-panel-title">Samaradorlik indikatorlari</div><span class="pay-badge">Kun / hafta / oy</span></div>
+          <div class="career-bars" id="careerBars"></div>
+        </section>
+        <section class="career-panel">
+          <div class="career-panel-head"><div class="career-panel-title">Kirim, daromad va jarimalar</div><span class="pay-badge">May 2026</span></div>
+          <div class="career-finance" id="careerFinance"></div>
+        </section>
+        <section class="career-panel">
+          <div class="career-panel-head"><div class="career-panel-title">E'tiroflar va o'sish tarixi</div><span class="pay-badge">MTC</span></div>
+          <div class="career-timeline" id="careerTimeline"></div>
+        </section>
+        <section class="career-panel">
+          <div class="career-panel-head"><div class="career-panel-title">Shaxsiy ma'lumotlar</div><span class="pay-badge" id="careerOnlineBadge">Offline</span></div>
+          <div class="career-finance" id="careerBio"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
   <!-- ═══ PAGE: PAYMENTS AND EARNINGS ═══ -->
   <div class="page" id="page-payments">
     <div class="pay-wrap">
@@ -1512,7 +1617,7 @@ let managers = [
   {id:2,name:'Diyora Shomamatova',email:'diyora@crm.uz',role:'manager',status:'Online',deals:5,tasks:3,customers:18,avatar:'DS',color:'linear-gradient(135deg,#f9a8d4,#ec4899)'},
   {id:3,name:'Aziz Jurayev',email:'aziz@crm.uz',role:'manager',status:'Offline',deals:3,tasks:1,customers:14,avatar:'AJ',color:'linear-gradient(135deg,#93c5fd,#3b82f6)'},
 ];
-let currentManagerId=1, selectedTeamManagerId=1;
+let currentManagerId=1, selectedTeamManagerId=1, selectedCareerManagerId=1;
 let nid=4, curView='kanban', editId=null, dragId=null, workspaceDealId=null, composerMode='chat';
 let selectedDealIds=new Set();
 let apiToken=localStorage.getItem('mtcrm_token') || '';
@@ -1646,6 +1751,7 @@ async function apiLogin(email,password){
   if(data.user){
     currentManagerId=data.user.id;
     selectedTeamManagerId=data.user.id;
+    selectedCareerManagerId=data.user.id;
   }
   await loadApiData();
   return data;
@@ -1709,12 +1815,14 @@ async function loadApiData(){
       const ownedDeals=(dealData.deals||[]).filter(d=>d.ownerId===u.id);
       return {...u,deals:ownedDeals.length,tasks:taskCounts[u.id]||0,customers:ownedDeals.length,avatar:u.avatar||u.name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase(),color:u.color||'linear-gradient(135deg,#93c5fd,#3b82f6)'};
     });
+    if(!managers.some(m=>String(m.id)===String(selectedCareerManagerId)))selectedCareerManagerId=currentManagerId;
     deals=(dealData.deals||[]).map(dealFromApi);
     documents=docData.docs || documents;
     nid=Math.max(0,...deals.map(d=>d.id))+1;
     renderHdrRight(curPage);
     if(curPage==='shartnomalar')renderCurrentDeals();
     if(curPage==='jamoa')renderTeamPage();
+    if(curPage==='career')renderCareerPage();
     if(curPage==='dashboard')renderDashboard();
     if(curPage==='docs')renderDocsPage();
     if(curPage==='payments')renderPaymentsPage();
@@ -1772,6 +1880,7 @@ function goPage(p){
   if(p==='shartnomalar') setView(curView);
   if(p==='dashboard') renderDashboard();
   if(p==='jamoa') renderTeamPage();
+  if(p==='career') renderCareerPage();
   if(p==='docs') renderDocsPage();
   if(p==='payments') renderPaymentsPage();
   if(p==='settings') renderSetContent('crmsoz');
@@ -1784,6 +1893,7 @@ function renderSidebarState(p){
   if(PAGE_TABS.includes(p))document.getElementById('sbCRM')?.classList.add('on');
   if(p==='payments')document.getElementById('sbPayments')?.classList.add('on');
   if(p==='jamoa')document.getElementById('sbTeam')?.classList.add('on');
+  if(p==='career')document.getElementById('sbCareer')?.classList.add('on');
   if(p==='docs')document.getElementById('sbDocs')?.classList.add('on');
   if(p==='settings')document.getElementById('sbSettings')?.classList.add('on');
   if(p==='dashboard')document.getElementById('sbDash')?.classList.add('on');
@@ -1800,6 +1910,8 @@ function renderHdrRight(p){
     <div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input placeholder="Qidirish..."></div>`;
   } else if(p==='jamoa'){
     r.innerHTML=`<button class="btn-ico" onclick="logout()">Chiqish</button>`;
+  } else if(p==='career'){
+    r.innerHTML=`<button class="btn-ico" onclick="renderCareerPage()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>Yangilash</button>`;
   } else if(p==='docs'){
     r.innerHTML=isAdmin()?`<button class="btn-ico btn-primary" onclick="document.getElementById('docTitle')?.focus()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Hujjat qo'shish</button>`:'';
   } else if(p==='payments'){
@@ -2415,6 +2527,128 @@ function renderPaymentsPage(){
 }
 
 // ════════════════════════════════════════
+//  MTC MYTEACHER CAREER
+// ════════════════════════════════════════
+const CAREER_LEVELS=[
+  {name:"O'rganuvchi",min:0,color:'#94A3B8'},
+  {name:'Amaliyotchi',min:1000000,color:'#38BDF8'},
+  {name:'Xodim',min:5000000,color:'#2563EB'},
+  {name:'III-darajali rezident',min:12000000,color:'#22C55E'},
+  {name:'II-darajali rezident',min:25000000,color:'#F59E0B'},
+  {name:'I-darajali rezident',min:50000000,color:'#7C3AED'}
+];
+function careerUser(){
+  const own=currentUser();
+  if(!isAdmin())return own;
+  return managers.find(m=>String(m.id)===String(selectedCareerManagerId)) || own;
+}
+function careerDeals(user){
+  return deals.filter(d=>String(d.ownerId)===String(user.id));
+}
+function careerLevelFor(user,total){
+  if(user.role==='admin')return CAREER_LEVELS[CAREER_LEVELS.length-1];
+  return [...CAREER_LEVELS].reverse().find(level=>total>=level.min) || CAREER_LEVELS[0];
+}
+function setCareerManager(id){
+  selectedCareerManagerId=id;
+  renderCareerPage();
+}
+function careerPhone(user,rows){
+  return user.phone || rows.flatMap(dealPhones)[0] || '+998 90 000 00 00';
+}
+function renderCareerPage(){
+  const people=document.getElementById('careerPeople');
+  if(!people)return;
+  if(isAdmin()){
+    people.innerHTML=managers.map(m=>`
+      <button class="career-person-pill ${String(m.id)===String(selectedCareerManagerId)?'active':''}" onclick="setCareerManager(${m.id})">
+        <span class="career-mini-av" style="background:${esc(m.color||'linear-gradient(135deg,#60A5FA,#2563EB)')}">${esc(managerInitials(m))}</span>
+        ${esc(footerDisplayName(m))}
+      </button>
+    `).join('');
+  }else{
+    selectedCareerManagerId=currentUser().id;
+    people.innerHTML=`<div class="career-person-pill active">Shaxsiy kabinet</div>`;
+  }
+  const user=careerUser();
+  const rows=careerDeals(user);
+  const total=rows.reduce((sum,d)=>sum+Number(d.price||0),0);
+  const commission=Math.round(total*.10);
+  const bonuses=user.role==='admin'?2200000:paymentAdjustments.filter(x=>x.amount>0).reduce((s,x)=>s+x.amount,0);
+  const penalties=user.status==='Online'?0:250000;
+  const income=Math.max(0,commission+bonuses-penalties);
+  const missed=Math.max(0,50000000-total);
+  const level=careerLevelFor(user,total);
+  const next=CAREER_LEVELS.find(l=>l.min>level.min);
+  const levelProgress=next?Math.min(100,Math.round((total-level.min)/(next.min-level.min)*100)):100;
+  const day=Math.min(100,62+Number(user.id||1)*7+rows.length*3);
+  const week=Math.min(100,58+rows.length*9);
+  const month=Math.min(100,total?Math.round(total/500000):44);
+  const quality=Math.min(100,72+Number(user.id||1)*4);
+  const avatar=document.getElementById('careerAvatar');
+  const ring=document.getElementById('careerRing');
+  ring.style.setProperty('--ring',level.color);
+  avatar.textContent=managerInitials(user);
+  avatar.style.background=user.color || 'linear-gradient(135deg,#60A5FA,#2563EB)';
+  document.getElementById('careerName').textContent=footerDisplayName(user);
+  document.getElementById('careerRole').textContent=footerRoleTitle(user);
+  document.getElementById('careerLevel').style.setProperty('--ring',level.color);
+  document.getElementById('careerLevel').innerHTML=`<span class="career-level-dot"></span><span>${esc(level.name)} · ${levelProgress}%</span>`;
+  document.getElementById('careerContacts').innerHTML=[
+    phoneIcon()+esc(careerPhone(user,rows)),
+    mailIcon()+esc(user.email||'email kiritilmagan'),
+    socialIcon()+esc('@myteacher_team')
+  ].map(html=>`<span class="career-chip">${html}</span>`).join('');
+  document.getElementById('careerStages').innerHTML=CAREER_LEVELS.map(l=>`
+    <div class="career-stage ${l.name===level.name?'active':''}"><i></i><span>${esc(l.name)}</span></div>
+  `).join('');
+  document.getElementById('careerMetrics').innerHTML=[
+    ['Kunlik samaradorlik',`${day}%`,'Faollik va follow-up intizomi'],
+    ['Haftalik natija',`${week}%`,`${rows.length} ta aktiv shartnoma`],
+    ['Oylik kassa',formatMoney(total),'Menejerga biriktirilgan sotuvlar'],
+    ['Karyera progressi',`${levelProgress}%`,next?`${next.name} sari`:"Eng yuqori pog'ona"]
+  ].map(item=>`<div class="career-stat"><div class="career-stat-label">${esc(item[0])}</div><div class="career-stat-value">${esc(item[1])}</div><div class="career-stat-note">${esc(item[2])}</div></div>`).join('');
+  document.getElementById('careerBars').innerHTML=[
+    ['Kunlik',day],
+    ['Haftalik',week],
+    ['Oylik',month],
+    ['Suhbat sifati',quality],
+    ['Reja bajarilishi',levelProgress]
+  ].map(([label,value])=>`<div class="career-bar-row"><strong>${esc(label)}</strong><div class="career-bar"><span style="width:${value}%"></span></div><span>${value}%</span></div>`).join('');
+  document.getElementById('careerFinance').innerHTML=[
+    ['Kirim',formatMoney(total),'good'],
+    ['Ishlangan daromad',formatMoney(commission),'good'],
+    ['Bonuslar',formatMoney(bonuses),'good'],
+    ['Jarimalar',formatMoney(penalties),'bad'],
+    ['Joriy balans',formatMoney(income),'good'],
+    ['Erishilmay qolgan bitimlar',formatMoney(missed),'bad']
+  ].map(([label,value,type])=>`<div class="career-fin-row ${type}"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join('');
+  document.getElementById('careerTimeline').innerHTML=[
+    ['★','Haftaning faol xodimi',`${footerDisplayName(user)} mijozlar bilan ishlash intizomi bo'yicha yuqori natija ko'rsatdi.`],
+    ['↗',"Karyera o'sishi",next?`${next.name} pog'onasiga o'tish uchun ${formatMoney(next.min-total)} natija kerak.`:"I-darajali rezident pog'onasi tasdiqlangan."],
+    ['✓',"Kompaniya e'tirofi","Skriptga amal qilish, qayta aloqa va CRM tartibi bo'yicha ijobiy qayd."]
+  ].map(([icon,title,sub])=>`<div class="career-time-item"><div class="career-time-dot">${icon}</div><div><div class="career-time-title">${esc(title)}</div><div class="career-time-sub">${esc(sub)}</div></div></div>`).join('');
+  document.getElementById('careerOnlineBadge').textContent=user.status || 'Offline';
+  document.getElementById('careerOnlineBadge').style.color=user.status==='Online'?'#15803D':'var(--blue)';
+  document.getElementById('careerBio').innerHTML=[
+    ['Ism familiya',footerDisplayName(user)],
+    ['Lavozim',footerRoleTitle(user)],
+    ['Email',user.email||'Kiritilmagan'],
+    ['Telefon',careerPhone(user,rows)],
+    ['Bugungi online vaqt',formatDuration(userOnlineSeconds(user))]
+  ].map(([label,value])=>`<div class="career-fin-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join('');
+}
+function phoneIcon(){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 13.5a19.79 19.79 0 01-3.07-8.67A2 2 0 012 2.84h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L6.09 10.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg>`;
+}
+function mailIcon(){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>`;
+}
+function socialIcon(){
+  return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>`;
+}
+
+// ════════════════════════════════════════
 //  DOKUMENTATSIYA
 // ════════════════════════════════════════
 const DOC_TYPES={
@@ -2556,10 +2790,12 @@ async function createOnboardingUser(){
       const data=await api('/api/team',{method:'POST',body:{name,email,role:'manager',password}});
       managers.push({...data.user,deals:0,tasks:0,customers:0,avatar:data.user.avatar||initials,color:data.user.color||'linear-gradient(135deg,#86efac,#22c55e)'});
       selectedTeamManagerId=data.user.id;
+      selectedCareerManagerId=data.user.id;
     }catch(err){showToast(err.message);return;}
   }else{
     managers.push({id,name,email,role:'manager',status:'Offline',deals:0,tasks:0,customers:0,avatar:initials,color:'linear-gradient(135deg,#86efac,#22c55e)'});
     selectedTeamManagerId=id;
+    selectedCareerManagerId=id;
   }
   closeOnboarding();
   if(curPage==='jamoa')renderTeamPage();
@@ -2598,6 +2834,7 @@ async function setMyWorkStatus(status){
     document.getElementById('idleOvl')?.classList.remove('show');
     renderWorkStatus();
     if(curPage==='jamoa')renderTeamPage();
+    if(curPage==='career')renderCareerPage();
     showToast(next==='Online'?'Ish vaqti boshlandi':'Offline rejimga o‘tdingiz');
   }catch(err){
     showToast(err.message || 'Status o‘zgarmadi');
