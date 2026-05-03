@@ -432,7 +432,7 @@ table.crm-t{width:100%;border-collapse:collapse}
 .auth-field.error label,.auth-help.error{color:#FF5252}
 .auth-field.error .auth-input{border-color:#FFB8B8}
 .auth-help{font-size:11px;color:#8B8B8B;margin-top:6px}
-.auth-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:22px;height:22px;color:#8A8A8A}
+.auth-eye{position:absolute;right:12px;top:50%;transform:translateY(-50%);width:22px;height:22px;color:#8A8A8A;cursor:pointer}
 .auth-submit{width:100%;height:40px;border:0;border-radius:7px;background:var(--blue);color:#fff;font-family:var(--f);font-size:15px;font-weight:500;cursor:pointer;margin-top:16px}
 .auth-submit:hover{background:var(--blue-d)}
 .auth-submit.disabled{background:#6F99E9}
@@ -760,7 +760,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       </div>
       <div class="auth-form">
         <div class="auth-field"><label>Email</label><input class="auth-input" id="loginEmail" value="admin@myteacher.uz"></div>
-        <div class="auth-field" id="loginPasswordField"><label>Parol</label><div class="auth-input-wrap"><input class="auth-input" id="loginPassword" type="password" value="admin12345"><svg class="auth-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20C7 20 2.73 16.89 1 12a18.45 18.45 0 014.06-5.94M9.9 4.24A10.45 10.45 0 0112 4c5 0 9.27 3.11 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M14.12 14.12A3 3 0 019.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="auth-help" id="loginHelp">8 ta belgidan ko'p bo'lishi shart!</div></div>
+        <div class="auth-field" id="loginPasswordField"><label>Parol</label><div class="auth-input-wrap"><input class="auth-input" id="loginPassword" type="password" value="admin12345"><svg class="auth-eye" onclick="togglePasswordEye(this)" role="button" aria-label="Parolni ko'rsatish" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20C7 20 2.73 16.89 1 12a18.45 18.45 0 014.06-5.94M9.9 4.24A10.45 10.45 0 0112 4c5 0 9.27 3.11 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M14.12 14.12A3 3 0 019.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="auth-help" id="loginHelp">8 ta belgidan ko'p bo'lishi shart!</div></div>
         <button class="auth-submit" onclick="finishOnboarding()">Kirish</button>
       </div>
     </div>
@@ -783,8 +783,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
           <div class="auth-field"><label>Familiya</label><input class="auth-input" id="regLast" placeholder="Familiyangizni kiriting"></div>
         </div>
         <div class="auth-field"><label>Telefon</label><input class="auth-input" id="regEmail" placeholder="Emailingizni kiriting"></div>
-        <div class="auth-field"><label>Parol</label><div class="auth-input-wrap"><input class="auth-input" type="password" placeholder="Email"><svg class="auth-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20C7 20 2.73 16.89 1 12a18.45 18.45 0 014.06-5.94"/><path d="M14.12 14.12A3 3 0 019.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="auth-help">8 ta belgidan ko'p bo'lishi shart!</div></div>
-        <div class="auth-field"><label>Parol</label><div class="auth-input-wrap"><input class="auth-input" type="password" placeholder="Email"><svg class="auth-eye" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20C7 20 2.73 16.89 1 12a18.45 18.45 0 014.06-5.94"/><path d="M14.12 14.12A3 3 0 019.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="auth-help">8 ta belgidan ko'p bo'lishi shart!</div></div>
+        <div class="auth-field"><label>Parol</label><div class="auth-input-wrap"><input class="auth-input" type="password" placeholder="Email"><svg class="auth-eye" onclick="togglePasswordEye(this)" role="button" aria-label="Parolni ko'rsatish" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20C7 20 2.73 16.89 1 12a18.45 18.45 0 014.06-5.94"/><path d="M14.12 14.12A3 3 0 019.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="auth-help">8 ta belgidan ko'p bo'lishi shart!</div></div>
+        <div class="auth-field"><label>Parol</label><div class="auth-input-wrap"><input class="auth-input" type="password" placeholder="Email"><svg class="auth-eye" onclick="togglePasswordEye(this)" role="button" aria-label="Parolni ko'rsatish" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20C7 20 2.73 16.89 1 12a18.45 18.45 0 014.06-5.94"/><path d="M14.12 14.12A3 3 0 019.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="auth-help">8 ta belgidan ko'p bo'lishi shart!</div></div>
         <button class="auth-submit disabled" onclick="showRegisterError()">Kirish</button>
       </div>
     </div>
@@ -1341,7 +1341,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
         <div class="deal-side-section">
           <div class="deal-section-head"><span>Foydalanuvchi</span><span>2⌃</span></div>
           <div class="deal-side-card">
-            <div class="deal-info-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71"/></svg><div class="r-mini-av">DS<div class="r-dot"></div></div><span id="dwUserName">Mijoz</span></div>
+            <div class="deal-info-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21a8 8 0 10-16 0"/><circle cx="12" cy="7" r="4"/></svg><div class="r-mini-av">DS<div class="r-dot"></div></div><span id="dwUserName">Mijoz</span></div>
             <div class="deal-info-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="9" x2="20" y2="9"/><line x1="4" y1="15" x2="20" y2="15"/></svg><input class="deal-field" id="dwTag" value="Yangi"></div>
             <div class="deal-info-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg><span class="cat-badge">Yangi</span></div>
             <div class="deal-info-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/></svg><input class="deal-field" id="dwUserNote" placeholder="Izoh"></div>
@@ -1364,7 +1364,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
         </div>
         <div class="deal-side-section">
           <div class="deal-section-head"><span>Kontaktlar</span><span>1⌃</span></div>
-          <div class="deal-side-card"><div class="deal-info-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 13.5"/></svg><div class="phone-stack" id="dwPhones"><div class="phone-line">Telefon yo'q</div></div></div></div>
+          <div class="deal-side-card"><div class="deal-info-row"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.08 4.18 2 2 0 014.06 2h3a2 2 0 012 1.72c.12.9.33 1.77.64 2.61a2 2 0 01-.45 2.11L8.1 9.9a16 16 0 006 6l1.46-1.15a2 2 0 012.11-.45c.84.31 1.71.52 2.61.64A2 2 0 0122 16.92z"/></svg><div class="phone-stack" id="dwPhones"><div class="phone-line">Telefon yo'q</div></div></div></div>
           <button class="link-btn deal-side-card" onclick="addWorkspacePhone()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Yangi telefon qo'shish</button>
         </div>
         <div class="deal-side-section">
@@ -2762,6 +2762,16 @@ function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),2500);
+}
+function togglePasswordEye(icon){
+  const input=icon.closest('.auth-input-wrap')?.querySelector('input');
+  if(!input)return;
+  const visible=input.type==='text';
+  input.type=visible?'password':'text';
+  icon.setAttribute('aria-label',visible?'Parolni ko‘rsatish':'Parolni yashirish');
+  icon.innerHTML=visible
+    ? `<path d="M17.94 17.94A10.94 10.94 0 0112 20C7 20 2.73 16.89 1 12a18.45 18.45 0 014.06-5.94M9.9 4.24A10.45 10.45 0 0112 4c5 0 9.27 3.11 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M14.12 14.12A3 3 0 019.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/>`
+    : `<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/>`;
 }
 function showSalePopup(name='Ibrohim Boltaboyev',amount='3 000 000 UZS',avatar='IB'){
   document.getElementById('saleName').textContent=name;
