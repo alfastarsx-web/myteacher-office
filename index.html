@@ -1266,7 +1266,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 
   <div class="app-footer">
     <div class="footer-left">
-      <div class="footer-brand" id="footerBrand"><strong>CRM</strong> <span>| Sardor Xudoyberdiyev — maslahatchi mutaxassis</span></div>
+      <div class="footer-brand" id="footerBrand"><strong>CRM</strong> <span>| Sardor Xudoyberdiyev — admin</span></div>
       <div class="news-ticker" aria-label="Haftalik natijalar">
         <div class="news-label"><span>Live</span></div>
         <div class="news-track" id="footerTicker"></div>
@@ -1500,6 +1500,20 @@ let documents=[
 function currentUser(){ return managers.find(m=>m.id===currentManagerId) || managers[0]; }
 function isAdmin(){ return currentUser().role==='admin'; }
 function hasPerm(key,user=currentUser()){ return user.role==='admin' || user.permissions?.[key]===true; }
+function footerDisplayName(user=currentUser()){
+  if(user.role==='admin' && String(user.name || '').trim().toLowerCase()==='admin')return 'Sardor Xudoyberdiyev';
+  return user.name || 'Foydalanuvchi';
+}
+function footerRoleTitle(user=currentUser()){
+  if(user.role==='admin')return 'admin';
+  return user.title || user.position || 'maslahatchi mutaxassis';
+}
+function renderFooterBrand(){
+  const el=document.getElementById('footerBrand');
+  if(!el)return;
+  const user=currentUser();
+  el.innerHTML=`<strong>CRM</strong> <span>| ${esc(footerDisplayName(user))} — ${esc(footerRoleTitle(user))}</span>`;
+}
 function customerTitle(d){ return d.customerName || d.sub || 'Nomsiz mijoz'; }
 function dealTitle(d){ return d.dealName || d.name || 'Shartnoma nomi yo‘q'; }
 function dealPhones(d){ return [...new Set([...(Array.isArray(d.phones)?d.phones:[]), d.phone].map(v=>String(v||'').trim()).filter(Boolean))]; }
@@ -1620,6 +1634,7 @@ async function loadApiData(){
     if(curPage==='dashboard')renderDashboard();
     if(curPage==='docs')renderDocsPage();
     if(curPage==='payments')renderPaymentsPage();
+    renderFooterBrand();
     renderFooterTicker();
     return true;
   }catch(err){
@@ -1690,6 +1705,7 @@ function renderSidebarState(p){
 }
 
 function renderHdrRight(p){
+  renderFooterBrand();
   const r = document.getElementById('hdrRight');
   if(p==='shartnomalar'){
     r.innerHTML=`<button class="btn-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Eksport</button><button class="btn-ico" onclick="logout()">Chiqish</button>`;
@@ -2561,6 +2577,7 @@ async function changeManagerPassword(id){
 function switchCurrentManager(id){
   currentManagerId=id;
   document.querySelectorAll('.ddm').forEach(x=>x.classList.remove('open'));
+  renderFooterBrand();
   renderHdrRight(curPage);
   if(curPage==='jamoa')renderTeamPage();
   showToast(`${currentUser().name} sifatida ko'rilmoqda`);
