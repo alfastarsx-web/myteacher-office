@@ -18,9 +18,9 @@
     </filter>
   </defs>
   <g filter="url(#markShadow)">
-    <path d="M25 10H50L62.5 31.5L50 53H25L12.5 31.5L25 10Z" fill="url(#redMark)"/>
-    <path d="M19 57H52L68.5 85.5L52 114H19L2.5 85.5L19 57Z" fill="url(#blueMark)"/>
-    <path d="M78 29H108L123 55L108 81H78L63 55L78 29Z" fill="url(#blueMarkSoft)"/>
-    <path d="M76 84H100L112 104L100 124H76L64 104L76 84Z" fill="url(#blueMark)"/>
+    <path d="M25 11H51L64 33.5L51 56H25L12 33.5L25 11Z" fill="url(#redMark)"/>
+    <path d="M18 57H54L72 88L54 119H18L0 88L18 57Z" fill="url(#blueMark)"/>
+    <path d="M79 26H111L127 54L111 82H79L63 54L79 26Z" fill="url(#blueMarkSoft)"/>
+    <path d="M78 84H104L117 105L104 126H78L65 105L78 84Z" fill="url(#blueMark)"/>
   </g>
 </svg>
