@@ -52,6 +52,11 @@ export class UsersService {
     if (!user) throw new NotFoundException('Menejer topilmadi');
     if (body.name !== undefined) user.name = String(body.name).trim();
     if (body.email !== undefined) user.email = String(body.email).trim().toLowerCase();
+    if (body.password !== undefined) {
+      const password = String(body.password || '');
+      if (password.length < 8) throw new Error('Parol kamida 8 ta belgidan iborat bo‘lishi kerak');
+      user.passwordHash = this.passwords.hash(password);
+    }
     if (body.status !== undefined) user.status = String(body.status);
     if (body.role !== undefined && user.id !== admin.id) user.role = body.role === UserRole.Admin ? UserRole.Admin : UserRole.Manager;
     return this.publicUser(await this.users.save(user));

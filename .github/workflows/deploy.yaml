@@ -19,7 +19,7 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
 
-            if [ ! -f backend/.env ] && [ -n "${{ secrets.DB_HOST }}" ]; then
+            if [ -n "${{ secrets.DB_HOST }}" ]; then
               printf '%s\n' \
                 'HOST=127.0.0.1' \
                 'PORT=4000' \
