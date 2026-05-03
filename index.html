@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>CRM</title>
+<title>MyTeacher Office</title>
+<link rel="icon" type="image/svg+xml" href="assets/myteacher-mark.svg">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 /* ══════════════════════════════════════
@@ -33,6 +34,8 @@ body{font-family:var(--f);background:var(--bg);color:var(--td);display:flex;heig
 .si.on{background:var(--blue-l);color:var(--blue)}
 .si.on::before{content:'';position:absolute;left:-14px;width:3px;height:22px;border-radius:0 3px 3px 0;background:var(--blue)}
 .si svg{width:20px;height:20px}
+.brand-mark{width:40px;height:40px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.brand-mark img{width:38px;height:38px;display:block}
 .sp{flex:1}
 .tgl{width:40px;height:24px;background:var(--yellow);border-radius:12px;position:relative;cursor:pointer;margin-top:8px;transition:background .2s}
 .tgl::after{content:'';width:18px;height:18px;background:#fff;border-radius:50%;position:absolute;right:3px;top:3px;transition:.2s}
@@ -747,6 +750,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 <section class="auth-shell" id="authShell">
   <button class="auth-close" onclick="closeOnboarding()">×</button>
   <div class="auth-page auth-mode active" id="authLogin">
+    <img src="assets/myteacher-mark.svg" alt="MyTeacher" style="width:58px;height:58px;margin:0 auto 18px;display:block">
     <h1 class="auth-title">MyTeacherga xush kelibsiz! 😎</h1>
     <p class="auth-subtitle">Crm ga kirish uchun ro’yxatdan o’tishingiz kerak. Agarda siz ro’yxatdan o’tgan bo’lsangiz kirishni bosing</p>
     <div class="auth-card">
@@ -765,6 +769,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   </div>
 
   <div class="auth-page auth-mode" id="authRegister">
+    <img src="assets/myteacher-mark.svg" alt="MyTeacher" style="width:58px;height:58px;margin:0 auto 18px;display:block">
     <h1 class="auth-title">MyTeacherga xush kelibsiz! 😎</h1>
     <p class="auth-subtitle">Crm ga kirish uchun ro’yxatdan o’tishingiz kerak. Agarda siz ro’yxatdan o’tgan bo’lsangiz kirishni bosing</p>
     <div class="auth-card">
@@ -803,13 +808,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 
 <!-- ══════════════ SIDEBAR ══════════════ -->
 <nav class="sb">
-  <div style="width:40px;height:40px;margin-bottom:12px;cursor:pointer" title="Onboarding" onclick="showOnboarding('login')">
-    <svg viewBox="0 0 40 40" fill="none" width="40" height="40">
-      <circle cx="14" cy="14" r="8" fill="#EF4444"/>
-      <circle cx="26" cy="14" r="8" fill="#3B82F6"/>
-      <circle cx="20" cy="24" r="8" fill="#FBBF24"/>
-    </svg>
-  </div>
+  <div class="brand-mark" title="MyTeacher" onclick="showOnboarding('login')"><img src="assets/myteacher-mark.svg" alt="MyTeacher"></div>
   <div class="si" id="sbDash" title="Dashboard" onclick="goPage('dashboard')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
   <div class="si" id="sbPayments" title="Payments and Earnings" onclick="goPage('payments')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg></div>
   <div class="si on" id="sbCRM" title="CRM" onclick="goPage('shartnomalar')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg></div>

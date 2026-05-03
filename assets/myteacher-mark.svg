@@ -1,0 +1,26 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="redMark" x1="17" y1="6" x2="58" y2="54" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#F91515"/>
+      <stop offset="1" stop-color="#D90416"/>
+    </linearGradient>
+    <linearGradient id="blueMark" x1="10" y1="31" x2="117" y2="122" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1767FF"/>
+      <stop offset=".55" stop-color="#0F4FE6"/>
+      <stop offset="1" stop-color="#0A39B8"/>
+    </linearGradient>
+    <linearGradient id="blueMarkSoft" x1="58" y1="25" x2="111" y2="91" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#2C7DFF"/>
+      <stop offset="1" stop-color="#0E4EDB"/>
+    </linearGradient>
+    <filter id="markShadow" x="0" y="0" width="128" height="128" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feDropShadow dx="0" dy="5" stdDeviation="5" flood-color="#0F172A" flood-opacity=".12"/>
+    </filter>
+  </defs>
+  <g filter="url(#markShadow)">
+    <path d="M25 10H50L62.5 31.5L50 53H25L12.5 31.5L25 10Z" fill="url(#redMark)"/>
+    <path d="M19 57H52L68.5 85.5L52 114H19L2.5 85.5L19 57Z" fill="url(#blueMark)"/>
+    <path d="M78 29H108L123 55L108 81H78L63 55L78 29Z" fill="url(#blueMarkSoft)"/>
+    <path d="M76 84H100L112 104L100 124H76L64 104L76 84Z" fill="url(#blueMark)"/>
+  </g>
+</svg>
