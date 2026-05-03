@@ -825,6 +825,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .onboarding-form{margin-top:34px}
 }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -1778,7 +1779,7 @@ function renderHdrRight(p){
   renderWorkStatus();
   const r = document.getElementById('hdrRight');
   if(p==='shartnomalar'){
-    r.innerHTML=`<input id="dealImportFile" type="file" accept=".csv,text/csv" style="display:none" onchange="importDealsFromCsv(this.files?.[0]);this.value=''"><button class="btn-ico" onclick="document.getElementById('dealImportFile')?.click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>`;
+    r.innerHTML=`<input id="dealImportFile" type="file" accept=".csv,text/csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" style="display:none" onchange="importDealsFromFile(this.files?.[0]);this.value=''"><button class="btn-ico" onclick="document.getElementById('dealImportFile')?.click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Import</button>`;
   } else if(p==='mijozlar'){
     r.innerHTML=`<button class="btn-ico" onclick="showOnboarding('user')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>Yangi foydalanuvchi</button>
     <div class="search-box"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><input placeholder="Qidirish..."></div>`;
@@ -1875,6 +1876,31 @@ function splitImportPhones(value){
 function csvToDealRows(text){
   const rows=parseCsv(text);
   if(rows.length<2)return [];
+  return tableToDealRows(rows);
+}
+
+function xlsxToDealRows(file){
+  return new Promise((resolve,reject)=>{
+    if(!window.XLSX){reject(new Error('Excel import kutubxonasi yuklanmadi. Internetni tekshiring'));return;}
+    const reader=new FileReader();
+    reader.onload=()=>{
+      try{
+        const data=new Uint8Array(reader.result);
+        const workbook=XLSX.read(data,{type:'array'});
+        const sheet=workbook.Sheets[workbook.SheetNames[0]];
+        const rows=XLSX.utils.sheet_to_json(sheet,{header:1,defval:''});
+        resolve(tableToDealRows(rows));
+      }catch(err){
+        reject(err);
+      }
+    };
+    reader.onerror=()=>reject(reader.error);
+    reader.readAsArrayBuffer(file);
+  });
+}
+
+function tableToDealRows(rows){
+  if(rows.length<2)return [];
   const headers=rows[0].map(h=>String(h||'').trim().toLowerCase());
   return rows.slice(1).map(cols=>{
     const item={};
@@ -1896,13 +1922,13 @@ function csvToDealRows(text){
   }).filter(row=>String(row.customerName||'').trim());
 }
 
-async function importDealsFromCsv(file){
+async function importDealsFromFile(file){
   if(!file)return;
   if(!apiToken){showToast('Avval tizimga kiring');showOnboarding('login');return;}
   try{
-    const text=await file.text();
-    const rows=csvToDealRows(text);
-    if(!rows.length){showToast('CSV ichida shartnoma topilmadi');return;}
+    const isXlsx=/\.xlsx$/i.test(file.name || '');
+    const rows=isXlsx ? await xlsxToDealRows(file) : csvToDealRows(await file.text());
+    if(!rows.length){showToast('Fayl ichida shartnoma topilmadi');return;}
     const data=await api('/api/deals/import',{method:'POST',body:{rows}});
     await loadApiData();
     showToast(`${(data.deals||[]).length} ta shartnoma import qilindi`);
