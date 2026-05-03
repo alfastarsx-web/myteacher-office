@@ -21,9 +21,9 @@ export class SeedService implements OnApplicationBootstrap {
   ) {}
 
   async onApplicationBootstrap() {
-    if (process.env.SEED_DEMO === 'false') return;
-    await this.seedUsers();
     await this.seedStages();
+    if (process.env.SEED_DEMO !== 'true') return;
+    await this.seedUsers();
     await this.seedDeals();
     await this.seedTasks();
     await this.seedDocs();

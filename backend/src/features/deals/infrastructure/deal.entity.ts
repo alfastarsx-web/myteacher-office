@@ -27,6 +27,21 @@ export class DealEntity {
   @Column({ type: 'text', default: '' })
   note: string;
 
+  @Column({ default: '' })
+  adSource: string;
+
+  @Column({ default: '' })
+  registeredAt: string;
+
+  @Column({ nullable: true })
+  age: number | null;
+
+  @Column({ type: 'text', default: '' })
+  learningGoal: string;
+
+  @Column({ default: '' })
+  leadChannel: string;
+
   @ManyToOne(() => UserEntity, user => user.deals, { eager: false, nullable: true })
   owner: UserEntity;
 

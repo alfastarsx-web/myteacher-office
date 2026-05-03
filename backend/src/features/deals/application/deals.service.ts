@@ -43,10 +43,42 @@ export class DealsService {
       stageId: body.stageId || 'yangi',
       price: Number(body.price || 0),
       note: String(body.note || ''),
+      adSource: String(body.adSource || ''),
+      registeredAt: String(body.registeredAt || ''),
+      age: body.age === null || body.age === undefined || body.age === '' ? null : Number(body.age),
+      learningGoal: String(body.learningGoal || ''),
+      leadChannel: String(body.leadChannel || ''),
       ownerId: user.role === UserRole.Admin ? this.parseOwnerId(body.ownerId) : user.id,
       createdBy: user.id
     });
     return this.deals.save(deal);
+  }
+
+  async importRows(body: any, user: UserEntity) {
+    this.assertCrmAccess(user);
+    const rows = Array.isArray(body.rows) ? body.rows : [];
+    if (!rows.length) throw new BadRequestException('Import uchun qatorlar topilmadi');
+    const imported: DealEntity[] = [];
+    for (const row of rows) {
+      const customerName = String(row.customerName || row.name || row.mijoz || '').trim();
+      if (!customerName) continue;
+      imported.push(await this.create({
+        customerName,
+        dealName: String(row.dealName || row.contract || row.shartnoma || '').trim(),
+        phone: row.phone || row.telefon || '',
+        phones: row.phones,
+        stageId: row.stageId || row.stage || 'yangi',
+        price: row.price || row.summa || 0,
+        note: row.note || row.izoh || '',
+        adSource: row.adSource || row.reklama || row['qaysi reklamadan kelgan'] || '',
+        registeredAt: row.registeredAt || row['ro‘yxatdan o‘tgan vaqti'] || row['royxatdan otgan vaqti'] || row.vaqt || '',
+        age: row.age || row.yosh || row.yoshi || '',
+        learningGoal: row.learningGoal || row.maqsad || row['o‘rganishdan maqsadi'] || row['organishdan maqsadi'] || '',
+        leadChannel: row.leadChannel || row.channel || row.kanal || row['qayerdan keldi'] || '',
+        ownerId: row.ownerId || null
+      }, user));
+    }
+    return imported;
   }
 
   async update(id: number, body: any, user: UserEntity) {
@@ -56,9 +88,10 @@ export class DealsService {
     const nextStageId = body.stageId !== undefined ? String(body.stageId) : deal.stageId;
     const nextPrice = body.price !== undefined ? Number(body.price || 0) : Number(deal.price || 0);
     this.assertStageRules(nextStageId, nextPrice, body, user, deal);
-    ['customerName', 'dealName', 'stageId', 'note'].forEach(key => {
+    ['customerName', 'dealName', 'stageId', 'note', 'adSource', 'registeredAt', 'learningGoal', 'leadChannel'].forEach(key => {
       if (body[key] !== undefined) deal[key] = String(body[key]);
     });
+    if (body.age !== undefined) deal.age = body.age === null || body.age === '' ? null : Number(body.age);
     if (body.phone !== undefined || body.phones !== undefined) {
       const phones = this.normalizePhones(body);
       deal.phone = phones[0] || '';
@@ -85,6 +118,7 @@ export class DealsService {
 
   async delete(id: number, user: UserEntity) {
     this.assertCrmAccess(user);
+    if (user.role !== UserRole.Admin) throw new ForbiddenException('Faqat Admin shartnomani o‘chira oladi');
     const deal = await this.deals.findOne({ where: { id } });
     if (!deal || !this.canSee(user, deal)) throw new NotFoundException('Shartnoma topilmadi');
     await this.deals.delete(id);
@@ -93,7 +127,8 @@ export class DealsService {
   private normalizePhones(body: any) {
     return [...new Set([...(Array.isArray(body.phones) ? body.phones : []), body.phone]
       .map(item => String(item || '').trim())
-      .filter(Boolean))];
+      .filter(Boolean))]
+      .slice(0, 3);
   }
 
   private parseOwnerId(value: any) {

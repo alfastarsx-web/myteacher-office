@@ -18,6 +18,11 @@ export class DealsController {
     return { deal: await this.deals.create(body, req.user) };
   }
 
+  @Post('import')
+  async importRows(@Body() body: any, @Req() req: AuthedRequest) {
+    return { deals: await this.deals.importRows(body, req.user) };
+  }
+
   @Patch('bulk/owner')
   async bulkAssignOwner(@Body() body: any, @Req() req: AuthedRequest) {
     return { deals: await this.deals.bulkAssignOwner(body, req.user) };
