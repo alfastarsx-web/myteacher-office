@@ -9,7 +9,7 @@ export class RootController {
     return res.sendFile(join(process.cwd(), '..', 'index.html'));
   }
 
-  @Get('api/health')
+  @Get('health')
   health() {
     return { ok: true };
   }

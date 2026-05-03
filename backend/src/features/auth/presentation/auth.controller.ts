@@ -4,7 +4,7 @@ import { AuthService } from '../application/auth.service';
 import { JwtAuthGuard } from './jwt-auth.guard';
 import type { AuthedRequest } from '../../../types';
 
-@Controller('api/auth')
+@Controller('auth')
 export class AuthController {
   constructor(
     private readonly auth: AuthService,

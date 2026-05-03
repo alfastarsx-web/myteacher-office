@@ -3,7 +3,7 @@ import { JwtAuthGuard } from '../../auth/presentation/jwt-auth.guard';
 import type { AuthedRequest } from '../../../types';
 import { DealsService } from '../application/deals.service';
 
-@Controller('api/deals')
+@Controller('deals')
 @UseGuards(JwtAuthGuard)
 export class DealsController {
   constructor(private readonly deals: DealsService) {}

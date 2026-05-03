@@ -2,7 +2,7 @@ import { Body, Controller, Get, Post, UseGuards } from '@nestjs/common';
 import { AdminGuard } from '../../auth/presentation/admin.guard';
 import { StagesService } from '../application/stages.service';
 
-@Controller('api/stages')
+@Controller('stages')
 export class StagesController {
   constructor(private readonly stages: StagesService) {}
 

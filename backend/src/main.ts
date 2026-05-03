@@ -1,4 +1,5 @@
 import 'dotenv/config';
+import { RequestMethod } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { json, urlencoded } from 'express';
@@ -18,6 +19,9 @@ async function bootstrap() {
   app.use(json({ limit: '25mb' }));
   app.use(urlencoded({ limit: '25mb', extended: true }));
   app.useGlobalFilters(new HttpErrorFilter());
+  app.setGlobalPrefix('api', {
+    exclude: [{ path: '', method: RequestMethod.GET }]
+  });
   app.useStaticAssets(rootDir, { index: false });
 
   const port = Number(process.env.PORT || 4000);

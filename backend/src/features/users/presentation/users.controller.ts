@@ -4,7 +4,7 @@ import { JwtAuthGuard } from '../../auth/presentation/jwt-auth.guard';
 import { UsersService } from '../application/users.service';
 import type { AuthedRequest } from '../../../types';
 
-@Controller('api/team')
+@Controller('team')
 export class UsersController {
   constructor(private readonly users: UsersService) {}
 

@@ -3,7 +3,7 @@ import { JwtAuthGuard } from '../../auth/presentation/jwt-auth.guard';
 import type { AuthedRequest } from '../../../types';
 import { DashboardService } from '../application/dashboard.service';
 
-@Controller('api/dashboard')
+@Controller('dashboard')
 @UseGuards(JwtAuthGuard)
 export class DashboardController {
   constructor(private readonly dashboard: DashboardService) {}

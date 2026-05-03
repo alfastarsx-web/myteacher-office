@@ -3,7 +3,7 @@ import { JwtAuthGuard } from '../../auth/presentation/jwt-auth.guard';
 import type { AuthedRequest } from '../../../types';
 import { TasksService } from '../application/tasks.service';
 
-@Controller('api/tasks')
+@Controller('tasks')
 @UseGuards(JwtAuthGuard)
 export class TasksController {
   constructor(private readonly tasks: TasksService) {}
