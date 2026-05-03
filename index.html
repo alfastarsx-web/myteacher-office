@@ -2453,6 +2453,14 @@ function renderTeamDetail(){
     </div>
     <div class="detail-section">
       <div class="detail-title">Ruxsatlar</div>
+      <div class="permission-subblock">
+        <div class="permission-name">Parolni o'zgartirish</div>
+        <div class="permission-desc">Admin tanlangan menejer uchun yangi parol belgilaydi. Kamida 8 ta belgi kiriting.</div>
+        <div class="detail-field">
+          <input class="detail-input" id="managerPasswordInput" type="password" placeholder="Yangi parol" ${adminMode?'':'disabled'}>
+        </div>
+        <button class="btn-outline" ${adminMode?'':'disabled'} onclick="changeManagerPassword(${m.id})">Parolni saqlash</button>
+      </div>
       <div class="permission-list">${permissions.map(p=>`<label class="permission-item"><input type="checkbox" ${p[3]?'checked':''} ${adminMode?'':'disabled'}><div><div class="permission-name">${p[1]}</div><div class="permission-desc">${p[2]}</div></div></label>`).join('')}</div>
       <div class="permission-subblock">
         <div class="permission-name">Joriy ko'rish rejimi</div>
@@ -2469,7 +2477,6 @@ function renderTeamDetail(){
       <div class="channel-list">${channels.map(c=>`<div class="channel-row"><div><span class="channel-dot" style="background:${c[1]}"></span>${c[0]}</div><span class="mini-chip">${c[2]?'Biriktirilgan':'Ulanmagan'}</span><button class="switch ${c[2]?'on':''}" ${adminMode?'':'disabled'} onclick="this.classList.toggle('on')"></button></div>`).join('')}</div>
     </div>
     <div class="team-danger">
-      <button class="btn-outline" ${adminMode?'':'disabled'} onclick="showToast('Parol tiklash havolasi tayyorlandi')">Parolni yangilash</button>
       <button class="btn-outline danger" ${adminMode && m.id!==currentManagerId?'':'disabled'} onclick="deactivateManager(${m.id})">Faolsizlantirish</button>
     </div>`;
 }
@@ -2509,6 +2516,21 @@ function changeManagerRole(id,role){
   showToast(`${m.name}: ${roleLabel(role)} roli berildi`);
   renderTeamPage();
   renderHdrRight('jamoa');
+}
+async function changeManagerPassword(id){
+  if(!isAdmin())return;
+  const input=document.getElementById('managerPasswordInput');
+  const password=(input?.value||'').trim();
+  const m=managers.find(x=>x.id===id);
+  if(!m)return;
+  if(password.length<8){showToast('Parol kamida 8 ta belgi bo‘lishi kerak');return;}
+  try{
+    if(apiToken)await api(`/api/team/${id}`,{method:'PATCH',body:{password}});
+    if(input)input.value='';
+    showToast(`${m.name} paroli yangilandi`);
+  }catch(err){
+    showToast(err.message || 'Parol yangilanmadi');
+  }
 }
 function switchCurrentManager(id){
   currentManagerId=id;
