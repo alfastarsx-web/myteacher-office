@@ -27,11 +27,11 @@ export class DealEntity {
   @Column({ type: 'text', default: '' })
   note: string;
 
-  @ManyToOne(() => UserEntity, user => user.deals, { eager: false })
+  @ManyToOne(() => UserEntity, user => user.deals, { eager: false, nullable: true })
   owner: UserEntity;
 
-  @Column()
-  ownerId: number;
+  @Column({ nullable: true })
+  ownerId: number | null;
 
   @Column()
   createdBy: number;

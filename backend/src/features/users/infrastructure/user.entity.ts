@@ -30,6 +30,9 @@ export class UserEntity {
   @Column({ default: 'linear-gradient(135deg,#93c5fd,#3b82f6)' })
   color: string;
 
+  @Column({ type: 'jsonb', default: () => "'{}'" })
+  permissions: Record<string, boolean>;
+
   @OneToMany(() => DealEntity, deal => deal.owner)
   deals: DealEntity[];
 

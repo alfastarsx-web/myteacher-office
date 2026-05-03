@@ -13,7 +13,7 @@ export class AdminGuard implements CanActivate {
     const token = header.startsWith('Bearer ') ? header.slice(7) : '';
     const user = token ? await this.auth.validateAccessToken(token) : null;
     if (!user) throw new UnauthorizedException('Unauthorized');
-    if (user.role !== UserRole.Admin) throw new ForbiddenException('Admin permission required');
+    if (user.role !== UserRole.Admin && user.permissions?.roles !== true) throw new ForbiddenException('Admin permission required');
     req.user = user;
     return true;
   }

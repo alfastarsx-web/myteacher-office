@@ -1407,7 +1407,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
         </div>
       </div>
       <div class="frow">
-        <div class="fg"><label>Agent</label><select class="fs"><option>Diyora Shomamatova</option><option>Aziz Jurayev</option></select></div>
+        <div class="fg"><label>Mas'ul menejer</label><select class="fs" id="mOwner"></select></div>
         <div class="fg"><label>Yaratuvchi</label><input class="fi" value="Diyora Shomamatova" readonly style="background:var(--bg);color:var(--mu)"></div>
       </div>
       <div class="fg" style="margin-bottom:18px"><label>Izoh</label><textarea class="fta" id="mNt" placeholder="Izoh..."></textarea></div>
@@ -1499,10 +1499,11 @@ let documents=[
 
 function currentUser(){ return managers.find(m=>m.id===currentManagerId) || managers[0]; }
 function isAdmin(){ return currentUser().role==='admin'; }
+function hasPerm(key,user=currentUser()){ return user.role==='admin' || user.permissions?.[key]===true; }
 function customerTitle(d){ return d.customerName || d.sub || 'Nomsiz mijoz'; }
 function dealTitle(d){ return d.dealName || d.name || 'Shartnoma nomi yo‘q'; }
 function dealPhones(d){ return [...new Set([...(Array.isArray(d.phones)?d.phones:[]), d.phone].map(v=>String(v||'').trim()).filter(Boolean))]; }
-function currentUserDeals(){ const u=currentUser(); return isAdmin()?deals:deals.filter(d=>d.ownerId===u.id || d.createdBy===u.id); }
+function currentUserDeals(){ const u=currentUser(); return hasPerm('all',u)?deals:deals.filter(d=>d.ownerId===u.id); }
 function apiBase(){
   if(location.protocol.startsWith('http'))return location.origin;
   return 'http://127.0.0.1:4000';
@@ -1526,11 +1527,11 @@ async function api(path,options={}){
 function dealFromApi(d){
   const date=d.createdAt?formatDealDate(d.createdAt):'Bugun';
   const phones=dealPhones(d);
-  return {id:d.id,customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,note:d.note || '',ownerId:d.ownerId,createdBy:d.createdBy};
+  return {id:d.id,customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,note:d.note || '',ownerId:d.ownerId ?? null,createdBy:d.createdBy};
 }
 function dealToApiPayload(d){
   const phones=dealPhones(d);
-  return {customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,stageId:d.col,price:d.price,note:d.note,ownerId:d.ownerId};
+  return {customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,stageId:d.col,price:d.price,note:d.note,ownerId:d.ownerId ?? null};
 }
 function formatDealDate(iso){
   const dt=new Date(iso);
@@ -1909,12 +1910,22 @@ function openModal(id=null,defCol='yangi'){
   const sel=document.getElementById('mS');
   sel.value=d?d.col:defCol;
   updS(sel);
+  renderDealOwnerSelect(d);
   document.getElementById('mTaskRow').style.display=d?'flex':'none';
   document.getElementById('mDel').style.display=d?'flex':'none';
   document.getElementById('dealOvl').classList.add('show');
 }
 function closeModal(){document.getElementById('dealOvl').classList.remove('show');editId=null;}
 function updS(sel){sel.style.background=SC[sel.value]||'#2563EB';sel.style.color='#fff';sel.style.fontWeight='700';}
+function renderDealOwnerSelect(deal=null){
+  const select=document.getElementById('mOwner');
+  if(!select)return;
+  const canAssign=isAdmin();
+  const selected=deal ? (deal.ownerId ?? '') : (canAssign ? '' : currentManagerId);
+  const managerOptions=managers.filter(m=>m.role!=='admin').map(m=>`<option value="${m.id}" ${String(selected)===String(m.id)?'selected':''}>${esc(m.name)}</option>`).join('');
+  select.innerHTML=`${canAssign?`<option value="" ${selected===''?'selected':''}>Taqsimlanmagan · faqat Admin</option>`:''}${managerOptions}`;
+  select.disabled=!canAssign;
+}
 function renderModalPhones(phones=[]){
   const list=document.getElementById('mPhoneList');
   const values=phones.length?phones:[''];
@@ -1947,7 +1958,9 @@ async function saveDeal(){
   if(!customerName){document.getElementById('mC').classList.add('err');document.getElementById('mC').focus();return;}
   document.getElementById('mC').classList.remove('err');
   document.getElementById('mN').classList.remove('err');
-  const payload={customerName,phone,phones,dealName,price,col,note,ownerId:currentManagerId};
+  const ownerSelect=document.getElementById('mOwner');
+  const ownerId=isAdmin()?(ownerSelect?.value || null):currentManagerId;
+  const payload={customerName,phone,phones,dealName,price,col,note,ownerId};
   if(apiToken){
     try{
       if(editId){
@@ -2418,10 +2431,10 @@ function renderTeamDetail(){
   const adminMode=isAdmin();
   const canEdit=adminMode || m.id===currentManagerId;
   const permissions=[
-    ['crm','CRMni ko‘rish','Shartnomalar, mijozlar va vazifalarni ochish',true],
-    ['own','O‘z mijozlari','Faqat o‘ziga biriktirilgan mijozlar bilan ishlash',m.role==='manager'],
-    ['all','Barcha mijozlar','Jamoaning barcha mijoz va shartnomalarini ko‘rish',m.role==='admin'],
-    ['roles','Rollarni boshqarish','Admin/Menejer rollarini berish',m.role==='admin'],
+    ['crm','CRMni ko‘rish','Shartnomalar, mijozlar va vazifalarni ochish',hasPerm('crm',m),true],
+    ['own','O‘z mijozlari','Faqat o‘ziga biriktirilgan mijozlar bilan ishlash',hasPerm('own',m),true],
+    ['all','Barcha mijozlar','Jamoaning barcha mijoz va shartnomalarini ko‘rish',hasPerm('all',m),m.role!=='admin'],
+    ['roles','Rollarni boshqarish','Admin/Menejer rollarini berish',hasPerm('roles',m),m.role!=='admin'],
   ];
   const channels=[
     ['Web chat','#2563EB',m.status==='Online'],
@@ -2460,7 +2473,7 @@ function renderTeamDetail(){
         </div>
         <button class="btn-outline" ${adminMode?'':'disabled'} onclick="changeManagerPassword(${m.id})">Parolni saqlash</button>
       </div>
-      <div class="permission-list">${permissions.map(p=>`<label class="permission-item"><input type="checkbox" ${p[3]?'checked':''} ${adminMode?'':'disabled'}><div><div class="permission-name">${p[1]}</div><div class="permission-desc">${p[2]}</div></div></label>`).join('')}</div>
+      <div class="permission-list">${permissions.map(p=>`<label class="permission-item"><input type="checkbox" ${p[3]?'checked':''} ${adminMode && p[4]?'':'disabled'} onchange="updateManagerPermission(${m.id},'${p[0]}',this.checked)"><div><div class="permission-name">${p[1]}</div><div class="permission-desc">${p[2]}</div></div></label>`).join('')}</div>
       <div class="permission-subblock">
         <div class="permission-name">Joriy ko'rish rejimi</div>
         <div class="permission-desc">CRMni qaysi foydalanuvchi roli orqali ko'rishni tanlang.</div>
@@ -2515,6 +2528,20 @@ function changeManagerRole(id,role){
   showToast(`${m.name}: ${roleLabel(role)} roli berildi`);
   renderTeamPage();
   renderHdrRight('jamoa');
+}
+async function updateManagerPermission(id,key,value){
+  if(!isAdmin())return;
+  const m=managers.find(x=>x.id===id);
+  if(!m)return;
+  m.permissions={...(m.permissions||{}),[key]:value};
+  try{
+    if(apiToken)await api(`/api/team/${id}`,{method:'PATCH',body:{permissions:{[key]:value}}});
+    showToast(`${m.name}: ruxsat yangilandi`);
+  }catch(err){
+    m.permissions={...(m.permissions||{}),[key]:!value};
+    showToast(err.message || 'Ruxsat saqlanmadi');
+  }
+  renderTeamPage();
 }
 async function changeManagerPassword(id){
   if(!isAdmin())return;

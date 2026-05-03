@@ -29,7 +29,7 @@ export interface Deal {
   stageId: string;
   price: number;
   note: string;
-  ownerId: number;
+  ownerId: number | null;
   createdBy: number;
   createdAt: string;
 }

@@ -22,11 +22,24 @@ export class UsersService {
 
   publicUser(user: UserEntity) {
     const { passwordHash: _passwordHash, ...safe } = user;
+    safe.permissions = this.effectivePermissions(user);
     return safe;
   }
 
+  effectivePermissions(user: UserEntity) {
+    const isAdmin = user.role === UserRole.Admin;
+    const saved = user.permissions || {};
+    return {
+      crm: true,
+      own: true,
+      ...saved,
+      all: isAdmin || saved.all === true,
+      roles: isAdmin || saved.roles === true
+    };
+  }
+
   async listFor(user: UserEntity) {
-    const rows = user.role === UserRole.Admin ? await this.users.find() : [user];
+    const rows = user.role === UserRole.Admin || user.permissions?.roles === true ? await this.users.find() : [user];
     return rows.map(item => this.publicUser(item));
   }
 
@@ -42,7 +55,8 @@ export class UsersService {
       role: body.role === UserRole.Admin ? UserRole.Admin : UserRole.Manager,
       status: body.status || 'Offline',
       avatar: body.avatar || name.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase(),
-      color: body.color || 'linear-gradient(135deg,#93c5fd,#3b82f6)'
+      color: body.color || 'linear-gradient(135deg,#93c5fd,#3b82f6)',
+      permissions: body.permissions || {}
     });
     return this.publicUser(await this.users.save(user));
   }
@@ -58,6 +72,7 @@ export class UsersService {
       user.passwordHash = this.passwords.hash(password);
     }
     if (body.status !== undefined) user.status = String(body.status);
+    if (body.permissions !== undefined) user.permissions = { ...(user.permissions || {}), ...body.permissions };
     if (body.role !== undefined && user.id !== admin.id) user.role = body.role === UserRole.Admin ? UserRole.Admin : UserRole.Manager;
     return this.publicUser(await this.users.save(user));
   }
