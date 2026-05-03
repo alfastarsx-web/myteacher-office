@@ -53,14 +53,11 @@ body{font-family:var(--f);background:var(--bg);color:var(--td);display:flex;heig
 .footer-brand{font-size:13px;font-weight:700;color:var(--mu);letter-spacing:.2px;white-space:nowrap}
 .footer-brand strong{color:var(--td)}
 .footer-brand span{font-weight:500;color:var(--mu)}
-.work-status{display:flex;align-items:center;gap:8px;border-left:1px solid var(--br);padding-left:12px;white-space:nowrap}
+.work-status{display:flex;align-items:center;gap:7px;border-left:1px solid var(--br);padding-left:12px;white-space:nowrap}
 .work-dot{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 3px rgba(239,68,68,.10)}
 .work-dot.on{background:var(--green);box-shadow:0 0 0 3px rgba(34,197,94,.12)}
-.work-time{font-size:12px;color:var(--mu)}
+.work-time{font-size:12px;color:var(--mu);font-variant-numeric:tabular-nums}
 .work-time strong{color:var(--td);font-weight:700}
-.work-toggle{height:28px;border:1px solid var(--br);border-radius:6px;background:var(--wh);font-family:var(--f);font-size:12px;font-weight:700;color:var(--tm);padding:0 10px;cursor:pointer}
-.work-toggle.on{border-color:#BBF7D0;background:#F0FDF4;color:#15803D}
-.work-toggle.off{border-color:#FECACA;background:#FEF2F2;color:#B91C1C}
 .news-ticker{height:28px;min-width:260px;max-width:760px;flex:1;border:1px solid var(--br);border-left:3px solid var(--blue);background:#F8FAFC;display:flex;align-items:center;overflow:hidden;box-shadow:inset 0 1px 0 rgba(255,255,255,.8)}
 .news-label{height:100%;width:48px;display:flex;align-items:center;justify-content:center;background:#EEF2FF;color:var(--blue);border-right:1px solid var(--br);font-size:10px;font-weight:900;letter-spacing:.6px;text-transform:uppercase;flex:0 0 48px;position:relative;z-index:2}
 .news-label span{animation:livePulse 1.8s ease-in-out infinite}
@@ -840,7 +837,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5.5" cy="11.5" r="4.5"/><circle cx="18.5" cy="11.5" r="4.5"/><line x1="5.5" y1="16" x2="18.5" y2="16"/></svg></div>
   <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
   <div class="si" id="sbSettings" title="Sozlamalar" onclick="goPage('settings')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
-  <div class="tgl" onclick="this.classList.toggle('off')"></div>
+  <div class="tgl off" id="workToggle" title="Online / Offline" onclick="toggleWorkFromSidebar()"></div>
 </nav>
 
 <!-- ══════════════ MAIN ══════════════ -->
@@ -1569,13 +1566,17 @@ function formatDuration(seconds){
 }
 function renderWorkStatus(){
   const el=document.getElementById('footerWorkStatus');
-  if(!el)return;
   const user=currentUser();
   const online=user.status==='Online';
+  const toggle=document.getElementById('workToggle');
+  if(toggle){
+    toggle.classList.toggle('off',!online);
+    toggle.title=online?'Online. Offline qilish':'Offline. Ishni boshlash';
+  }
+  if(!el)return;
   el.innerHTML=`
     <span class="work-dot ${online?'on':''}"></span>
-    <span class="work-time">Onlayn vaqtingiz: <strong>${formatDuration(userOnlineSeconds(user))}</strong></span>
-    <button class="work-toggle ${online?'off':'on'}" onclick="setMyWorkStatus('${online?'Offline':'Online'}')">${online?'Offline':'Ishni boshlash'}</button>
+    <span class="work-time"><strong>${formatDuration(userOnlineSeconds(user))}</strong></span>
   `;
 }
 function customerTitle(d){ return d.customerName || d.sub || 'Nomsiz mijoz'; }
@@ -2578,6 +2579,10 @@ async function setMyWorkStatus(status){
   }catch(err){
     showToast(err.message || 'Status o‘zgarmadi');
   }
+}
+function toggleWorkFromSidebar(){
+  const user=currentUser();
+  setMyWorkStatus(user.status==='Online'?'Offline':'Online');
 }
 function markUserActivity(){
   lastActivityAt=Date.now();
