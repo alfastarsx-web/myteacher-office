@@ -1838,13 +1838,18 @@ function formatMoney(value){
 }
 
 function parseCsv(text){
+  text=String(text||'').replace(/^\uFEFF/,'');
+  const firstLine=text.split(/\r?\n/)[0] || '';
+  const commaCount=(firstLine.match(/,/g)||[]).length;
+  const semicolonCount=(firstLine.match(/;/g)||[]).length;
+  const delimiter=semicolonCount>commaCount?';':',';
   const rows=[];
   let row=[],cell='',quote=false;
   for(let i=0;i<text.length;i++){
     const ch=text[i],next=text[i+1];
     if(ch==='"' && quote && next==='"'){cell+='"';i++;continue;}
     if(ch==='"'){quote=!quote;continue;}
-    if(ch===',' && !quote){row.push(cell.trim());cell='';continue;}
+    if(ch===delimiter && !quote){row.push(cell.trim());cell='';continue;}
     if((ch==='\n' || ch==='\r') && !quote){
       if(ch==='\r' && next==='\n')i++;
       row.push(cell.trim());
@@ -1859,6 +1864,14 @@ function parseCsv(text){
   return rows;
 }
 
+function parseImportNumber(value){
+  return String(value||'').replace(/[^\d.-]/g,'');
+}
+
+function splitImportPhones(value){
+  return String(value||'').split(/[;,]/).map(item=>item.trim()).filter(Boolean);
+}
+
 function csvToDealRows(text){
   const rows=parseCsv(text);
   if(rows.length<2)return [];
@@ -1870,13 +1883,13 @@ function csvToDealRows(text){
       customerName:item.customername || item.name || item.mijoz || item['mijoz nomi'] || item['customer name'],
       dealName:item.dealname || item.contract || item.shartnoma || item['shartnoma nomi'] || item['deal name'],
       phone:item.phone || item.telefon || item['telefon raqam'],
-      phones:[item.phone || item.telefon || item['telefon raqam'], item.phone2 || item.telefon2 || item['telefon 2'], item.phone3 || item.telefon3 || item['telefon 3']].filter(Boolean),
-      price:item.price || item.summa || item.narx,
+      phones:[...splitImportPhones(item.phones || item.telefonlar), item.phone || item.telefon || item['telefon raqam'], item.phone2 || item.telefon2 || item['telefon 2'], item.phone3 || item.telefon3 || item['telefon 3']].filter(Boolean),
+      price:parseImportNumber(item.price || item.summa || item.narx),
       stageId:item.stageid || item.stage || item.bosqich,
       note:item.note || item.izoh,
       adSource:item.adsource || item.reklama || item['qaysi reklamadan kelgan'],
       registeredAt:item.registeredat || item.vaqt || item['ro‘yxatdan o‘tgan vaqti'] || item['royxatdan otgan vaqti'],
-      age:item.age || item.yosh || item.yoshi,
+      age:parseImportNumber(item.age || item.yosh || item.yoshi),
       learningGoal:item.learninggoal || item.maqsad || item['o‘rganishdan maqsadi'] || item['organishdan maqsadi'],
       leadChannel:item.leadchannel || item.channel || item.kanal || item['qayerdan keldi']
     };
