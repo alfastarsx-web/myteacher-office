@@ -2805,6 +2805,7 @@ async function setMyWorkStatus(status){
     if(apiToken){
       const data=await api('/api/team/me/status',{method:'PATCH',body:{status:next}});
       updated=data.user || updated;
+      if(next==='Online' && !updated.onlineStartedAt)updated.onlineStartedAt=new Date().toISOString();
     }else{
       const now=new Date().toISOString();
       if(next==='Online' && user.status!=='Online'){

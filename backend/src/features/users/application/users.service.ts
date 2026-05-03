@@ -23,7 +23,8 @@ export class UsersService {
   publicUser(user: UserEntity) {
     const { passwordHash: _passwordHash, ...safe } = user;
     safe.permissions = this.effectivePermissions(user);
-    safe.todayOnlineSeconds = this.currentOnlineSeconds(user);
+    this.ensureOnlineDay(user);
+    safe.todayOnlineSeconds = Number(user.todayOnlineSeconds || 0);
     return safe;
   }
 
