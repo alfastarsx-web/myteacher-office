@@ -1564,6 +1564,22 @@ function formatDuration(seconds){
   const s=total%60;
   return h?`${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`:`${m}:${String(s).padStart(2,'0')}`;
 }
+function todayKey(){
+  return new Intl.DateTimeFormat('en-CA',{
+    timeZone:'Asia/Tashkent',
+    year:'numeric',
+    month:'2-digit',
+    day:'2-digit'
+  }).format(new Date());
+}
+function normalizeLocalOnlineDay(user){
+  const today=todayKey();
+  if(user.onlineDay!==today){
+    user.onlineDay=today;
+    user.todayOnlineSeconds=0;
+    user.onlineStartedAt=user.status==='Online'?new Date().toISOString():null;
+  }
+}
 function renderWorkStatus(){
   const el=document.getElementById('footerWorkStatus');
   const user=currentUser();
@@ -2557,6 +2573,7 @@ async function createOnboardingUser(){
 async function setMyWorkStatus(status){
   const user=currentUser();
   if(!user)return;
+  normalizeLocalOnlineDay(user);
   const next=status==='Online'?'Online':'Offline';
   try{
     let updated={...user,status:next};
@@ -2565,8 +2582,14 @@ async function setMyWorkStatus(status){
       updated=data.user || updated;
     }else{
       const now=new Date().toISOString();
-      if(next==='Online' && user.status!=='Online')updated.onlineStartedAt=now;
-      if(next==='Offline')updated.onlineStartedAt=null;
+      if(next==='Online' && user.status!=='Online'){
+        updated.onlineDay=todayKey();
+        updated.onlineStartedAt=now;
+      }
+      if(next==='Offline'){
+        updated.todayOnlineSeconds=userOnlineSeconds(user);
+        updated.onlineStartedAt=null;
+      }
     }
     const idx=managers.findIndex(m=>m.id===user.id);
     if(idx>=0)managers[idx]={...managers[idx],...updated};

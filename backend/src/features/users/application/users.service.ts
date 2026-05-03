@@ -93,8 +93,8 @@ export class UsersService {
       if (!user.onlineStartedAt) user.onlineStartedAt = new Date();
       return;
     }
-    user.status = 'Offline';
     this.stopOnlineTimer(user);
+    user.status = 'Offline';
   }
 
   private currentOnlineSeconds(user: UserEntity) {
@@ -106,7 +106,10 @@ export class UsersService {
 
   private stopOnlineTimer(user: UserEntity) {
     if (user.onlineStartedAt) {
-      user.todayOnlineSeconds = this.currentOnlineSeconds(user);
+      const base = Number(user.todayOnlineSeconds || 0);
+      const started = new Date(user.onlineStartedAt).getTime();
+      const elapsed = Number.isNaN(started) ? 0 : Math.max(0, Math.floor((Date.now() - started) / 1000));
+      user.todayOnlineSeconds = base + elapsed;
       user.onlineStartedAt = null;
     }
   }
@@ -121,6 +124,11 @@ export class UsersService {
   }
 
   private todayKey() {
-    return new Date().toISOString().slice(0, 10);
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Tashkent',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(new Date());
   }
 }
