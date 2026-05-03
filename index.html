@@ -1923,8 +1923,8 @@ function renderDealStats(){
   const missedValue = deals.filter(d=>d.col===STAGE_AGREED).reduce((sum,d)=>sum+d.price,0);
   const stats = [
     ['Bugungi Kassa',formatMoney(wonValue),`${deals.filter(d=>d.col===STAGE_WON).length} ta muvaffaqiyatli`],
-    ['Bugungi maosh',formatMoney(todaySalary),`${activeDeals.length} ta aktiv jarayon`],
-    ['Bu oydagi maosh',formatMoney(monthSalary),'Menejerlar bo‘yicha'],
+    ['Bugungi bonus',formatMoney(todaySalary),`${activeDeals.length} ta aktiv jarayon`],
+    ['Bu oydagi bonus',formatMoney(monthSalary),'Menejerlar bo‘yicha'],
     ['Erishilmay qolgan bitim summasi',formatMoney(missedValue),'Sotib olishga rozi bosqichi']
   ];
   document.getElementById('dealStats').innerHTML = stats.map(([label,value,sub])=>`
