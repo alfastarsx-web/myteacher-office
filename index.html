@@ -805,6 +805,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <div class="auth-field"><label>Ism</label><input class="auth-input" id="newUserName" value="Diyora"></div>
       <div class="auth-field"><label>Telefon</label><input class="auth-input" id="newUserPhone" value="+998 | 94 592 63 58"></div>
       <div class="auth-field"><label>Email</label><input class="auth-input" id="newUserEmail" value="example@gmail.com"></div>
+      <div class="auth-field" id="newUserPasswordField"><label>Boshlang'ich parol</label><div class="auth-input-wrap"><input class="auth-input" id="newUserPassword" type="password" value="manager12345"><svg class="auth-eye" onclick="togglePasswordEye(this)" role="button" aria-label="Parolni ko'rsatish" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.94 17.94A10.94 10.94 0 0112 20C7 20 2.73 16.89 1 12a18.45 18.45 0 014.06-5.94M9.9 4.24A10.45 10.45 0 0112 4c5 0 9.27 3.11 11 8a18.5 18.5 0 01-2.16 3.19"/><path d="M14.12 14.12A3 3 0 019.88 9.88"/><line x1="1" y1="1" x2="23" y2="23"/></svg></div><div class="auth-help">Kamida 8 ta belgi</div></div>
       <div class="auth-field"><label>Kanal nomi</label><input class="auth-input" id="newUserChannel" value="mysite.com"></div>
       <div class="auth-field"><label>Izoh</label><textarea class="auth-textarea" id="newUserNote">O'z izohingizni shu yerda kiritishingiz mumkin, bizga qanday taklif va shikoyatlaringiz bo'lsa hammasini yozishingiz mumkin.</textarea></div>
       <div class="onboarding-actions"><button class="auth-submit" style="width:auto;padding:0 18px;margin:0" onclick="createOnboardingUser()">Yaratish</button><button class="auth-secondary" onclick="closeOnboarding()">Orqaga</button></div>
@@ -2469,11 +2470,18 @@ function showRegisterError(){
 async function createOnboardingUser(){
   const name=document.getElementById('newUserName').value.trim() || 'Yangi Menejer';
   const email=document.getElementById('newUserEmail').value.trim() || 'manager@crm.uz';
+  const password=document.getElementById('newUserPassword')?.value || 'manager12345';
+  if(password.length<8){
+    document.getElementById('newUserPasswordField')?.classList.add('error');
+    showToast('Parol kamida 8 ta belgi bo‘lishi kerak');
+    return;
+  }
+  document.getElementById('newUserPasswordField')?.classList.remove('error');
   const initials=name.split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
   const id=Date.now();
   if(apiToken && isAdmin()){
     try{
-      const data=await api('/api/team',{method:'POST',body:{name,email,role:'manager',password:'manager12345'}});
+      const data=await api('/api/team',{method:'POST',body:{name,email,role:'manager',password}});
       managers.push({...data.user,deals:0,tasks:0,customers:0,avatar:data.user.avatar||initials,color:data.user.color||'linear-gradient(135deg,#86efac,#22c55e)'});
       selectedTeamManagerId=data.user.id;
     }catch(err){showToast(err.message);return;}
