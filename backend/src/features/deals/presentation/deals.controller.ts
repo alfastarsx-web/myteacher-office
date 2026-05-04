@@ -20,12 +20,17 @@ export class DealsController {
 
   @Post('import')
   async importRows(@Body() body: any, @Req() req: AuthedRequest) {
-    return { deals: await this.deals.importRows(body, req.user) };
+    return this.deals.importRows(body, req.user);
   }
 
   @Patch('bulk/owner')
   async bulkAssignOwner(@Body() body: any, @Req() req: AuthedRequest) {
     return { deals: await this.deals.bulkAssignOwner(body, req.user) };
+  }
+
+  @Delete('bulk')
+  async bulkDelete(@Body() body: any, @Req() req: AuthedRequest) {
+    return this.deals.bulkDelete(body, req.user);
   }
 
   @Patch(':id')

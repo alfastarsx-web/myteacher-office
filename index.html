@@ -1377,7 +1377,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <div class="frow">
         <div class="fg"><label>Pipeline</label><select class="fs"><option>Pipeline</option></select></div>
         <div class="fg"><label>Bosqich</label>
-          <select class="fs" id="mS" onchange="updS(this)">
+          <select class="fs" id="mS" onchange="updS(this);updateModalStageFields()">
             <option value="yangi">YANGI</option>
             <option value="malakali">MALAKALI</option>
             <option value="muzokaralar">MUZOKARALAR</option>
@@ -1400,6 +1400,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
         <div class="fg"><label>Qayerdan keldi</label><select class="fs" id="mLeadChannel"><option value="">Tanlanmagan</option><option value="tg">Telegram</option><option value="fb">Facebook</option><option value="ig">Instagram</option></select></div>
       </div>
       <div class="fg" style="margin-bottom:18px"><label>O'rganishdan maqsadi</label><textarea class="fta" id="mLearningGoal" placeholder="Masalan: IELTS topshirish, ish uchun, o'qish uchun..."></textarea></div>
+      <div id="mWonFields" style="display:none">
+        <div class="frow">
+          <div class="fg"><label>Chek rasmi</label><input class="fi" id="mReceipt" type="file" accept="image/*,application/pdf"></div>
+          <div class="fg"><label>Parol</label><input class="fi" id="mClosePassword" type="password" placeholder="Muvaffaqiyatli bosqichi uchun parol"></div>
+        </div>
+      </div>
       <div class="fg" style="margin-bottom:18px"><label>Izoh</label><textarea class="fta" id="mNt" placeholder="Izoh..."></textarea></div>
       <div class="slbl">Vazifalar</div>
       <button class="tadd-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Vazifa yaratish</button>
@@ -1931,7 +1937,9 @@ async function importDealsFromFile(file){
     if(!rows.length){showToast('Fayl ichida shartnoma topilmadi');return;}
     const data=await api('/api/deals/import',{method:'POST',body:{rows}});
     await loadApiData();
-    showToast(`${(data.deals||[]).length} ta shartnoma import qilindi`);
+    const imported=data.imported ?? (data.deals||[]).length;
+    const skipped=data.skipped ?? Math.max(0,rows.length-imported);
+    showToast(`${imported} ta import qilindi, ${skipped} ta skip bo‘ldi`);
   }catch(err){
     showToast(err.message || 'Importda xatolik');
   }
@@ -1948,7 +1956,9 @@ async function importDealsFromGoogleSheet(){
     if(!rows.length){showToast('Google Sheets ichida shartnoma topilmadi');return;}
     const data=await api('/api/deals/import',{method:'POST',body:{rows}});
     await loadApiData();
-    showToast(`${(data.deals||[]).length} ta shartnoma Google Sheetsdan tushdi`);
+    const imported=data.imported ?? (data.deals||[]).length;
+    const skipped=data.skipped ?? Math.max(0,rows.length-imported);
+    showToast(`${imported} ta import qilindi, ${skipped} ta skip bo‘ldi`);
   }catch(err){
     showToast(err.message || 'Google Sheets importida xatolik');
   }
@@ -2048,17 +2058,38 @@ function renderBulkDealActions(rows=visibleDeals()){
   const managerOptions=managers.filter(m=>m.role!=='admin').map(m=>`<option value="${m.id}">${esc(m.name)}</option>`).join('');
   box.innerHTML=`
     <span class="bulk-muted">${selectedDealIds.size ? `${selectedDealIds.size} ta tanlandi` : 'Shartnomalarni belgilang'}</span>
-    <select id="bulkOwnerSelect">
+    <select id="bulkActionSelect">
       <option value="">Taqsimlanmagan · faqat Admin</option>
       ${managerOptions}
+      <option value="__delete__">O‘chirish</option>
     </select>
-    <button class="btn-ico btn-primary" ${selectedDealIds.size?'':'disabled'} onclick="bulkAssignDeals()">Menejerga o'tkazish</button>
+    <button class="btn-ico btn-primary" ${selectedDealIds.size?'':'disabled'} onclick="bulkApplyDeals()">Bajarish</button>
   `;
 }
-async function bulkAssignDeals(){
+async function bulkApplyDeals(){
   if(!isAdmin() || !selectedDealIds.size)return;
-  const ownerId=document.getElementById('bulkOwnerSelect')?.value || null;
+  const action=document.getElementById('bulkActionSelect')?.value || '';
   const ids=[...selectedDealIds];
+  if(action==='__delete__'){
+    if(!confirm(`${ids.length} ta shartnoma o‘chirilsinmi? Bu amalni qaytarib bo‘lmaydi.`))return;
+    try{
+      if(apiToken){
+        await api('/api/deals/bulk',{method:'DELETE',body:{ids}});
+        await loadApiData();
+      }else{
+        deals=deals.filter(d=>!selectedDealIds.has(d.id));
+      }
+      selectedDealIds.clear();
+      renderList();
+      showToast('Tanlangan shartnomalar o‘chirildi');
+    }catch(err){
+      showToast(err.message || 'Shartnomalar o‘chirilmadi');
+    }
+    return;
+  }
+  const ownerId=action || null;
+  const ownerName=ownerId ? (managerById(ownerId)?.name || 'menejer') : 'Admin taqsimlanmagan ro‘yxati';
+  if(!confirm(`${ids.length} ta shartnoma ${ownerName}ga o‘tkazilsinmi?`))return;
   try{
     if(apiToken){
       const data=await api('/api/deals/bulk/owner',{method:'PATCH',body:{ids,ownerId}});
@@ -2118,22 +2149,39 @@ function renderKanban(){
 async function prepareStageTransition(deal,target,priceInput){
   const targetLabel=COLS.find(c=>c.id===target)?.label || 'Bosqich';
   let price=Number(deal.price||0);
+  const modalOpen=document.getElementById('dealOvl')?.classList.contains('show');
   if([STAGE_AGREED,STAGE_WON].includes(target) && price<=0){
-    const entered=prompt(`${targetLabel} bosqichiga o'tish uchun shartnoma summasini kiriting`, priceInput?.value || '');
-    if(entered===null)return null;
-    price=parseMoneyInput(entered);
+    price=parseMoneyInput(priceInput?.value || '');
     if(price<=0){
       showToast('Shartnoma summasi majburiy');
-      priceInput?.focus();
+      if(modalOpen){
+        priceInput?.focus();
+      }else{
+        openModal(deal.id,target);
+        setTimeout(()=>document.getElementById('mP')?.focus(),0);
+      }
       return null;
     }
     if(priceInput)priceInput.value=price;
   }
   let closePassword='';
   if(target===STAGE_WON && deal.col!==STAGE_WON){
-    closePassword=prompt('Muvaffaqiyatli bosqichiga o‘tish uchun parolingizni kiriting') || '';
+    const receipt=document.getElementById('mReceipt');
+    const receiptSelected=Boolean(receipt?.files?.length);
+    closePassword=document.getElementById('mClosePassword')?.value.trim() || '';
+    if(!modalOpen){
+      openModal(deal.id,target);
+      setTimeout(()=>document.getElementById('mReceipt')?.focus(),0);
+      return null;
+    }
+    if(!receiptSelected){
+      showToast('Chek rasmini ilova qiling');
+      receipt?.focus();
+      return null;
+    }
     if(!closePassword){
       showToast('Parol kiritilmadi');
+      document.getElementById('mClosePassword')?.focus();
       return null;
     }
   }
@@ -2228,6 +2276,9 @@ function openModal(id=null,defCol='yangi'){
   sel.innerHTML=visibleStages().map(c=>`<option value="${c.id}">${esc(c.label).toUpperCase()}</option>`).join('');
   sel.value=d?d.col:defCol;
   updS(sel);
+  document.getElementById('mClosePassword').value='';
+  document.getElementById('mReceipt').value='';
+  updateModalStageFields();
   renderDealOwnerSelect(d);
   document.getElementById('mTaskRow').style.display=d?'flex':'none';
   document.getElementById('mDel').style.display=d && isAdmin()?'flex':'none';
@@ -2235,6 +2286,11 @@ function openModal(id=null,defCol='yangi'){
 }
 function closeModal(){document.getElementById('dealOvl').classList.remove('show');editId=null;}
 function updS(sel){sel.style.background=SC[sel.value]||'#2563EB';sel.style.color='#fff';sel.style.fontWeight='700';}
+function updateModalStageFields(){
+  const stage=document.getElementById('mS')?.value;
+  const wonFields=document.getElementById('mWonFields');
+  if(wonFields)wonFields.style.display=stage===STAGE_WON?'block':'none';
+}
 function renderDealOwnerSelect(deal=null){
   const select=document.getElementById('mOwner');
   if(!select)return;

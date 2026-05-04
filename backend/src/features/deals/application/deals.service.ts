@@ -59,26 +59,34 @@ export class DealsService {
     const rows = Array.isArray(body.rows) ? body.rows : [];
     if (!rows.length) throw new BadRequestException('Import uchun qatorlar topilmadi');
     const imported: DealEntity[] = [];
+    let skipped = 0;
     for (const row of rows) {
-      const customerName = String(row.customerName || row.name || row.mijoz || '').trim();
-      if (!customerName) continue;
-      imported.push(await this.create({
-        customerName,
-        dealName: String(row.dealName || row.contract || row.shartnoma || '').trim(),
-        phone: row.phone || row.telefon || '',
-        phones: row.phones,
-        stageId: row.stageId || row.stage || 'yangi',
-        price: row.price || row.summa || 0,
-        note: row.note || row.izoh || '',
-        adSource: row.adSource || row.reklama || row['qaysi reklamadan kelgan'] || '',
-        registeredAt: row.registeredAt || row['ro‘yxatdan o‘tgan vaqti'] || row['royxatdan otgan vaqti'] || row.vaqt || '',
-        age: row.age || row.yosh || row.yoshi || '',
-        learningGoal: row.learningGoal || row.maqsad || row['o‘rganishdan maqsadi'] || row['organishdan maqsadi'] || '',
-        leadChannel: row.leadChannel || row.channel || row.kanal || row['qayerdan keldi'] || '',
-        ownerId: row.ownerId || null
-      }, user));
+      try {
+        const customerName = String(row.customerName || row.name || row.mijoz || '').trim();
+        if (!customerName) {
+          skipped++;
+          continue;
+        }
+        imported.push(await this.create({
+          customerName,
+          dealName: String(row.dealName || row.contract || row.shartnoma || '').trim(),
+          phone: row.phone || row.telefon || '',
+          phones: row.phones,
+          stageId: row.stageId || row.stage || 'yangi',
+          price: row.price || row.summa || 0,
+          note: row.note || row.izoh || '',
+          adSource: row.adSource || row.reklama || row['qaysi reklamadan kelgan'] || '',
+          registeredAt: row.registeredAt || row['ro‘yxatdan o‘tgan vaqti'] || row['royxatdan otgan vaqti'] || row.vaqt || '',
+          age: row.age || row.yosh || row.yoshi || '',
+          learningGoal: row.learningGoal || row.maqsad || row['o‘rganishdan maqsadi'] || row['organishdan maqsadi'] || '',
+          leadChannel: row.leadChannel || row.channel || row.kanal || row['qayerdan keldi'] || '',
+          ownerId: row.ownerId || null
+        }, user));
+      } catch {
+        skipped++;
+      }
     }
-    return imported;
+    return { deals: imported, imported: imported.length, skipped };
   }
 
   async update(id: number, body: any, user: UserEntity) {
@@ -115,6 +123,19 @@ export class DealsService {
     if (!rows.length) throw new NotFoundException('Shartnomalar topilmadi');
     rows.forEach(deal => { deal.ownerId = ownerId; });
     return this.deals.save(rows);
+  }
+
+  async bulkDelete(body: any, user: UserEntity) {
+    this.assertCrmAccess(user);
+    if (user.role !== UserRole.Admin) throw new ForbiddenException('Faqat Admin shartnomalarni o‘chira oladi');
+    const ids = [...new Set((Array.isArray(body.ids) ? body.ids : [])
+      .map(item => Number(item))
+      .filter(id => Number.isInteger(id) && id > 0))];
+    if (!ids.length) throw new BadRequestException('Shartnomalarni tanlang');
+    const rows = await this.deals.find({ where: { id: In(ids) }, order: { id: 'ASC' } });
+    if (!rows.length) throw new NotFoundException('Shartnomalar topilmadi');
+    await this.deals.delete(rows.map(row => row.id));
+    return { deleted: rows.length };
   }
 
   async delete(id: number, user: UserEntity) {
