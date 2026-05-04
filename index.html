@@ -1402,7 +1402,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <div class="fg" style="margin-bottom:18px"><label>O'rganishdan maqsadi</label><textarea class="fta" id="mLearningGoal" placeholder="Masalan: IELTS topshirish, ish uchun, o'qish uchun..."></textarea></div>
       <div id="mWonFields" style="display:none">
         <div class="frow">
-          <div class="fg"><label>Chek rasmi</label><input class="fi" id="mReceipt" type="file" accept="image/*,application/pdf"></div>
+          <div class="fg"><label>Chek rasmi</label><input class="fi" id="mReceipt" type="file" accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf"></div>
           <div class="fg"><label>Parol</label><input class="fi" id="mClosePassword" type="password" placeholder="Muvaffaqiyatli bosqichi uchun parol"></div>
         </div>
       </div>
@@ -1604,6 +1604,26 @@ function taskFromApi(t){
 }
 function parseMoneyInput(value){
   return parseInt(String(value||'').replace(/[^\d]/g,''),10)||0;
+}
+function validateReceiptFile(input){
+  const file=input?.files?.[0];
+  if(!file)return false;
+  const ext=(file.name.split('.').pop() || '').toLowerCase();
+  const allowedExt=['png','jpg','jpeg','pdf'];
+  const allowedTypes=['image/png','image/jpeg','application/pdf'];
+  if(!allowedExt.includes(ext) || !allowedTypes.includes(file.type)){
+    showToast('Chek fayli faqat PNG, JPEG yoki PDF bo‘lishi kerak');
+    input.value='';
+    input.focus();
+    return false;
+  }
+  if(file.size>5*1024*1024){
+    showToast('Chek fayli 5 MB dan katta bo‘lmasin');
+    input.value='';
+    input.focus();
+    return false;
+  }
+  return true;
 }
 function formatDealDate(iso){
   const dt=new Date(iso);
@@ -2167,7 +2187,7 @@ async function prepareStageTransition(deal,target,priceInput){
   let closePassword='';
   if(target===STAGE_WON && deal.col!==STAGE_WON){
     const receipt=document.getElementById('mReceipt');
-    const receiptSelected=Boolean(receipt?.files?.length);
+    const receiptSelected=validateReceiptFile(receipt);
     closePassword=document.getElementById('mClosePassword')?.value.trim() || '';
     if(!modalOpen){
       openModal(deal.id,target);
