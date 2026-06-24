@@ -1,0 +1,188 @@
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { PasswordService } from '../../../common/crypto/password.service';
+import { DealEntity } from '../../deals/infrastructure/deal.entity';
+import { TaskEntity } from '../../tasks/infrastructure/task.entity';
+import { UserRole } from '../domain/user-role.enum';
+import { UserEntity } from '../infrastructure/user.entity';
+
+@Injectable()
+export class UsersService {
+  constructor(
+    @InjectRepository(UserEntity) private readonly users: Repository<UserEntity>,
+    @InjectRepository(DealEntity) private readonly deals: Repository<DealEntity>,
+    @InjectRepository(TaskEntity) private readonly tasks: Repository<TaskEntity>,
+    private readonly passwords: PasswordService
+  ) {}
+
+  async findByEmail(email: string) {
+    return this.users.findOne({ where: { email: email.toLowerCase() } });
+  }
+
+  async findById(id: number) {
+    return this.users.findOne({ where: { id } });
+  }
+
+  async findFirstAdmin() {
+    return this.users.findOne({ where: { role: UserRole.Admin }, order: { id: 'ASC' } });
+  }
+
+  publicUser(user: UserEntity) {
+    const { passwordHash: _passwordHash, ...safe } = user;
+    safe.permissions = this.effectivePermissions(user);
+    this.ensureOnlineDay(user);
+    safe.todayOnlineSeconds = Number(user.todayOnlineSeconds || 0);
+    return safe;
+  }
+
+  effectivePermissions(user: UserEntity) {
+    const isAdmin = user.role === UserRole.Admin;
+    const saved = user.permissions || {};
+    return {
+      crm: true,
+      own: true,
+      ...saved,
+      all: isAdmin || saved.all === true,
+      roles: isAdmin || saved.roles === true
+    };
+  }
+
+  async listFor(user: UserEntity) {
+    const rows = user.role === UserRole.Admin || user.permissions?.roles === true ? await this.users.find() : [user];
+    return rows.map(item => this.publicUser(item));
+  }
+
+  async create(body: any) {
+    const name = String(body.name || '').trim();
+    const email = String(body.email || '').trim().toLowerCase();
+    if (!name || !email) throw new Error('Ism va email kerak');
+    if (await this.findByEmail(email)) throw new ConflictException('Bu email ro‘yxatdan o‘tgan');
+    const user = this.users.create({
+      name,
+      email,
+      passwordHash: this.passwords.hash(body.password || 'manager12345'),
+      role: body.role === UserRole.Admin ? UserRole.Admin : body.role === UserRole.Operator ? UserRole.Operator : UserRole.Manager,
+      position: this.normalizePosition(body.position),
+      status: body.status || 'Offline',
+      onlineDay: this.todayKey(),
+      avatar: body.avatar || name.split(' ').map(part => part[0]).join('').slice(0, 2).toUpperCase(),
+      color: body.color || 'linear-gradient(135deg,#93c5fd,#3b82f6)',
+      permissions: body.permissions || {}
+    });
+    return this.publicUser(await this.users.save(user));
+  }
+
+  async update(id: number, body: any, admin: UserEntity) {
+    const user = await this.findById(id);
+    if (!user) throw new NotFoundException('Menejer topilmadi');
+    if (body.name !== undefined) user.name = String(body.name).trim();
+    if (body.email !== undefined) user.email = String(body.email).trim().toLowerCase();
+    if (body.password !== undefined) {
+      const password = String(body.password || '');
+      if (password.length < 8) throw new Error('Parol kamida 8 ta belgidan iborat bo‘lishi kerak');
+      user.passwordHash = this.passwords.hash(password);
+    }
+    if (body.status !== undefined) this.applyStatus(user, String(body.status));
+    if (body.position !== undefined) user.position = this.normalizePosition(body.position);
+    if (body.permissions !== undefined) user.permissions = { ...(user.permissions || {}), ...body.permissions };
+    if (body.role !== undefined && user.id !== admin.id) user.role = body.role === UserRole.Admin ? UserRole.Admin : body.role === UserRole.Operator ? UserRole.Operator : UserRole.Manager;
+    return this.publicUser(await this.users.save(user));
+  }
+
+  async updateOwnStatus(user: UserEntity, status: string) {
+    const fresh = await this.findById(user.id);
+    if (!fresh) throw new NotFoundException('Foydalanuvchi topilmadi');
+    this.applyStatus(fresh, status);
+    return this.publicUser(await this.users.save(fresh));
+  }
+
+  async startWorkSession(id: number) {
+    const user = await this.findById(id);
+    if (!user) throw new NotFoundException('Foydalanuvchi topilmadi');
+    this.applyStatus(user, 'Online');
+    return this.users.save(user);
+  }
+
+  async delete(id: number, admin: UserEntity) {
+    if (id === admin.id) throw new BadRequestException('O‘zingizni o‘chira olmaysiz');
+    const user = await this.findById(id);
+    if (!user) throw new NotFoundException('Menejer topilmadi');
+    if (user.role === UserRole.Admin) throw new BadRequestException('Admin akkauntni o‘chirib bo‘lmaydi');
+    const pool = await this.ensurePoolUser();
+    await this.deals.update({ ownerId: user.id }, { ownerId: pool.id });
+    await this.tasks.update({ ownerId: user.id }, { ownerId: pool.id });
+    await this.users.delete(user.id);
+    return { ok: true, pool: this.publicUser(pool) };
+  }
+
+  private async ensurePoolUser() {
+    const email = 'pool@myteacher.uz';
+    const existing = await this.findByEmail(email);
+    if (existing) return existing;
+    return this.users.save(this.users.create({
+      name: 'Pool',
+      email,
+      passwordHash: this.passwords.hash(`pool-${Date.now()}-${Math.random()}`),
+      role: UserRole.Manager,
+      position: 'LEARNER',
+      status: 'Offline',
+      onlineDay: this.todayKey(),
+      avatar: 'PL',
+      color: 'linear-gradient(135deg,#64748b,#334155)',
+      permissions: { crm: true, own: true, all: false, roles: false }
+    }));
+  }
+
+  private normalizePosition(value: unknown) {
+    const allowed = ['LEARNER', 'TRAINEE', 'NEW_MANAGER', 'EMPLOYEE', 'RESIDENT_3', 'RESIDENT_2', 'RESIDENT_1'];
+    const position = String(value || 'LEARNER').trim().toUpperCase();
+    return allowed.includes(position) ? position : 'LEARNER';
+  }
+
+  private applyStatus(user: UserEntity, status: string) {
+    this.ensureOnlineDay(user);
+    if (status === 'Online') {
+      user.status = 'Online';
+      if (!user.onlineStartedAt) user.onlineStartedAt = new Date();
+      return;
+    }
+    this.stopOnlineTimer(user);
+    user.status = 'Offline';
+  }
+
+  private currentOnlineSeconds(user: UserEntity) {
+    this.ensureOnlineDay(user);
+    const base = Number(user.todayOnlineSeconds || 0);
+    if (user.status !== 'Online' || !user.onlineStartedAt) return base;
+    return base + Math.max(0, Math.floor((Date.now() - new Date(user.onlineStartedAt).getTime()) / 1000));
+  }
+
+  private stopOnlineTimer(user: UserEntity) {
+    if (user.onlineStartedAt) {
+      const base = Number(user.todayOnlineSeconds || 0);
+      const started = new Date(user.onlineStartedAt).getTime();
+      const elapsed = Number.isNaN(started) ? 0 : Math.max(0, Math.floor((Date.now() - started) / 1000));
+      user.todayOnlineSeconds = base + elapsed;
+      user.onlineStartedAt = null;
+    }
+  }
+
+  private ensureOnlineDay(user: UserEntity) {
+    const today = this.todayKey();
+    if (user.onlineDay !== today) {
+      user.onlineDay = today;
+      user.todayOnlineSeconds = 0;
+      user.onlineStartedAt = user.status === 'Online' ? new Date() : null;
+    }
+  }
+
+  private todayKey() {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Tashkent',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).format(new Date());
+  }
+}
