@@ -2752,7 +2752,7 @@ async function moveDealToStage(deal,target,options={}){
         col: 'yangi',
         note: `Operator tomonidan malakali qilindi`,
         operatorId: deal.operatorId||currentManagerId,
-        ownerId: managers.find(m=>m.role==='manager' && m.name.toLowerCase().includes('sarafroz'))?.id || managers.find(m=>m.role==='manager')?.id || null,
+        ownerId: managers.find(m=>m.role==='manager' && (m.email||'').toLowerCase()==='sarafroz@gmail.com')?.id || managers.find(m=>m.role==='manager')?.id || null,
         date: `${now.getDate()} ${mn[now.getMonth()]}`,
         adSource: deal.adSource||'',
         leadChannel: deal.leadChannel||'',
