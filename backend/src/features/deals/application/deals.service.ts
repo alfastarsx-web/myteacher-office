@@ -57,7 +57,7 @@ export class DealsService {
       age: body.age === null || body.age === undefined || body.age === '' ? null : Number(body.age),
       learningGoal: String(body.learningGoal || ''),
       leadChannel: String(body.leadChannel || ''),
-      ownerId: user.role === UserRole.Admin ? this.parseOwnerId(body.ownerId) : user.role === UserRole.Operator ? null : user.id,
+      ownerId: user.role === UserRole.Admin ? this.parseOwnerId(body.ownerId) : user.role === UserRole.Operator ? this.parseOwnerId(body.ownerId) : user.id,
       operatorId: user.role === UserRole.Operator ? user.id : (body.operatorId ? Number(body.operatorId) : null),
       appInstalled: Boolean(body.appInstalled || false),
       qualAt: body.qualAt || null,
