@@ -2736,37 +2736,33 @@ async function moveDealToStage(deal,target,options={}){
       }
     }
     // Operator malakali qilganda → menejer voronkasiga yangi lid qo'shish
+    // (apiToken bo'lsa, bu handoff backendda DealsService.update() ichida server tomonida bajariladi —
+    // chunki operator sessiyasida boshqa foydalanuvchilar (menejerlar) umuman ko'rinmaydi)
     if(target===STAGE_OP_QUAL && !deal._sentToManager && !deal.sentToManager){
       deal._sentToManager=true;
-      deal.qualAt=new Date().toISOString();
+      deal.qualAt=deal.qualAt||new Date().toISOString();
       saveDealExtra(deal.id, {sentToManager:true, qualAt:deal.qualAt, col:'op_malakali'});
-      const now=new Date();
-      const mn=['yan','fev','mar','apr','may','iyn','iyl','avg','sen','okt','noy','dek'];
-      const newManagerDeal={
-        id: Date.now(),
-        customerName: deal.customerName,
-        phone: deal.phone,
-        phones: deal.phones||[],
-        dealName: deal.dealName||deal.customerName,
-        price: 0,
-        col: 'yangi',
-        note: `Operator tomonidan malakali qilindi`,
-        operatorId: deal.operatorId||currentManagerId,
-        ownerId: managers.find(m=>m.role==='manager' && (m.email||'').toLowerCase()==='sarafroz@gmail.com')?.id || managers.find(m=>m.role==='manager')?.id || null,
-        date: `${now.getDate()} ${mn[now.getMonth()]}`,
-        adSource: deal.adSource||'',
-        leadChannel: deal.leadChannel||'',
-        messages: [],
-        _fromOperator: true,
-        _operatorDealId: deal.id,
-      };
-      deals.push(newManagerDeal);
-      if(apiToken){
-        try{
-          const data=await api('/api/deals',{method:'POST',body:dealToApiPayload(newManagerDeal)});
-          const idx=deals.findIndex(d=>d.id===newManagerDeal.id);
-          if(idx>=0)deals[idx]=dealFromApi(data.deal);
-        }catch(e){ console.warn('Menejer dealiga yuborish xatolik:',e.message); }
+      if(!apiToken){
+        const now=new Date();
+        const mn=['yan','fev','mar','apr','may','iyn','iyl','avg','sen','okt','noy','dek'];
+        deals.push({
+          id: Date.now(),
+          customerName: deal.customerName,
+          phone: deal.phone,
+          phones: deal.phones||[],
+          dealName: deal.dealName||deal.customerName,
+          price: 0,
+          col: 'yangi',
+          note: `Operator tomonidan malakali qilindi`,
+          operatorId: deal.operatorId||currentManagerId,
+          ownerId: managers.find(m=>m.role==='manager' && (m.email||'').toLowerCase()==='sarafroz@gmail.com')?.id || managers.find(m=>m.role==='manager')?.id || null,
+          date: `${now.getDate()} ${mn[now.getMonth()]}`,
+          adSource: deal.adSource||'',
+          leadChannel: deal.leadChannel||'',
+          messages: [],
+          _fromOperator: true,
+          _operatorDealId: deal.id,
+        });
       }
       showToast(`✅ "${customerTitle(deal)}" → Menejer voronkasiga yangi sifatida qo'shildi`);
     } else {
