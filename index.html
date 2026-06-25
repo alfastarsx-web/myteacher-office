@@ -1874,7 +1874,7 @@ async function api(path,options={}){
 function dealFromApi(d){
   const date=d.createdAt?formatDealDate(d.createdAt):'Bugun';
   const phones=dealPhones(d);
-  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),qualAt:d.qualAt||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
+  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
 }
 // localStorage ga deal extra fieldlarini saqlaymiz
 function saveDealExtra(id, fields){
@@ -2061,6 +2061,7 @@ async function loadApiData(){
       if(!ex) return;
       if(ex.operatorId !== undefined && !d.operatorId) d.operatorId = ex.operatorId;
       if(ex.appInstalled !== undefined && !d.appInstalled) d.appInstalled = ex.appInstalled;
+      if(ex.appInstalledAt !== undefined && !d.appInstalledAt) d.appInstalledAt = ex.appInstalledAt;
       if(ex.qualAt !== undefined && !d.qualAt) d.qualAt = ex.qualAt;
       if(ex.sentToManager !== undefined && !d._sentToManager) d._sentToManager = ex.sentToManager;
       if(ex.col !== undefined && d.col !== ex.col && ['op_yangi','op_qayta','op_malakali','op_yutqazilgan'].includes(ex.col)) d.col = ex.col;
@@ -3185,6 +3186,7 @@ async function toggleAppInstalled(){
   const d=currentWorkspaceDeal();
   if(!d)return;
   d.appInstalled=!d.appInstalled;
+  if(d.appInstalled && !d.appInstalledAt)d.appInstalledAt=new Date().toISOString();
   const btn=document.getElementById('dwAppInstalled');
   if(btn){
     btn.style.background=d.appInstalled?'#22C55E':'var(--br)';
@@ -3193,10 +3195,14 @@ async function toggleAppInstalled(){
   if(d.appInstalled && d.operatorId){
     showToast('📱 Ilova o‘rnatildi — +500 so‘m bonus yozildi');
   }
-  saveDealExtra(d.id, {appInstalled: d.appInstalled});
+  saveDealExtra(d.id, {appInstalled: d.appInstalled, appInstalledAt: d.appInstalledAt});
   if(apiToken){
-    api(`/api/deals/${d.id}`,{method:'PATCH',body:{appInstalled:d.appInstalled}}).catch(err=>showToast(err.message));
+    try{
+      const data=await api(`/api/deals/${d.id}`,{method:'PATCH',body:{appInstalled:d.appInstalled}});
+      Object.assign(d,dealFromApi(data.deal));
+    }catch(err){showToast(err.message);}
   }
+  renderDealStats();
   curView==='list'?renderList():renderKanban();
 }
 function saveWorkspaceNote(){
@@ -3398,10 +3404,13 @@ function calculateOperatorBonus(user){
   // Ilova bonusi:
   // Qual BO'LMAGAN + ilova o'rnatilgan → 500 so'm
   // Qual BO'LGAN + ilova o'rnatilgan → bonus yo'q
+  // Ilova qachon o'rnatilgani (appInstalledAt) — lid qachon yaratilganidan mustaqil,
+  // chunki ilova ko'pincha lid yaratilgandan keyingi kunlarda o'rnatiladi
+  const isAppToday = d => tashkentDateKey(d.appInstalledAt || d.createdAt) === todayKey;
   const appDeals = myDeals.filter(d => d.appInstalled);
   const appBonusDeals = appDeals.filter(d => !qualStages.has(d.col));
-  const todayApp = appDeals.filter(isToday).length;
-  const todayAppBonus = appBonusDeals.filter(isToday).length;
+  const todayApp = appDeals.filter(isAppToday).length;
+  const todayAppBonus = appBonusDeals.filter(isAppToday).length;
 
   // Bonus hisoblash
   const qualBonus = todayQual === 0 ? 0
@@ -3416,9 +3425,10 @@ function calculateOperatorBonus(user){
   const isThisMonth = d => String(d.createdAt||d.date||'').slice(0,7) === monthKey;
   const isQualThisMonth = d => (d.qualAt ? String(d.qualAt) : String(d.createdAt||d.date||'')).slice(0,7) === monthKey;
 
+  const isAppThisMonth = d => tashkentDateKey(d.appInstalledAt || d.createdAt).slice(0,7) === monthKey;
   const monthQual = dedupeQualLeads(qualDeals.filter(isQualThisMonth)).length;
   const monthSold = soldDeals.filter(isThisMonth).length;
-  const monthAppCount = appBonusDeals.filter(isThisMonth).length;
+  const monthAppCount = appBonusDeals.filter(isAppThisMonth).length;
 
   const monthQualBonus = monthQual === 0 ? 0 : monthQual <= 5 ? monthQual * 7000 : monthQual * 10000;
   const monthSaleBonus = monthSold * 20000;
@@ -3523,7 +3533,7 @@ function calcOperatorAnalytics(user, range){
     qualSeenKeys.add(key);
     return true;
   }).length;
-  const appInstalled = myDeals.filter(d => d.appInstalled && inRange(d.updatedAt||d.createdAt, range)).length;
+  const appInstalled = myDeals.filter(d => d.appInstalled && inRange(d.appInstalledAt||d.createdAt, range)).length;
   const soldDeals = myDeals.filter(d => d.col===STAGE_WON && inRange(d.wonAt||d.updatedAt, range));
   const lostDeals = myDeals.filter(d => d.col==='op_yutqazilgan' && inRange(d.updatedAt, range)).length;
   const convRate = newContacts ? Math.round(qualDeals/newContacts*100) : 0;

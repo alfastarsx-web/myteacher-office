@@ -56,6 +56,8 @@ export class DealEntity {
   @Column({ default: false })
   appInstalled: boolean;
   @Column({ nullable: true, type: 'varchar' })
+  appInstalledAt: string | null;
+  @Column({ nullable: true, type: 'varchar' })
   qualAt: string | null;
   @Column({ default: false })
   sentToManager: boolean;

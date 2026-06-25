@@ -64,6 +64,7 @@ export class DealsService {
       ownerId: user.role === UserRole.Admin ? this.parseOwnerId(body.ownerId) : user.role === UserRole.Operator ? this.parseOwnerId(body.ownerId) : user.id,
       operatorId: user.role === UserRole.Operator ? user.id : (body.operatorId ? Number(body.operatorId) : null),
       appInstalled: Boolean(body.appInstalled || false),
+      appInstalledAt: body.appInstalled ? new Date().toISOString() : null,
       qualAt: body.qualAt || null,
       sentToManager: Boolean(body.sentToManager || false),
       createdBy: user.id
@@ -164,7 +165,11 @@ export class DealsService {
       }
     }
     if (body.operatorId !== undefined) deal.operatorId = body.operatorId ? Number(body.operatorId) : null;
-    if (body.appInstalled !== undefined) deal.appInstalled = Boolean(body.appInstalled);
+    if (body.appInstalled !== undefined) {
+      const nextAppInstalled = Boolean(body.appInstalled);
+      if (nextAppInstalled && !deal.appInstalled) deal.appInstalledAt = new Date().toISOString();
+      deal.appInstalled = nextAppInstalled;
+    }
     if (body.qualAt !== undefined) deal.qualAt = body.qualAt || null;
     if (body.sentToManager !== undefined) deal.sentToManager = Boolean(body.sentToManager);
     if (nextStageId === OPERATOR_QUAL_STAGE_ID && prevStageId !== OPERATOR_QUAL_STAGE_ID && !deal.sentToManager) {
