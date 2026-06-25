@@ -2752,7 +2752,7 @@ async function moveDealToStage(deal,target,options={}){
           phones: deal.phones||[],
           dealName: deal.dealName||deal.customerName,
           price: 0,
-          col: 'yangi',
+          col: 'malakali',
           note: `Operator tomonidan malakali qilindi`,
           operatorId: deal.operatorId||currentManagerId,
           ownerId: managers.find(m=>m.role==='manager' && (m.email||'').toLowerCase()==='sarafroz@gmail.com')?.id || managers.find(m=>m.role==='manager')?.id || null,
@@ -2764,7 +2764,7 @@ async function moveDealToStage(deal,target,options={}){
           _operatorDealId: deal.id,
         });
       }
-      showToast(`✅ "${customerTitle(deal)}" → Menejer voronkasiga yangi sifatida qo'shildi`);
+      showToast(`✅ "${customerTitle(deal)}" → Menejer voronkasiga Malakali sifatida qo'shildi`);
     } else {
       showToast(`"${customerTitle(deal)}" → ${activeCols().find(c=>c.id===target)?.label||COLS.find(c=>c.id===target)?.label}`);
     }
