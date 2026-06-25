@@ -173,7 +173,7 @@ export class DealsService {
     return this.deals.save(deal);
   }
 
-  // Operator lidni "Malakali" qilganda, server tomonida menejer voronkasiga yangi shartnoma sifatida yuboramiz.
+  // Operator lidni "Malakali" qilganda, server tomonida menejer voronkasiga Malakali bosqichida yuboramiz.
   // Frontend buni o'zi qila olmaydi, chunki operator sessiyasida boshqa foydalanuvchilar (menejerlar) ko'rinmaydi.
   private async handoffQualifiedLead(deal: DealEntity, user: UserEntity) {
     deal.sentToManager = true;
@@ -185,7 +185,7 @@ export class DealsService {
       dealName: deal.dealName || deal.customerName,
       phone: deal.phone,
       phones: deal.phones,
-      stageId: 'yangi',
+      stageId: 'malakali',
       price: 0,
       note: 'Operator tomonidan malakali qilindi',
       adSource: deal.adSource,
