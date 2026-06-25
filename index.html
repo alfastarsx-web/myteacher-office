@@ -1874,7 +1874,7 @@ async function api(path,options={}){
 function dealFromApi(d){
   const date=d.createdAt?formatDealDate(d.createdAt):'Bugun';
   const phones=dealPhones(d);
-  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),qualAt:d.qualAt||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
+  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),qualAt:d.qualAt||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
 }
 // localStorage ga deal extra fieldlarini saqlaymiz
 function saveDealExtra(id, fields){
@@ -2353,7 +2353,7 @@ function renderDealStats(){
     const op = calculateOperatorBonus(currentUser());
     const qualProgress = Math.min(100, op.todayQual >= 6 ? 100 : Math.round(op.todayQual / 5 * 100));
     const cards = [
-      {icon:'👥', label:'Ishga olingan', value:op.totalContacts, unit:'ta lid', sub:`Bugun +${op.todayContacts} yangi`, color:'#2563EB', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', accent:'#BFDBFE', progress:Math.min(100,op.todayContacts*5)},
+      {icon:'👥', label:'Ishga olingan', value:op.todayProcessed, unit:'ta lid', sub:`Bugun +${op.todayContacts} yangi`, color:'#2563EB', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', accent:'#BFDBFE', progress:Math.min(100,op.todayProcessed*5)},
       {icon:'🏅', label:'Bu oydagi bonuslarim', value:formatMoney(op.monthBonus), unit:'', sub:`Qual: ${op.monthQual} ta · Sotuv: ${op.monthSold} ta · Ilova: ${op.monthAppBonus?formatMoney(op.monthAppBonus):'0 UZS'}`, color:'#7C3AED', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', accent:'#C4B5FD', progress:Math.min(100,Math.round(op.monthBonus/500000*100))},
       {icon:'📱', label:'Ilova o\'rnatilgan', value:op.todayApp, unit:'ta', sub:`Bonus oladi: ${op.todayAppBonus} ta · +${formatMoney(op.appBonus)}`, color:'#0891B2', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', accent:'#A5F3FC', progress:Math.min(100,op.todayApp*10)},
       {icon:'💰', label:'Bugungi bonus', value:formatMoney(op.todayBonus), unit:'', sub:`Q: ${formatMoney(op.qualBonus)} · S: ${formatMoney(op.saleBonus)} · I: ${formatMoney(op.appBonus)}`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC', progress:Math.min(100,Math.round(op.todayBonus/100000*100))},
@@ -3351,18 +3351,28 @@ function calculateOperatorBonus(user){
 
   // Toshkent vaqtida bugungi sana
   const todayKey = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date());
+  const tashkentDateKey = iso => iso ? new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)) : '';
 
   // Sana tekshirish yordamchi funksiya — faqat createdAt ishlatamiz (updatedAt ishonchsiz)
-  const isToday = d => String(d.createdAt || d.date || '').slice(0,10) === todayKey;
+  const isToday = d => (d.createdAt ? tashkentDateKey(d.createdAt) : String(d.date || '').slice(0,10)) === todayKey;
   // qualAt saqlanganlar uchun qualAt, yo'qsa createdAt
   const isQualToday = d => {
-    const s = d.qualAt ? String(d.qualAt).slice(0,10) : String(d.createdAt || d.date || '').slice(0,10);
+    const s = d.qualAt ? tashkentDateKey(d.qualAt) : (d.createdAt ? tashkentDateKey(d.createdAt) : String(d.date || '').slice(0,10));
     return s === todayKey;
+  };
+  // Lid ustida bugun biror harakat bajarilgan bo'lsa (bosqich o'zgarishi, komment, va h.k.) —
+  // har qanday PATCH backendda updatedAt'ni yangilaydi, shu sababli created/updated farqiga qaraymiz
+  const isProcessedToday = d => {
+    if (tashkentDateKey(d.updatedAt) !== todayKey) return false;
+    const created = d.createdAt ? new Date(d.createdAt).getTime() : 0;
+    const updated = d.updatedAt ? new Date(d.updatedAt).getTime() : 0;
+    return updated - created > 2000;
   };
 
   // Jami va bugungi kontaktlar
   const totalContacts = myDeals.length;
   const todayContacts = myDeals.filter(isToday).length;
+  const todayProcessed = myDeals.filter(isProcessedToday).length;
 
   // Qual lidlar — op_malakali yoki undan yuqori bosqich
   const qualStages = new Set(['op_malakali','yangi','malakali','taklif','muzokaralar','sotib_olishga_rozi','yutgan']);
@@ -3404,7 +3414,7 @@ function calculateOperatorBonus(user){
   const monthBonus = monthQualBonus + monthSaleBonus + monthAppBonus;
 
   return {
-    totalContacts, todayContacts, todayQual, todaySold,
+    totalContacts, todayContacts, todayProcessed, todayQual, todaySold,
     soldDeals, qualDeals, todayApp, todayAppBonus,
     appDeals, appBonusDeals, todayBonus, qualBonus, saleBonus, appBonus,
     monthBonus, monthQual, monthSold, monthQualBonus, monthSaleBonus, monthAppBonus
