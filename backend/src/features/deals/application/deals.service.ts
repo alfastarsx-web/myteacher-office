@@ -4,19 +4,23 @@ import { In, Repository } from 'typeorm';
 import { PasswordService } from '../../../common/crypto/password.service';
 import { UserRole } from '../../users/domain/user-role.enum';
 import { UserEntity } from '../../users/infrastructure/user.entity';
+import { UsersService } from '../../users/application/users.service';
 import { DealEntity } from '../infrastructure/deal.entity';
 import { NotificationsGateway } from '../../notifications/notifications.gateway';
 
 const AGREED_STAGE_ID = 'sotib_olishga_rozi';
 const WON_STAGE_ID = 'yutgan';
 const BULK_BLOCKED_STAGE_IDS = [AGREED_STAGE_ID, WON_STAGE_ID];
+const OPERATOR_QUAL_STAGE_ID = 'op_malakali';
+const QUALIFIED_LEAD_TARGET_EMAIL = 'sarafroz@gmail.com';
 
 @Injectable()
 export class DealsService {
   constructor(
     @InjectRepository(DealEntity) private readonly deals: Repository<DealEntity>,
     private readonly passwords: PasswordService,
-    private readonly notifications: NotificationsGateway
+    private readonly notifications: NotificationsGateway,
+    private readonly users: UsersService
   ) {}
 
   canSee(user: UserEntity, deal: DealEntity) {
@@ -163,7 +167,44 @@ export class DealsService {
     if (body.appInstalled !== undefined) deal.appInstalled = Boolean(body.appInstalled);
     if (body.qualAt !== undefined) deal.qualAt = body.qualAt || null;
     if (body.sentToManager !== undefined) deal.sentToManager = Boolean(body.sentToManager);
+    if (nextStageId === OPERATOR_QUAL_STAGE_ID && prevStageId !== OPERATOR_QUAL_STAGE_ID && !deal.sentToManager) {
+      await this.handoffQualifiedLead(deal, user);
+    }
     return this.deals.save(deal);
+  }
+
+  // Operator lidni "Malakali" qilganda, server tomonida menejer voronkasiga yangi shartnoma sifatida yuboramiz.
+  // Frontend buni o'zi qila olmaydi, chunki operator sessiyasida boshqa foydalanuvchilar (menejerlar) ko'rinmaydi.
+  private async handoffQualifiedLead(deal: DealEntity, user: UserEntity) {
+    deal.sentToManager = true;
+    deal.qualAt = new Date().toISOString();
+    const manager = await this.users.findByEmail(QUALIFIED_LEAD_TARGET_EMAIL);
+    if (!manager) return;
+    const handoff = this.deals.create({
+      customerName: deal.customerName,
+      dealName: deal.dealName || deal.customerName,
+      phone: deal.phone,
+      phones: deal.phones,
+      stageId: 'yangi',
+      price: 0,
+      note: 'Operator tomonidan malakali qilindi',
+      adSource: deal.adSource,
+      registeredAt: deal.registeredAt,
+      learningGoal: deal.learningGoal,
+      leadChannel: deal.leadChannel,
+      ownerId: manager.id,
+      operatorId: deal.operatorId || user.id,
+      createdBy: user.id
+    });
+    const saved = await this.deals.save(handoff);
+    this.notifications.sendToUser(manager.id, {
+      type: 'deal_assigned',
+      title: 'Yangi shartnoma biriktirildi',
+      body: `"${deal.customerName}" — operator tomonidan malakali qilindi`,
+      dealId: saved.id,
+      fromUserId: user.id,
+      userId: manager.id
+    }).catch(() => {});
   }
 
   async bulkAssignOwner(body: any, user: UserEntity) {
