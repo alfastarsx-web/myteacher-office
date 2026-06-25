@@ -3374,10 +3374,22 @@ function calculateOperatorBonus(user){
   const todayContacts = myDeals.filter(isToday).length;
   const todayProcessed = myDeals.filter(isProcessedToday).length;
 
-  // Qual lidlar — op_malakali yoki undan yuqori bosqich
+  // Qual lidlar — op_malakali yoki undan yuqori bosqich.
+  // DIQQAT: operator lidni malakali qilganda, backend menejer voronkasiga bitta "echo" yozuv
+  // ham yaratadi (bir xil telefon/operatorId bilan) — shu sababli bir xil lid ikki marta
+  // (asl op_malakali yozuv + echo) hisoblanib ketmasligi uchun telefon bo'yicha dedupe qilamiz.
   const qualStages = new Set(['op_malakali','yangi','malakali','taklif','muzokaralar','sotib_olishga_rozi','yutgan']);
   const qualDeals = myDeals.filter(d => qualStages.has(d.col));
-  const todayQual = qualDeals.filter(isQualToday).length;
+  const dedupeQualLeads = list => {
+    const seen = new Set();
+    return list.filter(d => {
+      const key = d.phone || d.customerName || `id:${d.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+  const todayQual = dedupeQualLeads(qualDeals.filter(isQualToday)).length;
 
   // Sotilgan lidlar (menejer yutgan)
   const soldDeals = myDeals.filter(d => d.col === STAGE_WON);
@@ -3404,7 +3416,7 @@ function calculateOperatorBonus(user){
   const isThisMonth = d => String(d.createdAt||d.date||'').slice(0,7) === monthKey;
   const isQualThisMonth = d => (d.qualAt ? String(d.qualAt) : String(d.createdAt||d.date||'')).slice(0,7) === monthKey;
 
-  const monthQual = qualDeals.filter(isQualThisMonth).length;
+  const monthQual = dedupeQualLeads(qualDeals.filter(isQualThisMonth)).length;
   const monthSold = soldDeals.filter(isThisMonth).length;
   const monthAppCount = appBonusDeals.filter(isThisMonth).length;
 
@@ -3501,7 +3513,16 @@ function calcOperatorAnalytics(user, range){
   const myDeals = deals.filter(d => d.operatorId===user.id);
   const newContacts = myDeals.filter(d => inRange(d.createdAt||d.date, range)).length;
   const qualStages = ['op_malakali','yangi','malakali','taklif','muzokaralar','sotib_olishga_rozi','yutgan'];
-  const qualDeals = myDeals.filter(d => qualStages.includes(d.col) && inRange(d.qualAt||d.createdAt, range)).length;
+  // Echo yozuvlar (operator malakali qilganda menejer voronkasiga yaratiladigan nusxa) bir xil
+  // telefon raqamiga ega bo'ladi — shu sababli dedupe qilmasak, bitta qualifikatsiya 2 marta hisoblanadi.
+  const qualMatches = myDeals.filter(d => qualStages.includes(d.col) && inRange(d.qualAt||d.createdAt, range));
+  const qualSeenKeys = new Set();
+  const qualDeals = qualMatches.filter(d => {
+    const key = d.phone || d.customerName || `id:${d.id}`;
+    if (qualSeenKeys.has(key)) return false;
+    qualSeenKeys.add(key);
+    return true;
+  }).length;
   const appInstalled = myDeals.filter(d => d.appInstalled && inRange(d.updatedAt||d.createdAt, range)).length;
   const soldDeals = myDeals.filter(d => d.col===STAGE_WON && inRange(d.wonAt||d.updatedAt, range));
   const lostDeals = myDeals.filter(d => d.col==='op_yutqazilgan' && inRange(d.updatedAt, range)).length;
