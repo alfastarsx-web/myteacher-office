@@ -69,7 +69,9 @@ export class AuthService {
   async validateAccessToken(token: string) {
     try {
       const payload = await this.jwt.verifyAsync(token, { secret: this.accessSecret() });
-      return this.users.findById(Number(payload.sub));
+      const user = await this.users.findById(Number(payload.sub));
+      if (user) this.users.touchLastSeen(user.id).catch(() => {});
+      return user;
     } catch {
       return null;
     }
