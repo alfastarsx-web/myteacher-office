@@ -29,11 +29,16 @@ export class UsersService {
   }
 
   publicUser(user: UserEntity) {
+    this.reconcileStaleSession(user);
     const { passwordHash: _passwordHash, ...safe } = user;
     safe.permissions = this.effectivePermissions(user);
     this.ensureOnlineDay(user);
     safe.todayOnlineSeconds = Number(user.todayOnlineSeconds || 0);
     return safe;
+  }
+
+  async touchLastSeen(id: number) {
+    await this.users.update(id, { lastSeenAt: new Date() });
   }
 
   effectivePermissions(user: UserEntity) {
@@ -159,14 +164,39 @@ export class UsersService {
     return base + Math.max(0, Math.floor((Date.now() - new Date(user.onlineStartedAt).getTime()) / 1000));
   }
 
+  // Brauzer tab fonda qolib ketsa yoki kompyuter uxlab qolsa, JS taymerlar to'xtab qoladi va
+  // frontend "Offline" signalini hech qachon yubormasligi mumkin. Shu sababli bo'sh turgan vaqtni
+  // "online" deb hisoblamaslik uchun, hisoblashni "hozir"ga emas, oxirgi haqiqiy so'rov vaqtiga
+  // (lastSeenAt) cheklaymiz.
   private stopOnlineTimer(user: UserEntity) {
     if (user.onlineStartedAt) {
       const base = Number(user.todayOnlineSeconds || 0);
       const started = new Date(user.onlineStartedAt).getTime();
-      const elapsed = Number.isNaN(started) ? 0 : Math.max(0, Math.floor((Date.now() - started) / 1000));
+      const cappedEnd = this.cappedNow(user);
+      const elapsed = Number.isNaN(started) ? 0 : Math.max(0, Math.floor((cappedEnd - started) / 1000));
       user.todayOnlineSeconds = base + elapsed;
       user.onlineStartedAt = null;
     }
+  }
+
+  private cappedNow(user: UserEntity) {
+    const now = Date.now();
+    if (!user.lastSeenAt) return now;
+    const lastSeen = new Date(user.lastSeenAt).getTime();
+    return Number.isNaN(lastSeen) ? now : Math.min(now, lastSeen);
+  }
+
+  private readonly STALE_SESSION_MS = 15 * 60 * 1000;
+
+  // Status "Online" bo'lib qolgan, lekin uzoq vaqtdan beri so'rov yubormagan (stale) sessiyalarni
+  // avtomatik tozalaymiz — har safar publicUser() chaqirilganda (masalan, jamoa sahifasi ochilganda).
+  private reconcileStaleSession(user: UserEntity) {
+    if (user.status !== 'Online' || !user.onlineStartedAt || !user.lastSeenAt) return;
+    const lastSeen = new Date(user.lastSeenAt).getTime();
+    if (Number.isNaN(lastSeen) || Date.now() - lastSeen <= this.STALE_SESSION_MS) return;
+    this.stopOnlineTimer(user);
+    user.status = 'Offline';
+    this.users.save(user).catch(() => {});
   }
 
   private ensureOnlineDay(user: UserEntity) {

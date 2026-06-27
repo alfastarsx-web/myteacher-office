@@ -45,6 +45,9 @@ export class UserEntity {
   @Column({ type: 'timestamptz', nullable: true })
   onlineStartedAt: Date | null;
 
+  @Column({ type: 'timestamptz', nullable: true })
+  lastSeenAt: Date | null;
+
   @OneToMany(() => DealEntity, deal => deal.owner)
   deals: DealEntity[];
 
