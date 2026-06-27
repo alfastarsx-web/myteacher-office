@@ -60,6 +60,10 @@ export class DealEntity {
   @Column({ nullable: true, type: 'varchar' })
   qualAt: string | null;
   @Column({ default: false })
+  fullCall: boolean;
+  @Column({ nullable: true, type: 'varchar' })
+  fullCallAt: string | null;
+  @Column({ default: false })
   sentToManager: boolean;
   @Column()
   createdBy: number;

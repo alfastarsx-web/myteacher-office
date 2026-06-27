@@ -171,6 +171,12 @@ export class DealsService {
       deal.appInstalled = nextAppInstalled;
     }
     if (body.qualAt !== undefined) deal.qualAt = body.qualAt || null;
+    if (body.fullCall !== undefined) {
+      if (user.role !== UserRole.Manager) throw new ForbiddenException('Faqat menejer full call belgisini qo‘ya oladi');
+      const nextFullCall = Boolean(body.fullCall);
+      if (nextFullCall && !deal.fullCall) deal.fullCallAt = new Date().toISOString();
+      deal.fullCall = nextFullCall;
+    }
     if (body.sentToManager !== undefined) deal.sentToManager = Boolean(body.sentToManager);
     if (nextStageId === OPERATOR_QUAL_STAGE_ID && prevStageId !== OPERATOR_QUAL_STAGE_ID && !deal.sentToManager) {
       await this.handoffQualifiedLead(deal, user);
