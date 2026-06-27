@@ -2478,7 +2478,7 @@ function renderList(){
     const disabled=(isAdmin()||isOperator())?'':'disabled';
     return `<tr onclick="openModal(${d.id})">
       <td><input type="checkbox" ${checked} ${disabled} onclick="event.stopPropagation()" onchange="toggleDealSelection(${d.id},this.checked)" style="width:15px;height:15px;accent-color:var(--blue)"></td>
-      <td><div class="dn">${customerTitle(d)}</div><div class="ds">${dealTitle(d)}</div></td>
+      <td><div class="dn">${esc(customerTitle(d))}</div><div class="ds">${esc(dealTitle(d))}</div></td>
       <td><span class="badge" style="background:${col.color}">${col.label}</span></td>
       <td><div class="ac"><div class="av">${owner?esc(managerInitials(owner)):'—'}</div>${esc(dealOwnerLabel(d))}</div></td>
       <td>${d.price?formatMoney(d.price):'—'}</td>
@@ -2675,7 +2675,7 @@ function renderKanban(){
         ${cd.map(d=>`
           <div class="kcard" draggable="true" data-id="${d.id}">
             <div class="kcard-top">
-              <div><div class="dn">${customerTitle(d)}</div><div class="ds">${isAdmin()?esc(managerById(d.ownerId)?.name || 'Biriktirilmagan'):dealTitle(d)}</div></div>
+              <div><div class="dn">${esc(customerTitle(d))}</div><div class="ds">${isAdmin()?esc(managerById(d.ownerId)?.name || 'Biriktirilmagan'):esc(dealTitle(d))}</div></div>
               <span class="kcard-date">${d.date}</span>
             </div>
             <div class="kcard-foot">
