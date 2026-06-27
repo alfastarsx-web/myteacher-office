@@ -4895,7 +4895,7 @@ async function deleteManager(id){
     }else{
       const pool=managers.find(x=>x.name==='Pool') || {id:nid++,name:'Pool',email:'pool@myteacher.uz',role:'manager',status:'Offline',avatar:'PL',color:'linear-gradient(135deg,#64748b,#334155)',permissions:{crm:true,own:true}};
       if(!managers.some(x=>x.id===pool.id))managers.push(pool);
-      deals.forEach(d=>{if(d.ownerId===id)d.ownerId=pool.id;});
+      deals.forEach(d=>{if(d.ownerId===id)d.ownerId=pool.id; if(d.operatorId===id)d.operatorId=pool.id;});
       managers=managers.filter(x=>x.id!==id);
     }
     selectedTeamManagerId=currentManagerId;
