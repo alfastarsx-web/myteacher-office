@@ -47,14 +47,14 @@ export class DealsService {
     const customerName = String(body.customerName || '').trim();
     if (!customerName) throw new BadRequestException('Mijoz nomi kerak');
     const phones = this.normalizePhones(body);
-    this.assertStageRules(body.stageId || 'yangi', Number(body.price || 0), body, user, null);
+    this.assertStageRules(body.stageId || 'yangi', this.parsePrice(body.price), body, user, null);
     const deal = this.deals.create({
       customerName,
       dealName: String(body.dealName || '').trim(),
       phone: phones[0] || '',
       phones,
       stageId: body.stageId || 'yangi',
-      price: Number(body.price || 0),
+      price: this.parsePrice(body.price),
       note: String(body.note || ''),
       adSource: String(body.adSource || ''),
       registeredAt: String(body.registeredAt || ''),
@@ -114,7 +114,7 @@ export class DealsService {
     const prevStageId = deal.stageId;
     const prevCommentsLength = deal.comments?.length || 0;
     const nextStageId = body.stageId !== undefined ? String(body.stageId) : deal.stageId;
-    const nextPrice = body.price !== undefined ? Number(body.price || 0) : Number(deal.price || 0);
+    const nextPrice = body.price !== undefined ? this.parsePrice(body.price) : this.parsePrice(deal.price);
     this.assertStageRules(nextStageId, nextPrice, body, user, deal);
     ['customerName', 'dealName', 'stageId', 'note', 'adSource', 'registeredAt', 'learningGoal', 'leadChannel'].forEach(key => {
       if (body[key] !== undefined) deal[key] = String(body[key]);
@@ -148,7 +148,7 @@ export class DealsService {
       deal.phone = phones[0] || '';
       deal.phones = phones;
     }
-    if (body.price !== undefined) deal.price = Number(body.price || 0);
+    if (body.price !== undefined) deal.price = this.parsePrice(body.price);
     if (body.ownerId !== undefined && user.role === UserRole.Admin) {
       const prevOwnerId = deal.ownerId;
       deal.ownerId = this.parseOwnerId(body.ownerId);
@@ -292,6 +292,11 @@ export class DealsService {
     return Number(value);
   }
 
+  private parsePrice(value: any) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  }
+
   private parseIds(value: any) {
     return [...new Set((Array.isArray(value) ? value : [])
       .map(item => Number(item))
@@ -305,7 +310,7 @@ export class DealsService {
   }
 
   private assertStageRules(stageId: string, price: number, body: any, user: UserEntity, deal: DealEntity | null) {
-    if ([AGREED_STAGE_ID, WON_STAGE_ID].includes(stageId) && price <= 0) {
+    if ([AGREED_STAGE_ID, WON_STAGE_ID].includes(stageId) && (!Number.isFinite(price) || price <= 0)) {
       throw new BadRequestException('Bu bosqichga o‘tish uchun shartnoma summasini kiriting');
     }
     const isNewWon = stageId === WON_STAGE_ID && deal?.stageId !== WON_STAGE_ID;
