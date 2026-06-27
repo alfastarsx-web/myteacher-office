@@ -1831,6 +1831,12 @@ function closeWorkWelcome(){
   document.getElementById('welcomeOvl')?.classList.remove('show');
 }
 function customerTitle(d){ return d.customerName || d.sub || 'Nomsiz mijoz'; }
+function daysSinceUpdate(d){
+  const ts=d.updatedAt||d.createdAt;
+  if(!ts)return 0;
+  const diff=Date.now()-new Date(ts).getTime();
+  return diff>0?Math.floor(diff/86400000):0;
+}
 function dealTitle(d){ return d.dealName || d.name || 'Shartnoma nomi yo‘q'; }
 function dealPhones(d){ return [...new Set([...(Array.isArray(d.phones)?d.phones:[]), d.phone].map(v=>String(v||'').trim()).filter(Boolean))]; }
 function currentUserDeals(){
@@ -2701,7 +2707,9 @@ function renderKanban(){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Shartnoma yaratish
         </button>
-        ${cd.map(d=>`
+        ${cd.map(d=>{
+          const staleDays=![STAGE_WON,'yutqazilgan'].includes(d.col)?daysSinceUpdate(d):0;
+          return `
           <div class="kcard" draggable="true" data-id="${d.id}">
             <div class="kcard-top">
               <div><div class="dn">${esc(customerTitle(d))}</div><div class="ds">${isAdmin()?esc(managerById(d.ownerId)?.name || 'Biriktirilmagan'):esc(dealTitle(d))}</div></div>
@@ -2710,11 +2718,13 @@ function renderKanban(){
             <div class="kcard-foot">
               ${d._kanbanTask.html}
               <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+                ${staleDays>=3?`<span title="${staleDays} kun harakatsiz" style="display:inline-flex;align-items:center;gap:3px;background:#FEE2E2;color:#DC2626;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px">⚠️ ${staleDays} kun</span>`:''}
                 ${d.appInstalled?'<span title="Ilova o\'rnatilgan" style="display:inline-flex;align-items:center;gap:3px;background:#DCFCE7;color:#16A34A;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px">📱 Ilova</span>':''}
                 ${d.price?`<span class="kcard-price">${formatMoney(d.price)}</span>`:''}
               </div>
             </div>
-          </div>`).join('')}
+          </div>`;
+        }).join('')}
       </div>
     </div>`;
   }).join('');
