@@ -1619,6 +1619,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
           <div class="fg"><label>Chek rasmi</label><input class="fi" id="mReceipt" type="file" accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf"></div>
           <div class="fg"><label>Parol</label><input class="fi" id="mClosePassword" type="password" placeholder="Muvaffaqiyatli bosqichi uchun parol"></div>
         </div>
+        <div class="frow">
+          <div class="fg"><label>Kurs muddati (oy)</label><select class="fs" id="mCourseDuration"><option value="">Tanlanmagan</option><option value="1">1 oy</option><option value="2">2 oy</option><option value="3">3 oy</option><option value="4">4 oy</option><option value="5">5 oy</option><option value="6">6 oy</option></select></div>
+        </div>
       </div>
       <div class="fg" style="margin-bottom:18px"><label>Izoh</label><textarea class="fta" id="mNt" placeholder="Izoh..."></textarea></div>
       <div class="slbl">Vazifalar</div>
@@ -1880,7 +1883,7 @@ async function api(path,options={}){
 function dealFromApi(d){
   const date=d.createdAt?formatDealDate(d.createdAt):'Bugun';
   const phones=dealPhones(d);
-  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
+  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,courseDuration:d.courseDuration||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
 }
 // localStorage ga deal extra fieldlarini saqlaymiz
 function saveDealExtra(id, fields){
@@ -1898,6 +1901,7 @@ function dealToApiPayload(d){
   const phones=dealPhones(d);
   const payload={customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,stageId:d.col,price:d.price,note:d.note,adSource:d.adSource,registeredAt:d.registeredAt,age:d.age,learningGoal:d.learningGoal,leadChannel:d.leadChannel,comments:d.comments,ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:d.appInstalled||false,qualAt:d.qualAt||null,sentToManager:d._sentToManager||d.sentToManager||false};
   if(d.closePassword)payload.closePassword=d.closePassword;
+  if(d.courseDuration)payload.courseDuration=d.courseDuration;
   return payload;
 }
 function taskFromApi(t){
@@ -2718,10 +2722,12 @@ async function prepareStageTransition(deal,target,priceInput){
     if(priceInput)priceInput.value=price;
   }
   let closePassword='';
+  let courseDuration=deal.courseDuration||null;
   if(target===STAGE_WON && deal.col!==STAGE_WON){
     const receipt=document.getElementById('mReceipt');
     const receiptSelected=validateReceiptFile(receipt);
     closePassword=document.getElementById('mClosePassword')?.value.trim() || '';
+    courseDuration=Number(document.getElementById('mCourseDuration')?.value || 0) || null;
     if(!modalOpen){
       openModal(deal.id,target);
       setTimeout(()=>document.getElementById('mReceipt')?.focus(),0);
@@ -2737,8 +2743,13 @@ async function prepareStageTransition(deal,target,priceInput){
       document.getElementById('mClosePassword')?.focus();
       return null;
     }
+    if(!courseDuration){
+      showToast('Kurs muddatini tanlang');
+      document.getElementById('mCourseDuration')?.focus();
+      return null;
+    }
   }
-  return {price, closePassword};
+  return {price, closePassword, courseDuration};
 }
 async function moveDealToStage(deal,target,options={}){
   const prepared=await prepareStageTransition(deal,target,options.priceInput);
@@ -2750,6 +2761,7 @@ async function moveDealToStage(deal,target,options={}){
     if(apiToken){
       const body={stageId:target,price:prepared.price};
       if(prepared.closePassword)body.closePassword=prepared.closePassword;
+      if(prepared.courseDuration)body.courseDuration=prepared.courseDuration;
       saveDealExtra(deal.id, {col: target});
       const data=await api(`/api/deals/${deal.id}`,{method:'PATCH',body});
       Object.assign(deal,dealFromApi(data.deal));
@@ -2875,6 +2887,7 @@ function openModal(id=null,defCol=null){
   updS(sel);
   document.getElementById('mClosePassword').value='';
   document.getElementById('mReceipt').value='';
+  document.getElementById('mCourseDuration').value=d?.courseDuration||'';
   updateModalStageFields();
   renderDealOwnerSelect(d);
   document.getElementById('mTaskRow').style.display=d?'flex':'none';
@@ -2942,7 +2955,7 @@ async function saveDeal(){
   const operatorId=isOperator()?currentManagerId:(existing?.operatorId||null);
   const prepared=await prepareStageTransition(existing || {price,col:null},col,priceInput);
   if(!prepared)return;
-  const payload={customerName,phone,phones,dealName,price:prepared.price,col,note,adSource,registeredAt,age,learningGoal,leadChannel,ownerId,operatorId,closePassword:prepared.closePassword};
+  const payload={customerName,phone,phones,dealName,price:prepared.price,col,note,adSource,registeredAt,age,learningGoal,leadChannel,ownerId,operatorId,closePassword:prepared.closePassword,courseDuration:prepared.courseDuration};
   if(apiToken){
     try{
       if(editId){
