@@ -68,6 +68,7 @@ export class DealsService {
       appInstalledAt: body.appInstalled ? new Date().toISOString() : null,
       qualAt: body.qualAt || null,
       sentToManager: Boolean(body.sentToManager || false),
+      courseDuration: Number.isInteger(Number(body.courseDuration)) && Number(body.courseDuration) >= 1 && Number(body.courseDuration) <= 6 ? Number(body.courseDuration) : null,
       createdBy: user.id
     });
     return this.deals.save(deal);
@@ -183,6 +184,10 @@ export class DealsService {
       deal.fullCall = nextFullCall;
     }
     if (body.sentToManager !== undefined) deal.sentToManager = Boolean(body.sentToManager);
+    if (body.courseDuration !== undefined) {
+      const duration = Number(body.courseDuration);
+      deal.courseDuration = Number.isInteger(duration) && duration >= 1 && duration <= 6 ? duration : null;
+    }
     if (nextStageId === OPERATOR_QUAL_STAGE_ID && prevStageId !== OPERATOR_QUAL_STAGE_ID && !deal.sentToManager) {
       await this.handoffQualifiedLead(deal, user);
     }
@@ -323,6 +328,10 @@ export class DealsService {
       const password = String(body.closePassword || '');
       if (!password || !this.passwords.verify(password, user.passwordHash)) {
         throw new ForbiddenException('Muvaffaqiyatli bosqichga o‘tish uchun parol noto‘g‘ri');
+      }
+      const courseDuration = Number(body.courseDuration);
+      if (!Number.isInteger(courseDuration) || courseDuration < 1 || courseDuration > 6) {
+        throw new BadRequestException('Kurs muddatini (1-6 oy) tanlang');
       }
     }
   }
