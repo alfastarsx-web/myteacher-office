@@ -2416,12 +2416,13 @@ function renderDealStats(){
   }
   // Menejer metrikalar
   const m = calculateManagerOverview(currentUser());
-  const todaySalary = calculateManagerCompensation(currentUser()).earnings.netPayment;
+  const salesBonus = calculateManagerCompensation(currentUser()).earnings.netPayment;
+  const todayBonus = salesBonus + m.fullCallBonus;
   const managerCards = [
     {icon:'🎯', label:'Olingan Qual lid', value:`${m.todayQualReceived} ta`, sub:'Bugun operatordan kelgan', color:'#7C3AED', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', accent:'#C4B5FD'},
     {icon:'📞', label:'Full call', value:`${m.todayFullCall} ta`, sub:'15+ daqiqa yoki sotuv', color:'#DB2777', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', accent:'#FBCFE8'},
     {icon:'💵', label:'Bugungi sotuv summasi', value:formatMoney(m.todaySoldAmount), sub:`${m.todaySoldCount} ta muvaffaqiyatli`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC'},
-    {icon:'🏆', label:'Bugungi bonus', value:formatMoney(todaySalary), sub:'Kurs + naqd + har 3 sotuv', color:'#2563EB', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', accent:'#BFDBFE'},
+    {icon:'🏆', label:'Bugungi bonus', value:formatMoney(todayBonus), sub:`Sotuv: ${formatMoney(salesBonus)} · Full call: ${formatMoney(m.fullCallBonus)}`, color:'#2563EB', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', accent:'#BFDBFE'},
   ];
   document.getElementById('dealStats').innerHTML = managerCards.map(card=>`
     <div style="background:${card.bg};border:1px solid ${card.accent};border-radius:14px;padding:14px 16px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:transform .15s,box-shadow .15s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(0,0,0,.09)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,.04)'">
@@ -3431,13 +3432,17 @@ function calculateManagerOverview(user){
     return false;
   };
   const todayFullCall = myDeals.filter(isFullCallToday).length;
+  // Full call bonusi: 10 tagacha har biri 5000 so'm, 11+ bo'lsa hammasi 7000 so'mdan
+  const fullCallBonus = todayFullCall === 0 ? 0
+    : todayFullCall <= 10 ? todayFullCall * 5000
+    : todayFullCall * 7000;
 
   // Bugungi sotuv
   const wonToday = myDeals.filter(d => d.col === STAGE_WON && tashkentDateKey(d.updatedAt || d.createdAt) === todayKey);
   const todaySoldCount = wonToday.length;
   const todaySoldAmount = wonToday.reduce((sum,d) => sum + Number(d.price || 0), 0);
 
-  return {todayQualReceived, todayFullCall, todaySoldCount, todaySoldAmount};
+  return {todayQualReceived, todayFullCall, fullCallBonus, todaySoldCount, todaySoldAmount};
 }
 // ════════════════════════════════════════
 //  ADMIN UMUMIY KO'RSATKICHLARI (barcha xodimlar bo'yicha, bugun)
