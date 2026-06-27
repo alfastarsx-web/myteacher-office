@@ -65,6 +65,8 @@ export class DealEntity {
   fullCallAt: string | null;
   @Column({ default: false })
   sentToManager: boolean;
+  @Column({ nullable: true, type: 'varchar' })
+  lostFromStage: string | null;
   @Column()
   createdBy: number;
 

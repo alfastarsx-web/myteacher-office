@@ -1880,7 +1880,7 @@ async function api(path,options={}){
 function dealFromApi(d){
   const date=d.createdAt?formatDealDate(d.createdAt):'Bugun';
   const phones=dealPhones(d);
-  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
+  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,lostFromStage:d.lostFromStage||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
 }
 // localStorage ga deal extra fieldlarini saqlaymiz
 function saveDealExtra(id, fields){
@@ -3633,6 +3633,30 @@ function calcChannelPerformance(range){
     .sort((a,b) => b.revenue-a.revenue || b.leads-a.leads);
 }
 
+// Voronkaning joriy holati — har bosqichda hozir nechta lid turgani (snapshot, davrga bog'liq emas)
+const FUNNEL_STAGES = ['malakali','taklif','muzokaralar','sotib_olishga_rozi','yutgan'];
+const FUNNEL_LABELS = {malakali:'Malakali',taklif:'Taklif berilgan',muzokaralar:'Muzokaralar',sotib_olishga_rozi:'Sotib olishga rozi',yutgan:'Yutgan'};
+function calcFunnelSnapshot(){
+  return FUNNEL_STAGES.map(stageId => ({
+    stageId,
+    label: FUNNEL_LABELS[stageId],
+    count: deals.filter(d => d.col===stageId).length
+  }));
+}
+// Qaysi bosqichdan ko'proq lid yutqazilayotgani — lostFromStage maydoni orqali (faqat shu maydon
+// to'ldirilgandan keyin yaratilgan/yutqazilgan dealar uchun ishlaydi)
+function calcLostByStage(range){
+  const lost = deals.filter(d => d.col==='yutqazilgan' && d.lostFromStage && inRange(d.updatedAt||d.date, range));
+  const byStage = {};
+  lost.forEach(d => {
+    const key = d.lostFromStage;
+    if(!byStage[key]) byStage[key] = {stageId:key, label:FUNNEL_LABELS[key]||COLS.find(c=>c.id===key)?.label||key, count:0, lostValue:0};
+    byStage[key].count++;
+    byStage[key].lostValue += Number(d.price||0);
+  });
+  return Object.values(byStage).sort((a,b) => b.count-a.count);
+}
+
 function calcCommentQuality(user, range){
   // Har bir deal harakatida comment yoki vazifa bo'lishi kerak
   const myDeals = deals.filter(d => String(d.ownerId)===String(user.id));
@@ -3738,6 +3762,9 @@ function renderAdminAnalytics(wrap, range, periodLabel){
   const channels = calcChannelPerformance(range);
   const totalLeads = channels.reduce((s,c)=>s+c.leads,0);
   const totalRevenue = channels.reduce((s,c)=>s+c.revenue,0);
+  const funnel = calcFunnelSnapshot();
+  const maxFunnelCount = Math.max(1, ...funnel.map(f=>f.count));
+  const lostByStage = calcLostByStage(range);
 
   wrap.innerHTML = `
     <div class="analytics-hero">
@@ -3773,6 +3800,34 @@ function renderAdminAnalytics(wrap, range, periodLabel){
             </tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--mu)">Bu davrda ma\'lumot yo\'q</td></tr>'}
         </tbody>
       </table>
+    </div>
+
+    <div class="analytics-main" style="margin-top:18px">
+      <div class="an-panel">
+        <div class="an-panel-head"><div class="an-panel-title">Voronkaning joriy holati</div></div>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+          ${funnel.map(f=>`
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--td);margin-bottom:4px"><span>${esc(f.label)}</span><span>${f.count} ta</span></div>
+              <div style="height:10px;background:var(--bg);border-radius:999px;overflow:hidden"><div style="height:100%;width:${Math.round(f.count/maxFunnelCount*100)}%;background:${f.stageId===STAGE_WON?'#16A34A':'#2563EB'};border-radius:999px"></div></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="an-panel">
+        <div class="an-panel-head"><div class="an-panel-title">Qaysi bosqichda ko'proq yutqazilmoqda</div></div>
+        <table class="crm-t">
+          <thead><tr><th>Bosqich</th><th>Yutqazilgan</th><th>Yo'qotilgan summa</th></tr></thead>
+          <tbody>
+            ${lostByStage.length?lostByStage.map(l=>`
+              <tr>
+                <td>${esc(l.label)}</td>
+                <td><span style="color:#DC2626;font-weight:700">${l.count}</span></td>
+                <td>${formatMoney(l.lostValue)}</td>
+              </tr>`).join(''):'<tr><td colspan="3" style="text-align:center;color:var(--mu)">Bu davrda yutqazilgan lid yo\'q (yoki eski lidlarda bosqich tarixi saqlanmagan)</td></tr>'}
+          </tbody>
+        </table>
+      </div>
     </div>
   `;
 }
