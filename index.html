@@ -3618,6 +3618,21 @@ function inRange(isoStr, range){
   return d >= range.from && d <= range.to;
 }
 
+// Kanal/reklama manbai bo'yicha samaradorlik — qaysi adSource ko'proq lid va daromad keltirayotganini ko'rsatadi
+function calcChannelPerformance(range){
+  const inPeriod = deals.filter(d => inRange(d.createdAt||d.date, range));
+  const byChannel = {};
+  inPeriod.forEach(d => {
+    const key = (d.adSource || d.leadChannel || '').trim() || "Noma'lum";
+    if(!byChannel[key]) byChannel[key] = {channel:key, leads:0, won:0, revenue:0};
+    byChannel[key].leads++;
+    if(d.col===STAGE_WON){ byChannel[key].won++; byChannel[key].revenue += Number(d.price||0); }
+  });
+  return Object.values(byChannel)
+    .map(c => ({...c, convRate: c.leads ? Math.round(c.won/c.leads*100) : 0}))
+    .sort((a,b) => b.revenue-a.revenue || b.leads-a.leads);
+}
+
 function calcCommentQuality(user, range){
   // Har bir deal harakatida comment yoki vazifa bo'lishi kerak
   const myDeals = deals.filter(d => String(d.ownerId)===String(user.id));
@@ -3710,11 +3725,56 @@ function renderAnalyticsPage(){
   const range = analyticsDateRange(analyticsPeriod);
   const periodLabel = analyticsPeriod==='today'?'Bugun':analyticsPeriod==='week'?'Shu hafta':'Shu oy';
 
-  if(op){
+  if(isAdmin()){
+    renderAdminAnalytics(wrap, range, periodLabel);
+  } else if(op){
     renderOperatorAnalytics(wrap, user, range, periodLabel);
   } else {
     renderManagerAnalytics(wrap, user, range, periodLabel);
   }
+}
+
+function renderAdminAnalytics(wrap, range, periodLabel){
+  const channels = calcChannelPerformance(range);
+  const totalLeads = channels.reduce((s,c)=>s+c.leads,0);
+  const totalRevenue = channels.reduce((s,c)=>s+c.revenue,0);
+
+  wrap.innerHTML = `
+    <div class="analytics-hero">
+      <div class="analytics-hero-text">
+        <h2>📊 Kanal bo'yicha samaradorlik</h2>
+        <p>Qaysi reklama manbai ko'proq lid va daromad keltirayotgani · ${periodLabel}</p>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px">
+        <div class="analytics-period-tabs">
+          <button class="apt ${analyticsPeriod==='today'?'active':''}" onclick="analyticsPeriod='today';renderAnalyticsPage()">Bugun</button>
+          <button class="apt ${analyticsPeriod==='week'?'active':''}" onclick="analyticsPeriod='week';renderAnalyticsPage()">Hafta</button>
+          <button class="apt ${analyticsPeriod==='month'?'active':''}" onclick="analyticsPeriod='month';renderAnalyticsPage()">Oy</button>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:32px;font-weight:900;line-height:1">${formatMoney(totalRevenue)}</div>
+          <div style="font-size:12px;opacity:.8">Jami daromad · ${totalLeads} ta lid</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="an-panel" style="margin-top:18px">
+      <div class="an-panel-head"><div class="an-panel-title">Kanallar (eng daromadlisidan)</div></div>
+      <table class="crm-t">
+        <thead><tr><th>Kanal / manba</th><th>Lidlar</th><th>Yutgan</th><th>Konversiya</th><th>Daromad</th></tr></thead>
+        <tbody>
+          ${channels.length?channels.map(c=>`
+            <tr>
+              <td>${esc(c.channel)}</td>
+              <td>${c.leads}</td>
+              <td>${c.won}</td>
+              <td><span style="color:${c.convRate>=20?'#16A34A':c.convRate>=10?'#D97706':'#DC2626'};font-weight:700">${c.convRate}%</span></td>
+              <td>${formatMoney(c.revenue)}</td>
+            </tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--mu)">Bu davrda ma\'lumot yo\'q</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 
 function renderManagerAnalytics(wrap, user, range, periodLabel){
