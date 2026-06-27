@@ -111,6 +111,7 @@ export class UsersService {
     if (user.role === UserRole.Admin) throw new BadRequestException('Admin akkauntni o‘chirib bo‘lmaydi');
     const pool = await this.ensurePoolUser();
     await this.deals.update({ ownerId: user.id }, { ownerId: pool.id });
+    await this.deals.update({ operatorId: user.id }, { operatorId: pool.id });
     await this.tasks.update({ ownerId: user.id }, { ownerId: pool.id });
     await this.users.delete(user.id);
     return { ok: true, pool: this.publicUser(pool) };
