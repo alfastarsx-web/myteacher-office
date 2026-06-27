@@ -16,7 +16,13 @@ export class AuthService {
     private readonly passwords: PasswordService,
     private readonly jwt: JwtService,
     @InjectRepository(RefreshTokenEntity) private readonly refreshTokens: Repository<RefreshTokenEntity>
-  ) {}
+  ) {
+    if (!process.env.JWT_ACCESS_SECRET) {
+      throw new Error(
+        'JWT_ACCESS_SECRET environment variable is not set. Refusing to start the server with an insecure default secret — set JWT_ACCESS_SECRET in your .env before starting.'
+      );
+    }
+  }
 
   async login(email: string, password: string) {
     const user = await this.users.findByEmail(email);
@@ -95,7 +101,7 @@ export class AuthService {
   }
 
   private accessSecret() {
-    return process.env.JWT_ACCESS_SECRET || 'dev_access_secret_change_me';
+    return process.env.JWT_ACCESS_SECRET as string;
   }
 
   private refreshTtlMs() {
