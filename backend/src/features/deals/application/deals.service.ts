@@ -203,6 +203,7 @@ export class DealsService {
       registeredAt: deal.registeredAt,
       learningGoal: deal.learningGoal,
       leadChannel: deal.leadChannel,
+      qualAt: deal.qualAt,
       ownerId: manager.id,
       operatorId: deal.operatorId || user.id,
       createdBy: user.id
