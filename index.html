@@ -1161,6 +1161,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <!-- ═══ PAGE: SHARTNOMALAR ═══ -->
   <div class="page" id="page-shartnomalar">
     <div class="deal-stats" id="dealStats"></div>
+    <div id="poolAlertBanner" style="display:none;align-items:center;justify-content:space-between;gap:12px;margin:0 24px;padding:10px 16px;border-radius:10px;background:#FEF3C7;border:1px solid #FDE68A;color:#92400E;font-size:13px;font-weight:600"></div>
     <!-- List -->
     <div id="sListView" style="display:none;flex:1;overflow:auto">
       <div class="cbar list-cbar">
@@ -2100,7 +2101,11 @@ function getDealQuery(){ return document.getElementById('dealSearch')?.value.tri
 function visibleDeals(){
   const q=getDealQuery();
   const myDeals=currentUserDeals();
-  const base=isAdmin()?myDeals:isOperator()?myDeals:myDeals.filter(d=>d.col!=='yutqazilgan');
+  let base=isAdmin()?myDeals:isOperator()?myDeals:myDeals.filter(d=>d.col!=='yutqazilgan');
+  if(isAdmin() && poolFilterActive){
+    const pool=managers.find(m=>m.name==='Pool');
+    base=base.filter(d=>pool && d.ownerId===pool.id && ![STAGE_WON,'yutqazilgan'].includes(d.col));
+  }
   if(!q)return base;
   return base.filter(d=>[customerTitle(d),dealTitle(d),...dealPhones(d),d.date].some(v=>String(v||'').toLowerCase().includes(q)));
 }
@@ -2357,7 +2362,31 @@ async function importDealsFromGoogleSheet(){
   }
 }
 
+let poolFilterActive=false;
+function renderPoolAlert(){
+  const banner=document.getElementById('poolAlertBanner');
+  if(!banner)return;
+  if(!isAdmin()){ banner.style.display='none'; poolFilterActive=false; return; }
+  const pool=managers.find(m=>m.name==='Pool');
+  const poolActiveDeals=pool?deals.filter(d=>d.ownerId===pool.id && ![STAGE_WON,'yutqazilgan'].includes(d.col)):[];
+  if(!poolActiveDeals.length){
+    banner.style.display='none';
+    poolFilterActive=false;
+    return;
+  }
+  banner.style.display='flex';
+  banner.innerHTML=`
+    <span>⚠️ Pool'da <strong>${poolActiveDeals.length}</strong> ta qayta taqsimlanishi kerak bo'lgan faol lid bor (xodim o'chirilganda qolgan)</span>
+    <button class="btn-ico btn-primary" onclick="togglePoolFilter()" style="flex-shrink:0">${poolFilterActive?'Filterni tozalash':"Ko'rish va taqsimlash"}</button>
+  `;
+}
+function togglePoolFilter(){
+  poolFilterActive=!poolFilterActive;
+  renderPoolAlert();
+  renderCurrentDeals();
+}
 function renderDealStats(){
+  renderPoolAlert();
   if(isOperator()){
     const op = calculateOperatorBonus(currentUser());
     const qualProgress = Math.min(100, op.todayQual >= 6 ? 100 : Math.round(op.todayQual / 5 * 100));
