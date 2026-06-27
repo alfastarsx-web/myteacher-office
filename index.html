@@ -1161,6 +1161,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <!-- ═══ PAGE: SHARTNOMALAR ═══ -->
   <div class="page" id="page-shartnomalar">
     <div class="deal-stats" id="dealStats"></div>
+    <div id="poolAlertBanner" style="display:none;align-items:center;justify-content:space-between;gap:12px;margin:0 24px;padding:10px 16px;border-radius:10px;background:#FEF3C7;border:1px solid #FDE68A;color:#92400E;font-size:13px;font-weight:600"></div>
     <!-- List -->
     <div id="sListView" style="display:none;flex:1;overflow:auto">
       <div class="cbar list-cbar">
@@ -1833,6 +1834,12 @@ function closeWorkWelcome(){
   document.getElementById('welcomeOvl')?.classList.remove('show');
 }
 function customerTitle(d){ return d.customerName || d.sub || 'Nomsiz mijoz'; }
+function daysSinceUpdate(d){
+  const ts=d.updatedAt||d.createdAt;
+  if(!ts)return 0;
+  const diff=Date.now()-new Date(ts).getTime();
+  return diff>0?Math.floor(diff/86400000):0;
+}
 function dealTitle(d){ return d.dealName || d.name || 'Shartnoma nomi yo‘q'; }
 function dealPhones(d){ return [...new Set([...(Array.isArray(d.phones)?d.phones:[]), d.phone].map(v=>String(v||'').trim()).filter(Boolean))]; }
 function currentUserDeals(){
@@ -1883,7 +1890,7 @@ async function api(path,options={}){
 function dealFromApi(d){
   const date=d.createdAt?formatDealDate(d.createdAt):'Bugun';
   const phones=dealPhones(d);
-  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,courseDuration:d.courseDuration||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
+  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,courseDuration:d.courseDuration||null,lostFromStage:d.lostFromStage||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
 }
 // localStorage ga deal extra fieldlarini saqlaymiz
 function saveDealExtra(id, fields){
@@ -2104,7 +2111,11 @@ function getDealQuery(){ return document.getElementById('dealSearch')?.value.tri
 function visibleDeals(){
   const q=getDealQuery();
   const myDeals=currentUserDeals();
-  const base=isAdmin()?myDeals:isOperator()?myDeals:myDeals.filter(d=>d.col!=='yutqazilgan');
+  let base=isAdmin()?myDeals:isOperator()?myDeals:myDeals.filter(d=>d.col!=='yutqazilgan');
+  if(isAdmin() && poolFilterActive){
+    const pool=managers.find(m=>m.name==='Pool');
+    base=base.filter(d=>pool && d.ownerId===pool.id && ![STAGE_WON,'yutqazilgan'].includes(d.col));
+  }
   if(!q)return base;
   return base.filter(d=>[customerTitle(d),dealTitle(d),...dealPhones(d),d.date].some(v=>String(v||'').toLowerCase().includes(q)));
 }
@@ -2361,7 +2372,31 @@ async function importDealsFromGoogleSheet(){
   }
 }
 
+let poolFilterActive=false;
+function renderPoolAlert(){
+  const banner=document.getElementById('poolAlertBanner');
+  if(!banner)return;
+  if(!isAdmin()){ banner.style.display='none'; poolFilterActive=false; return; }
+  const pool=managers.find(m=>m.name==='Pool');
+  const poolActiveDeals=pool?deals.filter(d=>d.ownerId===pool.id && ![STAGE_WON,'yutqazilgan'].includes(d.col)):[];
+  if(!poolActiveDeals.length){
+    banner.style.display='none';
+    poolFilterActive=false;
+    return;
+  }
+  banner.style.display='flex';
+  banner.innerHTML=`
+    <span>⚠️ Pool'da <strong>${poolActiveDeals.length}</strong> ta qayta taqsimlanishi kerak bo'lgan faol lid bor (xodim o'chirilganda qolgan)</span>
+    <button class="btn-ico btn-primary" onclick="togglePoolFilter()" style="flex-shrink:0">${poolFilterActive?'Filterni tozalash':"Ko'rish va taqsimlash"}</button>
+  `;
+}
+function togglePoolFilter(){
+  poolFilterActive=!poolFilterActive;
+  renderPoolAlert();
+  renderCurrentDeals();
+}
 function renderDealStats(){
+  renderPoolAlert();
   if(isOperator()){
     const op = calculateOperatorBonus(currentUser());
     const qualProgress = Math.min(100, op.todayQual >= 6 ? 100 : Math.round(op.todayQual / 5 * 100));
@@ -2676,7 +2711,9 @@ function renderKanban(){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Shartnoma yaratish
         </button>
-        ${cd.map(d=>`
+        ${cd.map(d=>{
+          const staleDays=![STAGE_WON,'yutqazilgan'].includes(d.col)?daysSinceUpdate(d):0;
+          return `
           <div class="kcard" draggable="true" data-id="${d.id}">
             <div class="kcard-top">
               <div><div class="dn">${esc(customerTitle(d))}</div><div class="ds">${isAdmin()?esc(managerById(d.ownerId)?.name || 'Biriktirilmagan'):esc(dealTitle(d))}</div></div>
@@ -2685,11 +2722,13 @@ function renderKanban(){
             <div class="kcard-foot">
               ${d._kanbanTask.html}
               <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+                ${staleDays>=3?`<span title="${staleDays} kun harakatsiz" style="display:inline-flex;align-items:center;gap:3px;background:#FEE2E2;color:#DC2626;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px">⚠️ ${staleDays} kun</span>`:''}
                 ${d.appInstalled?'<span title="Ilova o\'rnatilgan" style="display:inline-flex;align-items:center;gap:3px;background:#DCFCE7;color:#16A34A;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px">📱 Ilova</span>':''}
                 ${d.price?`<span class="kcard-price">${formatMoney(d.price)}</span>`:''}
               </div>
             </div>
-          </div>`).join('')}
+          </div>`;
+        }).join('')}
       </div>
     </div>`;
   }).join('');
@@ -3631,6 +3670,45 @@ function inRange(isoStr, range){
   return d >= range.from && d <= range.to;
 }
 
+// Kanal/reklama manbai bo'yicha samaradorlik — qaysi adSource ko'proq lid va daromad keltirayotganini ko'rsatadi
+function calcChannelPerformance(range){
+  const inPeriod = deals.filter(d => inRange(d.createdAt||d.date, range));
+  const byChannel = {};
+  inPeriod.forEach(d => {
+    const key = (d.adSource || d.leadChannel || '').trim() || "Noma'lum";
+    if(!byChannel[key]) byChannel[key] = {channel:key, leads:0, won:0, revenue:0};
+    byChannel[key].leads++;
+    if(d.col===STAGE_WON){ byChannel[key].won++; byChannel[key].revenue += Number(d.price||0); }
+  });
+  return Object.values(byChannel)
+    .map(c => ({...c, convRate: c.leads ? Math.round(c.won/c.leads*100) : 0}))
+    .sort((a,b) => b.revenue-a.revenue || b.leads-a.leads);
+}
+
+// Voronkaning joriy holati — har bosqichda hozir nechta lid turgani (snapshot, davrga bog'liq emas)
+const FUNNEL_STAGES = ['malakali','taklif','muzokaralar','sotib_olishga_rozi','yutgan'];
+const FUNNEL_LABELS = {malakali:'Malakali',taklif:'Taklif berilgan',muzokaralar:'Muzokaralar',sotib_olishga_rozi:'Sotib olishga rozi',yutgan:'Yutgan'};
+function calcFunnelSnapshot(){
+  return FUNNEL_STAGES.map(stageId => ({
+    stageId,
+    label: FUNNEL_LABELS[stageId],
+    count: deals.filter(d => d.col===stageId).length
+  }));
+}
+// Qaysi bosqichdan ko'proq lid yutqazilayotgani — lostFromStage maydoni orqali (faqat shu maydon
+// to'ldirilgandan keyin yaratilgan/yutqazilgan dealar uchun ishlaydi)
+function calcLostByStage(range){
+  const lost = deals.filter(d => d.col==='yutqazilgan' && d.lostFromStage && inRange(d.updatedAt||d.date, range));
+  const byStage = {};
+  lost.forEach(d => {
+    const key = d.lostFromStage;
+    if(!byStage[key]) byStage[key] = {stageId:key, label:FUNNEL_LABELS[key]||COLS.find(c=>c.id===key)?.label||key, count:0, lostValue:0};
+    byStage[key].count++;
+    byStage[key].lostValue += Number(d.price||0);
+  });
+  return Object.values(byStage).sort((a,b) => b.count-a.count);
+}
+
 function calcCommentQuality(user, range){
   // Har bir deal harakatida comment yoki vazifa bo'lishi kerak
   const myDeals = deals.filter(d => String(d.ownerId)===String(user.id));
@@ -3723,11 +3801,87 @@ function renderAnalyticsPage(){
   const range = analyticsDateRange(analyticsPeriod);
   const periodLabel = analyticsPeriod==='today'?'Bugun':analyticsPeriod==='week'?'Shu hafta':'Shu oy';
 
-  if(op){
+  if(isAdmin()){
+    renderAdminAnalytics(wrap, range, periodLabel);
+  } else if(op){
     renderOperatorAnalytics(wrap, user, range, periodLabel);
   } else {
     renderManagerAnalytics(wrap, user, range, periodLabel);
   }
+}
+
+function renderAdminAnalytics(wrap, range, periodLabel){
+  const channels = calcChannelPerformance(range);
+  const totalLeads = channels.reduce((s,c)=>s+c.leads,0);
+  const totalRevenue = channels.reduce((s,c)=>s+c.revenue,0);
+  const funnel = calcFunnelSnapshot();
+  const maxFunnelCount = Math.max(1, ...funnel.map(f=>f.count));
+  const lostByStage = calcLostByStage(range);
+
+  wrap.innerHTML = `
+    <div class="analytics-hero">
+      <div class="analytics-hero-text">
+        <h2>📊 Kanal bo'yicha samaradorlik</h2>
+        <p>Qaysi reklama manbai ko'proq lid va daromad keltirayotgani · ${periodLabel}</p>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:12px">
+        <div class="analytics-period-tabs">
+          <button class="apt ${analyticsPeriod==='today'?'active':''}" onclick="analyticsPeriod='today';renderAnalyticsPage()">Bugun</button>
+          <button class="apt ${analyticsPeriod==='week'?'active':''}" onclick="analyticsPeriod='week';renderAnalyticsPage()">Hafta</button>
+          <button class="apt ${analyticsPeriod==='month'?'active':''}" onclick="analyticsPeriod='month';renderAnalyticsPage()">Oy</button>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:32px;font-weight:900;line-height:1">${formatMoney(totalRevenue)}</div>
+          <div style="font-size:12px;opacity:.8">Jami daromad · ${totalLeads} ta lid</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="an-panel" style="margin-top:18px">
+      <div class="an-panel-head"><div class="an-panel-title">Kanallar (eng daromadlisidan)</div></div>
+      <table class="crm-t">
+        <thead><tr><th>Kanal / manba</th><th>Lidlar</th><th>Yutgan</th><th>Konversiya</th><th>Daromad</th></tr></thead>
+        <tbody>
+          ${channels.length?channels.map(c=>`
+            <tr>
+              <td>${esc(c.channel)}</td>
+              <td>${c.leads}</td>
+              <td>${c.won}</td>
+              <td><span style="color:${c.convRate>=20?'#16A34A':c.convRate>=10?'#D97706':'#DC2626'};font-weight:700">${c.convRate}%</span></td>
+              <td>${formatMoney(c.revenue)}</td>
+            </tr>`).join(''):'<tr><td colspan="5" style="text-align:center;color:var(--mu)">Bu davrda ma\'lumot yo\'q</td></tr>'}
+        </tbody>
+      </table>
+    </div>
+
+    <div class="analytics-main" style="margin-top:18px">
+      <div class="an-panel">
+        <div class="an-panel-head"><div class="an-panel-title">Voronkaning joriy holati</div></div>
+        <div style="padding:16px;display:flex;flex-direction:column;gap:10px">
+          ${funnel.map(f=>`
+            <div>
+              <div style="display:flex;justify-content:space-between;font-size:12px;font-weight:700;color:var(--td);margin-bottom:4px"><span>${esc(f.label)}</span><span>${f.count} ta</span></div>
+              <div style="height:10px;background:var(--bg);border-radius:999px;overflow:hidden"><div style="height:100%;width:${Math.round(f.count/maxFunnelCount*100)}%;background:${f.stageId===STAGE_WON?'#16A34A':'#2563EB'};border-radius:999px"></div></div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+      <div class="an-panel">
+        <div class="an-panel-head"><div class="an-panel-title">Qaysi bosqichda ko'proq yutqazilmoqda</div></div>
+        <table class="crm-t">
+          <thead><tr><th>Bosqich</th><th>Yutqazilgan</th><th>Yo'qotilgan summa</th></tr></thead>
+          <tbody>
+            ${lostByStage.length?lostByStage.map(l=>`
+              <tr>
+                <td>${esc(l.label)}</td>
+                <td><span style="color:#DC2626;font-weight:700">${l.count}</span></td>
+                <td>${formatMoney(l.lostValue)}</td>
+              </tr>`).join(''):'<tr><td colspan="3" style="text-align:center;color:var(--mu)">Bu davrda yutqazilgan lid yo\'q (yoki eski lidlarda bosqich tarixi saqlanmagan)</td></tr>'}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
 }
 
 function renderManagerAnalytics(wrap, user, range, periodLabel){
@@ -4793,7 +4947,7 @@ async function deleteManager(id){
     }else{
       const pool=managers.find(x=>x.name==='Pool') || {id:nid++,name:'Pool',email:'pool@myteacher.uz',role:'manager',status:'Offline',avatar:'PL',color:'linear-gradient(135deg,#64748b,#334155)',permissions:{crm:true,own:true}};
       if(!managers.some(x=>x.id===pool.id))managers.push(pool);
-      deals.forEach(d=>{if(d.ownerId===id)d.ownerId=pool.id;});
+      deals.forEach(d=>{if(d.ownerId===id)d.ownerId=pool.id; if(d.operatorId===id)d.operatorId=pool.id;});
       managers=managers.filter(x=>x.id!==id);
     }
     selectedTeamManagerId=currentManagerId;

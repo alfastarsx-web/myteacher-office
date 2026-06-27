@@ -67,6 +67,8 @@ export class DealEntity {
   sentToManager: boolean;
   @Column({ nullable: true, type: 'int' })
   courseDuration: number | null;
+  @Column({ nullable: true, type: 'varchar' })
+  lostFromStage: string | null;
   @Column()
   createdBy: number;
 

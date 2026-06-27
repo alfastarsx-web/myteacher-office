@@ -10,6 +10,7 @@ import { NotificationsGateway } from '../../notifications/notifications.gateway'
 
 const AGREED_STAGE_ID = 'sotib_olishga_rozi';
 const WON_STAGE_ID = 'yutgan';
+const LOST_STAGE_ID = 'yutqazilgan';
 const BULK_BLOCKED_STAGE_IDS = [AGREED_STAGE_ID, WON_STAGE_ID];
 const OPERATOR_QUAL_STAGE_ID = 'op_malakali';
 const QUALIFIED_LEAD_TARGET_EMAIL = 'sarafroz@gmail.com';
@@ -121,6 +122,10 @@ export class DealsService {
       if (body[key] !== undefined) deal[key] = String(body[key]);
     });
     if (Array.isArray(body.comments)) deal.comments = body.comments;
+    // Lid "Yutqazilgan" bo'lganda, qaysi bosqichdan kelib yutqazilganini saqlaymiz — voronka tahlili uchun
+    if (nextStageId === LOST_STAGE_ID && prevStageId !== LOST_STAGE_ID) {
+      deal.lostFromStage = prevStageId;
+    }
     // Bosqich o'zgarganda deal owneriga xabar
     if (body.stageId !== undefined && body.stageId !== prevStageId && deal.ownerId && deal.ownerId !== user.id) {
       this.notifications.sendToUser(deal.ownerId, {
