@@ -1,6 +1,6 @@
 import { WebSocketGateway, WebSocketServer, SubscribeMessage, OnGatewayConnection, OnGatewayDisconnect } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
@@ -12,6 +12,8 @@ import { NotificationEntity } from './notification.entity';
   namespace: '/notifications'
 })
 export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisconnect {
+  private readonly logger = new Logger(NotificationsGateway.name);
+
   @WebSocketServer()
   server: Server;
 
@@ -73,14 +75,21 @@ export class NotificationsGateway implements OnGatewayConnection, OnGatewayDisco
 
   // Send notification to specific user
   async sendToUser(userId: number, notification: Omit<NotificationEntity, 'id' | 'createdAt' | 'read'>) {
-    const saved = await this.notifications.save(
-      this.notifications.create({ ...notification, userId, read: false })
-    );
-    const socketIds = this.userSockets.get(userId) || [];
-    socketIds.forEach(socketId => {
-      this.server.to(socketId).emit('notifications:new', saved);
-    });
-    return saved;
+    try {
+      const saved = await this.notifications.save(
+        this.notifications.create({ ...notification, userId, read: false })
+      );
+      const socketIds = this.userSockets.get(userId) || [];
+      socketIds.forEach(socketId => {
+        this.server.to(socketId).emit('notifications:new', saved);
+      });
+      return saved;
+    } catch (err) {
+      // Callers fire-and-forget this (.catch(() => {})) so failures here were previously
+      // invisible — log them so a broken notification path shows up in server logs.
+      this.logger.error(`Failed to send notification to user ${userId}: ${(err as Error).message}`, (err as Error).stack);
+      throw err;
+    }
   }
 
   // Send to multiple users
