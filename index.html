@@ -5420,16 +5420,17 @@ function debugOperator(){
 }
 
 async function initApp(){
-  goPage(curPage);
   if(apiToken){
     const ok=await loadApiData();
     if(ok){
+      goPage(curPage);
       connectNotifSocket();
       return;
     }
     apiToken='';
     localStorage.removeItem('mtcrm_token');
   }
+  goPage(curPage);
   apiOnline=false;
   renderWorkStatus();
   renderFooterTicker();
