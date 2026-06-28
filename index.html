@@ -3767,17 +3767,27 @@ function calcOperatorAnalytics(user, range){
   // telefon raqamiga ega bo'ladi — shu sababli dedupe qilmasak, bitta qualifikatsiya 2 marta hisoblanadi.
   const qualMatches = myDeals.filter(d => qualStages.includes(d.col) && inRange(d.qualAt||d.createdAt, range));
   const qualSeenKeys = new Set();
-  const qualDeals = qualMatches.filter(d => {
+  const qualMatchesDeduped = qualMatches.filter(d => {
     const key = d.phone || d.customerName || `id:${d.id}`;
     if (qualSeenKeys.has(key)) return false;
     qualSeenKeys.add(key);
     return true;
-  }).length;
+  });
+  const qualDeals = qualMatchesDeduped.length;
   const appInstalled = myDeals.filter(d => d.appInstalled && inRange(d.appInstalledAt||d.createdAt, range)).length;
   const soldDeals = myDeals.filter(d => d.col===STAGE_WON && inRange(d.wonAt||d.updatedAt, range));
   const lostDeals = myDeals.filter(d => d.col==='op_yutqazilgan' && inRange(d.updatedAt, range)).length;
   const convRate = newContacts ? Math.round(qualDeals/newContacts*100) : 0;
-  const qualBonus = qualDeals<=5 ? qualDeals*7000 : qualDeals*10000;
+  // Qual bonusining 5-tagacha=7000/6+=10000 stavkasi KUNLIK rag'bat — shu sababli hafta/oy uchun
+  // butun davr yig'indisiga emas, har bir kunga alohida qo'llab, keyin yig'indilaymiz. Aks holda
+  // (masalan) 7 kunlik 35 ta qual — barchasi yuqori stavkada hisoblanib, bonus sun'iy oshib ketardi.
+  const tashkentDateKey = iso => iso ? new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)) : '';
+  const qualByDay = {};
+  qualMatchesDeduped.forEach(d => {
+    const key = tashkentDateKey(d.qualAt || d.createdAt);
+    qualByDay[key] = (qualByDay[key] || 0) + 1;
+  });
+  const qualBonus = Object.values(qualByDay).reduce((sum, n) => sum + (n <= 5 ? n * 7000 : n * 10000), 0);
   const saleBonus = soldDeals.length*20000;
   const appBonus = appInstalled*500;
   return {newContacts, qualDeals, appInstalled, soldDeals:soldDeals.length, lostDeals, convRate, qualBonus, saleBonus, appBonus, totalBonus:qualBonus+saleBonus+appBonus};
