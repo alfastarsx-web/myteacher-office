@@ -4681,6 +4681,16 @@ function editCareerBio(){
   if(value===null)return;
   saveOwnCareerProfile({bio:value.trim()});
 }
+function editCareerPhone(){
+  const value=prompt("Telefon raqamingiz:",currentUser().phone||'');
+  if(value===null)return;
+  saveOwnCareerProfile({phone:value.trim()});
+}
+function editCareerAddress(){
+  const value=prompt("Yashash manzilingiz:",currentUser().address||'');
+  if(value===null)return;
+  saveOwnCareerProfile({address:value.trim()});
+}
 async function addCareerAdjustment(){
   if(!isAdmin())return;
   const user=careerUser();
@@ -4817,7 +4827,8 @@ function renderCareerPage(){
     ['Email',user.email||'Kiritilmagan'],
     ['Bugungi online vaqt',formatDuration(userOnlineSeconds(user))]
   ].map(([label,value])=>`<div class="career-fin-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join('')
-    +`<div class="career-fin-row"><span>Telefon</span><strong>${telLink(careerPhone(user,rows))}</strong></div>`
+    +`<div class="career-fin-row"><span>Telefon</span><strong>${telLink(careerPhone(user,rows))}${isOwnCareerProfile?` <button class="link-btn" style="padding:0;display:inline" onclick="editCareerPhone()">✎</button>`:''}</strong></div>`
+    +`<div class="career-fin-row" style="align-items:flex-start"><span>Yashash manzil</span><strong style="text-align:right;white-space:pre-wrap">${esc(user.address||'Kiritilmagan')}${isOwnCareerProfile?` <button class="link-btn" style="padding:0;display:inline" onclick="editCareerAddress()">✎</button>`:''}</strong></div>`
     +`<div class="career-fin-row" style="align-items:flex-start"><span>Bio</span><strong style="text-align:right;white-space:pre-wrap">${esc(user.bio||'Kiritilmagan')}</strong></div>`
     +(isOwnCareerProfile?`<button class="link-btn" style="margin-top:8px" onclick="editCareerBio()">✎ Bio'ni tahrirlash</button>`:'');
 }
