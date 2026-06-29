@@ -42,6 +42,12 @@ export class UserEntity {
   @Column({ type: 'text', nullable: true })
   bio: string | null;
 
+  @Column({ type: 'varchar', length: 30, nullable: true })
+  phone: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  address: string | null;
+
   @Column({ type: 'jsonb', default: () => "'{}'" })
   permissions: Record<string, boolean>;
 

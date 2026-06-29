@@ -121,6 +121,12 @@ export class UsersService {
     if (body.bio !== undefined) {
       fresh.bio = String(body.bio || '').trim().slice(0, 2000) || null;
     }
+    if (body.phone !== undefined) {
+      fresh.phone = String(body.phone || '').trim().slice(0, 30) || null;
+    }
+    if (body.address !== undefined) {
+      fresh.address = String(body.address || '').trim().slice(0, 500) || null;
+    }
     return this.publicUser(await this.users.save(fresh));
   }
 
