@@ -5377,7 +5377,7 @@ function renderTags(f){
   if(!el)return;
   const filtered=setTags.filter(t=>t.toLowerCase().includes(f.toLowerCase()));
   empty.style.display=filtered.length?'none':'block';
-  el.innerHTML=filtered.map(t=>`<div class="tag-list-item"><span class="tag-chip">${t}</span><input type="checkbox" style="width:15px;height:15px;accent-color:var(--blue)"></div>`).join('');
+  el.innerHTML=filtered.map(t=>`<div class="tag-list-item"><span class="tag-chip">${esc(t)}</span><input type="checkbox" style="width:15px;height:15px;accent-color:var(--blue)"></div>`).join('');
 }
 function filterTags(v){renderTags(v);}
 
