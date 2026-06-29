@@ -160,6 +160,21 @@ table.crm-t{width:100%;border-collapse:collapse}
 .stat-card{background:var(--wh);border:1px solid var(--br);border-radius:8px;padding:12px 14px;box-shadow:var(--shadow-sm)}
 .stat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.35px;color:var(--mu);margin-bottom:5px}
 .stat-value{font-size:20px;font-weight:700;color:var(--td)}
+/* KPI kartochkalari — Operator/Admin/Menejer dashboard kartochkalari (renderDealStats) */
+.kpi-card{background:var(--kpi-bg);border:1px solid var(--kpi-accent);border-radius:14px;padding:14px 16px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:transform .15s,box-shadow .15s}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.09)}
+.kpi-card-decor{position:absolute;right:-12px;top:-12px;width:68px;height:68px;border-radius:50%;background:var(--kpi-accent);opacity:.4}
+.kpi-card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px}
+.kpi-card-icon{width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 1px 4px rgba(0,0,0,.08);flex-shrink:0;position:relative;z-index:1}
+.kpi-card-tag{font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;color:var(--kpi-color);background:#fff;border-radius:999px;padding:3px 8px;margin-top:2px;opacity:.85;position:relative;z-index:1}
+.kpi-card-label{font-size:10px;font-weight:800;color:var(--kpi-color);opacity:.7;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px;position:relative;z-index:1}
+.kpi-card-value-row{display:flex;align-items:baseline;gap:4px;margin-bottom:3px;position:relative;z-index:1}
+.kpi-card-value{font-size:26px;font-weight:900;color:var(--kpi-color);line-height:1}
+.kpi-card-value.kpi-card-value-sm{font-size:15px}
+.kpi-card-unit{font-size:12px;font-weight:700;color:var(--kpi-color);opacity:.65}
+.kpi-card-sub{font-size:11px;color:var(--kpi-color);opacity:.6;line-height:1.4;margin-bottom:10px;position:relative;z-index:1}
+.kpi-card-progress{height:3px;background:rgba(255,255,255,.7);border-radius:999px;overflow:hidden;position:relative;z-index:1}
+.kpi-card-progress-bar{height:100%;background:var(--kpi-color);border-radius:999px;opacity:.65}
 .stat-sub{font-size:11px;color:var(--mu);margin-top:3px}
 .board-wrap{flex:1;overflow:auto;background:var(--bg)}
 .board{display:flex;height:100%;min-width:max-content}
@@ -173,6 +188,7 @@ table.crm-t{width:100%;border-collapse:collapse}
 .kcard{background:var(--wh);border:1px solid var(--br);border-radius:8px;padding:13px;cursor:grab;transition:box-shadow .15s,border-color .15s,opacity .2s,transform .15s;user-select:none;box-shadow:var(--shadow-sm)}
 .kcard:hover{border-color:#BFDBFE;box-shadow:0 10px 22px rgba(37,99,235,.10);transform:translateY(-1px)}
 .kcard.dragging{opacity:.3;cursor:grabbing}
+.kcard-ghost{position:fixed;top:0;left:0;z-index:999;pointer-events:none;opacity:.95;box-shadow:0 12px 30px rgba(15,23,42,.25);transform:rotate(-2deg) scale(1.03)}
 .kcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:6px}
 .kcard-date{font-size:11px;color:var(--mu);white-space:nowrap;flex-shrink:0}
 .kcard-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
@@ -891,10 +907,23 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .ddbtn{padding:5px 8px;font-size:11px}
 
   /* CRM Stats */
-  .deal-stats{grid-template-columns:repeat(2,minmax(0,1fr));padding:10px 12px;gap:8px}
+  .deal-stats{grid-template-columns:repeat(2,minmax(0,1fr));padding:8px 10px;gap:6px}
   .stat-card{padding:10px 12px}
   .stat-value{font-size:16px}
   .stat-label{font-size:10px}
+  /* KPI kartochkalari — mobilda eng ixcham holatga keltiramiz */
+  .kpi-card{padding:8px 10px;border-radius:10px}
+  .kpi-card-decor{display:none}
+  .kpi-card-top{margin-bottom:4px}
+  .kpi-card-icon{width:22px;height:22px;font-size:12px;border-radius:7px}
+  .kpi-card-tag{display:none}
+  .kpi-card-label{font-size:8px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .kpi-card-value-row{margin-bottom:1px}
+  .kpi-card-value{font-size:15px}
+  .kpi-card-value.kpi-card-value-sm{font-size:13px}
+  .kpi-card-unit{font-size:9px}
+  .kpi-card-sub{font-size:9px;margin-bottom:4px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
+  .kpi-card-progress{height:2px}
 
   /* Kanban */
   .board-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -1017,7 +1046,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
    RESPONSIVE — SMALL MOBILE (max 380px)
 ══════════════════════════════════════ */
 @media (max-width: 380px){
-  .deal-stats{grid-template-columns:1fr}
+  .deal-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
   .analytics-score-row{grid-template-columns:1fr}
   .pay-grid{grid-template-columns:1fr}
   .career-metrics{grid-template-columns:1fr}
@@ -1849,6 +1878,13 @@ function daysSinceUpdate(d){
 }
 function dealTitle(d){ return d.dealName || d.name || 'Shartnoma nomi yo‘q'; }
 function dealPhones(d){ return [...new Set([...(Array.isArray(d.phones)?d.phones:[]), d.phone].map(v=>String(v||'').trim()).filter(Boolean))]; }
+// Telefon raqamini bosilganda qurilmaning qo'ng'iroq qilish ekraniga o'tadigan link qilib chiqaradi
+function telLink(phone){
+  if(!phone)return '—';
+  const digits=String(phone).replace(/[^\d+]/g,'');
+  if(!digits)return esc(phone);
+  return `<a href="tel:${digits}" onclick="event.stopPropagation()" style="color:inherit;text-decoration:none">${esc(phone)}</a>`;
+}
 function currentUserDeals(){
   const u=currentUser();
   if(u.role==='admin') return deals;
@@ -2405,6 +2441,24 @@ function togglePoolFilter(){
   renderPoolAlert();
   renderCurrentDeals();
 }
+function renderKpiCards(cards){
+  document.getElementById('dealStats').innerHTML = cards.map(card=>`
+    <div class="kpi-card" style="--kpi-bg:${card.bg};--kpi-accent:${card.accent};--kpi-color:${card.color}">
+      <div class="kpi-card-decor"></div>
+      <div class="kpi-card-top">
+        <div class="kpi-card-icon">${card.icon}</div>
+        <span class="kpi-card-tag">bugun</span>
+      </div>
+      <div class="kpi-card-label">${esc(card.label)}</div>
+      <div class="kpi-card-value-row">
+        <span class="kpi-card-value${card.unit?'':' kpi-card-value-sm'}">${card.value}</span>
+        ${card.unit?`<span class="kpi-card-unit">${esc(card.unit)}</span>`:''}
+      </div>
+      <div class="kpi-card-sub">${card.sub}</div>
+      ${card.progress!==undefined?`<div class="kpi-card-progress"><div class="kpi-card-progress-bar" style="width:${card.progress}%"></div></div>`:''}
+    </div>
+  `).join('');
+}
 function renderDealStats(){
   renderPoolAlert();
   if(isOperator()){
@@ -2416,24 +2470,7 @@ function renderDealStats(){
       {icon:'📱', label:'Ilova o\'rnatilgan', value:op.todayApp, unit:'ta', sub:`Bonus oladi: ${op.todayAppBonus} ta · +${formatMoney(op.appBonus)}`, color:'#0891B2', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', accent:'#A5F3FC', progress:Math.min(100,op.todayApp*10)},
       {icon:'💰', label:'Bugungi bonus', value:formatMoney(op.todayBonus), unit:'', sub:`Q: ${formatMoney(op.qualBonus)} · S: ${formatMoney(op.saleBonus)} · I: ${formatMoney(op.appBonus)}`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC', progress:Math.min(100,Math.round(op.todayBonus/100000*100))},
     ];
-    document.getElementById('dealStats').innerHTML = cards.map(card=>`
-      <div style="background:${card.bg};border:1px solid ${card.accent};border-radius:14px;padding:14px 16px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:transform .15s,box-shadow .15s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(0,0,0,.09)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,.04)'">
-        <div style="position:absolute;right:-12px;top:-12px;width:68px;height:68px;border-radius:50%;background:${card.accent};opacity:.4"></div>
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
-          <div style="width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 1px 4px rgba(0,0,0,.08)">${card.icon}</div>
-          <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;color:${card.color};background:#fff;border-radius:999px;padding:3px 8px;margin-top:2px;opacity:.85">bugun</span>
-        </div>
-        <div style="font-size:10px;font-weight:800;color:${card.color};opacity:.7;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">${card.label}</div>
-        <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:3px">
-          <span style="font-size:${card.unit?'26px':'15px'};font-weight:900;color:${card.color};line-height:1">${card.value}</span>
-          ${card.unit?`<span style="font-size:12px;font-weight:700;color:${card.color};opacity:.65">${card.unit}</span>`:''}
-        </div>
-        <div style="font-size:11px;color:${card.color};opacity:.6;margin-bottom:10px;line-height:1.4">${card.sub}</div>
-        <div style="height:3px;background:rgba(255,255,255,.7);border-radius:999px;overflow:hidden">
-          <div style="height:100%;width:${card.progress}%;background:${card.color};border-radius:999px;opacity:.65"></div>
-        </div>
-      </div>
-    `).join('');
+    renderKpiCards(cards);
     return;
   }
   if(isAdmin()){
@@ -2446,21 +2483,7 @@ function renderDealStats(){
       {icon:'🏆', label:'Sotuv', value:a.todaySoldCount, unit:'ta', sub:'Bugungi muvaffaqiyatli', color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC'},
       {icon:'💰', label:'Sotuv summasi', value:formatMoney(a.todayCash), unit:'', sub:`Bu oy: ${formatMoney(a.monthCash)}`, color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', accent:'#FDE68A'},
     ];
-    document.getElementById('dealStats').innerHTML = cards.map(card=>`
-      <div style="background:${card.bg};border:1px solid ${card.accent};border-radius:14px;padding:14px 16px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:transform .15s,box-shadow .15s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(0,0,0,.09)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,.04)'">
-        <div style="position:absolute;right:-12px;top:-12px;width:68px;height:68px;border-radius:50%;background:${card.accent};opacity:.4"></div>
-        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px">
-          <div style="width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 1px 4px rgba(0,0,0,.08)">${card.icon}</div>
-          <span style="font-size:9px;font-weight:900;text-transform:uppercase;letter-spacing:.6px;color:${card.color};background:#fff;border-radius:999px;padding:3px 8px;margin-top:2px;opacity:.85">bugun</span>
-        </div>
-        <div style="font-size:10px;font-weight:800;color:${card.color};opacity:.7;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">${card.label}</div>
-        <div style="display:flex;align-items:baseline;gap:4px;margin-bottom:3px">
-          <span style="font-size:${card.unit?'26px':'15px'};font-weight:900;color:${card.color};line-height:1">${card.value}</span>
-          ${card.unit?`<span style="font-size:12px;font-weight:700;color:${card.color};opacity:.65">${card.unit}</span>`:''}
-        </div>
-        <div style="font-size:11px;color:${card.color};opacity:.6;line-height:1.4">${card.sub}</div>
-      </div>
-    `).join('');
+    renderKpiCards(cards);
     return;
   }
   // Menejer metrikalar
@@ -2473,15 +2496,7 @@ function renderDealStats(){
     {icon:'💵', label:'Bugungi sotuv summasi', value:formatMoney(m.todaySoldAmount), sub:`${m.todaySoldCount} ta muvaffaqiyatli`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC'},
     {icon:'🏆', label:'Bugungi bonus', value:formatMoney(todayBonus), sub:`Sotuv: ${formatMoney(salesBonus)} · Full call: ${formatMoney(m.fullCallBonus)}`, color:'#2563EB', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', accent:'#BFDBFE'},
   ];
-  document.getElementById('dealStats').innerHTML = managerCards.map(card=>`
-    <div style="background:${card.bg};border:1px solid ${card.accent};border-radius:14px;padding:14px 16px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:transform .15s,box-shadow .15s" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(0,0,0,.09)'" onmouseout="this.style.transform='';this.style.boxShadow='0 2px 8px rgba(0,0,0,.04)'">
-      <div style="position:absolute;right:-12px;top:-12px;width:68px;height:68px;border-radius:50%;background:${card.accent};opacity:.4"></div>
-      <div style="width:36px;height:36px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;box-shadow:0 1px 4px rgba(0,0,0,.08);margin-bottom:10px">${card.icon}</div>
-      <div style="font-size:10px;font-weight:800;color:${card.color};opacity:.7;text-transform:uppercase;letter-spacing:.4px;margin-bottom:3px">${card.label}</div>
-      <div style="font-size:18px;font-weight:900;color:${card.color};line-height:1.2;margin-bottom:4px">${card.value}</div>
-      <div style="font-size:11px;color:${card.color};opacity:.6;line-height:1.4">${card.sub}</div>
-    </div>
-  `).join('');
+  renderKpiCards(managerCards);
   refreshDashboardSummary();
 }
 async function refreshDashboardSummary(){
@@ -2877,8 +2892,16 @@ async function moveDealToStage(deal,target,options={}){
 // ════════════════════════════════════════
 //  DRAG & DROP
 // ════════════════════════════════════════
+async function completeCardDrop(cardId,targetCol){
+  document.querySelectorAll('.col-body').forEach(z=>z.classList.remove('over'));
+  const d=deals.find(x=>String(x.id)===String(cardId));
+  if(d && targetCol && d.col!==targetCol){
+    if(await moveDealToStage(d,targetCol))renderKanban();
+  }
+}
 function bindDrag(){
   document.querySelectorAll('.kcard').forEach(card=>{
+    // Desktop — sichqoncha bilan sudrash (HTML5 drag API)
     card.addEventListener('dragstart',e=>{
       dragId=card.dataset.id; // String saqlaymiz, parseInt xato berishi mumkin
       e.dataTransfer.effectAllowed='move';
@@ -2890,11 +2913,13 @@ function bindDrag(){
       dragId=null;
     });
     card.addEventListener('click',()=>{
-      if(!card.classList.contains('dragging')){
+      if(!card.classList.contains('dragging') && Date.now()-lastTouchDragEndAt>400){
         const deal = deals.find(x=>String(x.id)===String(card.dataset.id));
         if(deal) openDealWorkspace(deal.id);
       }
     });
+    // Mobil/touch — bosib turib sudrash (long-press + drag), aks holda board gorizontal scroll bilan ziddiyat qiladi
+    bindCardTouchDrag(card);
   });
 
   document.querySelectorAll('.col-body').forEach(zone=>{
@@ -2908,16 +2933,85 @@ function bindDrag(){
     });
     zone.addEventListener('drop',async e=>{
       e.preventDefault();
-      document.querySelectorAll('.col-body').forEach(z=>z.classList.remove('over'));
       if(dragId===null) return;
-      const d=deals.find(x=>String(x.id)===String(dragId));
-      const target=zone.dataset.col;
-      if(d && d.col!==target){
-        if(await moveDealToStage(d,target))renderKanban();
-      }
+      const cardId=dragId;
       dragId=null;
+      await completeCardDrop(cardId,zone.dataset.col);
     });
   });
+}
+let touchDragState=null;
+let lastTouchDragEndAt=0;
+const TOUCH_LONG_PRESS_MS=380;
+const TOUCH_MOVE_CANCEL_PX=10;
+function bindCardTouchDrag(card){
+  card.addEventListener('touchstart',e=>{
+    if(e.touches.length!==1)return;
+    const touch=e.touches[0];
+    const startX=touch.clientX, startY=touch.clientY;
+    let moved=false, started=false;
+    const timer=setTimeout(()=>{
+      if(!moved){ started=true; startTouchDrag(card,startX,startY); }
+    },TOUCH_LONG_PRESS_MS);
+    const onMove=ev=>{
+      const t=ev.touches[0];
+      if(!moved && (Math.abs(t.clientX-startX)>TOUCH_MOVE_CANCEL_PX || Math.abs(t.clientY-startY)>TOUCH_MOVE_CANCEL_PX)){
+        moved=true;
+        clearTimeout(timer);
+      }
+      if(touchDragState && touchDragState.card===card){
+        ev.preventDefault(); // drag boshlangach, sahifa scroll bo'lishini to'xtatamiz
+        updateTouchDrag(t.clientX,t.clientY);
+      }
+    };
+    const onEnd=ev=>{
+      clearTimeout(timer);
+      card.removeEventListener('touchmove',onMove);
+      card.removeEventListener('touchend',onEnd);
+      card.removeEventListener('touchcancel',onEnd);
+      if(started && touchDragState && touchDragState.card===card){
+        const t=ev.changedTouches[0];
+        endTouchDrag(t.clientX,t.clientY);
+      }
+    };
+    card.addEventListener('touchmove',onMove,{passive:false});
+    card.addEventListener('touchend',onEnd);
+    card.addEventListener('touchcancel',onEnd);
+  },{passive:true});
+}
+function startTouchDrag(card,x,y){
+  card.classList.add('dragging');
+  const ghost=card.cloneNode(true);
+  ghost.classList.add('kcard-ghost');
+  ghost.style.width=card.offsetWidth+'px';
+  document.body.appendChild(ghost);
+  touchDragState={card,ghost,offsetX:card.offsetWidth/2,offsetY:24};
+  positionTouchGhost(x,y);
+  if(navigator.vibrate)navigator.vibrate(12);
+}
+function positionTouchGhost(x,y){
+  if(!touchDragState)return;
+  touchDragState.ghost.style.left=(x-touchDragState.offsetX)+'px';
+  touchDragState.ghost.style.top=(y-touchDragState.offsetY)+'px';
+}
+function updateTouchDrag(x,y){
+  if(!touchDragState)return;
+  positionTouchGhost(x,y);
+  document.querySelectorAll('.col-body').forEach(z=>z.classList.remove('over'));
+  const el=document.elementFromPoint(x,y);
+  const zone=el?.closest('.col-body');
+  if(zone)zone.classList.add('over');
+}
+async function endTouchDrag(x,y){
+  if(!touchDragState)return;
+  const {card,ghost}=touchDragState;
+  const el=document.elementFromPoint(x,y);
+  const zone=el?.closest('.col-body');
+  card.classList.remove('dragging');
+  ghost.remove();
+  touchDragState=null;
+  lastTouchDragEndAt=Date.now();
+  await completeCardDrop(card.dataset.id,zone?.dataset.col);
 }
 
 // ════════════════════════════════════════
@@ -3080,7 +3174,7 @@ function renderDealWorkspace(){
   document.getElementById('dwUserName').textContent=customerTitle(d);
   document.getElementById('dwSideDeal').textContent=dealTitle(d);
   document.getElementById('dwSideDate').textContent=d.date;
-  document.getElementById('dwPhones').innerHTML=(dealPhones(d).length?dealPhones(d):['Telefon yo‘q']).map(p=>`<div class="phone-line">${esc(p)}</div>`).join('');
+  document.getElementById('dwPhones').innerHTML=dealPhones(d).length?dealPhones(d).map(p=>`<div class="phone-line">${telLink(p)}</div>`).join(''):'<div class="phone-line">Telefon yo‘q</div>';
   document.getElementById('dwPrice').value=d.price ? formatMoney(d.price) : '';
   document.getElementById('dwAdSource').textContent=d.adSource || '—';
   document.getElementById('dwRegisteredAt').textContent=d.registeredAt || '—';
@@ -4449,11 +4543,11 @@ function renderMijozlar(){
           </div>
           <div>
             <div style="font-weight:600;color:var(--td)">${esc(customerTitle(d))}</div>
-            <div style="font-size:11px;color:var(--mu)">${phones[0]||'—'}</div>
+            <div style="font-size:11px;color:var(--mu)">${telLink(phones[0])}</div>
           </div>
         </div>
       </td>
-      <td style="font-size:12px">${phones.map(p=>`<div>${esc(p)}</div>`).join('')||'—'}</td>
+      <td style="font-size:12px">${phones.length?phones.map(p=>`<div>${telLink(p)}</div>`).join(''):'—'}</td>
       <td>
         <div style="display:flex;align-items:center;gap:6px">
           <div style="width:22px;height:22px;border-radius:50%;background:${owner?.color||'var(--br)'};display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff">
@@ -4480,8 +4574,8 @@ function showMijozDetail(dealId){
   const initials = customerTitle(d).split(' ').map(x=>x[0]).join('').slice(0,2).toUpperCase();
   document.getElementById('detAv').textContent = initials;
   document.getElementById('detName').textContent = customerTitle(d);
-  document.getElementById('detPhone').textContent = dealPhones(d)[0]||'';
-  document.getElementById('detPhone2').textContent = dealPhones(d).join(', ')||'—';
+  document.getElementById('detPhone').innerHTML = telLink(dealPhones(d)[0]);
+  document.getElementById('detPhone2').innerHTML = dealPhones(d).length?dealPhones(d).map(telLink).join(', '):'—';
   document.getElementById('detEmail').textContent = d.email||'—';
 
   // Shu mijozning barcha shartnomalarini ko'rsatamiz
@@ -4676,7 +4770,7 @@ function renderCareerPage(){
   document.getElementById('careerLevel').innerHTML=`<span class="career-level-dot"></span><span>${esc(POSITION_LABELS[calc.position] || calc.position)} · ${levelProgress}%</span>`;
   const isOwnCareerProfile=String(user.id)===String(currentUser().id);
   document.getElementById('careerContacts').innerHTML=[
-    {html:phoneIcon()+esc(careerPhone(user,rows))},
+    {html:phoneIcon()+telLink(careerPhone(user,rows))},
     {html:mailIcon()+esc(user.email||'email kiritilmagan')},
     {html:socialIcon()+esc(user.socialHandle||"Ijtimoiy tarmoq yo'q"), editable:isOwnCareerProfile}
   ].map(c=>`<span class="career-chip" ${c.editable?'onclick="editCareerSocial()" style="cursor:pointer" title="Tahrirlash uchun bosing"':''}>${c.html}${c.editable?' ✎':''}</span>`).join('');
@@ -4721,9 +4815,9 @@ function renderCareerPage(){
     ['Ism familiya',footerDisplayName(user)],
     ['Lavozim',POSITION_LABELS[calc.position] || footerRoleTitle(user)],
     ['Email',user.email||'Kiritilmagan'],
-    ['Telefon',careerPhone(user,rows)],
     ['Bugungi online vaqt',formatDuration(userOnlineSeconds(user))]
   ].map(([label,value])=>`<div class="career-fin-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join('')
+    +`<div class="career-fin-row"><span>Telefon</span><strong>${telLink(careerPhone(user,rows))}</strong></div>`
     +`<div class="career-fin-row" style="align-items:flex-start"><span>Bio</span><strong style="text-align:right;white-space:pre-wrap">${esc(user.bio||'Kiritilmagan')}</strong></div>`
     +(isOwnCareerProfile?`<button class="link-btn" style="margin-top:8px" onclick="editCareerBio()">✎ Bio'ni tahrirlash</button>`:'');
 }
