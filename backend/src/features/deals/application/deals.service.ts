@@ -14,6 +14,7 @@ const LOST_STAGE_ID = 'yutqazilgan';
 const BULK_BLOCKED_STAGE_IDS = [AGREED_STAGE_ID, WON_STAGE_ID];
 const OPERATOR_QUAL_STAGE_ID = 'op_malakali';
 const QUALIFIED_LEAD_TARGET_EMAIL = 'sarafroz@gmail.com';
+const VALID_PAYMENT_TYPES = ['naqd', 'karta', 'otkazma'];
 
 @Injectable()
 export class DealsService {
@@ -69,6 +70,7 @@ export class DealsService {
       qualAt: body.qualAt || null,
       sentToManager: Boolean(body.sentToManager || false),
       courseDuration: Number.isInteger(Number(body.courseDuration)) && Number(body.courseDuration) >= 1 && Number(body.courseDuration) <= 6 ? Number(body.courseDuration) : null,
+      paymentType: VALID_PAYMENT_TYPES.includes(body.paymentType) ? body.paymentType : null,
       createdBy: user.id
     });
     return this.deals.save(deal);
@@ -187,6 +189,9 @@ export class DealsService {
     if (body.courseDuration !== undefined) {
       const duration = Number(body.courseDuration);
       deal.courseDuration = Number.isInteger(duration) && duration >= 1 && duration <= 6 ? duration : null;
+    }
+    if (body.paymentType !== undefined) {
+      deal.paymentType = VALID_PAYMENT_TYPES.includes(body.paymentType) ? body.paymentType : null;
     }
     if (nextStageId === OPERATOR_QUAL_STAGE_ID && prevStageId !== OPERATOR_QUAL_STAGE_ID && !deal.sentToManager) {
       await this.handoffQualifiedLead(deal, user);
@@ -332,6 +337,9 @@ export class DealsService {
       const courseDuration = Number(body.courseDuration);
       if (!Number.isInteger(courseDuration) || courseDuration < 1 || courseDuration > 6) {
         throw new BadRequestException('Kurs muddatini (1-6 oy) tanlang');
+      }
+      if (!VALID_PAYMENT_TYPES.includes(body.paymentType)) {
+        throw new BadRequestException('To‘lov turini tanlang');
       }
     }
   }

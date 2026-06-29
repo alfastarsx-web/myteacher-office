@@ -1316,8 +1316,12 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <div class="career-team-strip" id="careerPeople"></div>
       <div class="career-top">
         <section class="career-hero">
-          <div class="career-avatar-ring" id="careerRing">
+          <div class="career-avatar-ring" id="careerRing" style="position:relative">
             <div class="career-avatar-photo" id="careerAvatar">MT</div>
+            <button id="careerPhotoBtn" onclick="document.getElementById('careerPhotoInput').click()" title="Rasm o'zgartirish" style="display:none;position:absolute;right:-2px;bottom:-2px;width:32px;height:32px;border-radius:50%;background:var(--blue);border:3px solid #fff;color:#fff;cursor:pointer;align-items:center;justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.2)">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </button>
+            <input id="careerPhotoInput" type="file" accept="image/png,image/jpeg,image/webp" style="display:none" onchange="uploadCareerPhoto(this.files?.[0])">
           </div>
           <div>
             <div class="career-name" id="careerName">MyTeacher xodimi</div>
@@ -1338,8 +1342,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
           <div class="career-bars" id="careerBars"></div>
         </section>
         <section class="career-panel">
-          <div class="career-panel-head"><div class="career-panel-title">Kirim, daromad va jarimalar</div><span class="pay-badge">May 2026</span></div>
+          <div class="career-panel-head"><div class="career-panel-title">Kirim, daromad va jarimalar</div><span class="pay-badge" id="careerFinanceBadge"></span></div>
           <div class="career-finance" id="careerFinance"></div>
+          <div id="careerAdjustmentsList" style="margin-top:8px"></div>
+          <button class="link-btn" id="careerAddAdjustmentBtn" style="display:none;margin-top:8px" onclick="addCareerAdjustment()">+ Bonus/jarima qo'shish</button>
         </section>
         <section class="career-panel">
           <div class="career-panel-head"><div class="career-panel-title">E'tiroflar va o'sish tarixi</div><span class="pay-badge">MTC</span></div>
@@ -1622,6 +1628,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
         </div>
         <div class="frow">
           <div class="fg"><label>Kurs muddati (oy)</label><select class="fs" id="mCourseDuration"><option value="">Tanlanmagan</option><option value="1">1 oy</option><option value="2">2 oy</option><option value="3">3 oy</option><option value="4">4 oy</option><option value="5">5 oy</option><option value="6">6 oy</option></select></div>
+          <div class="fg"><label>To'lov turi</label><select class="fs" id="mPaymentType"><option value="">Tanlanmagan</option><option value="naqd">Naqd</option><option value="karta">Karta</option><option value="otkazma">O'tkazma</option></select></div>
         </div>
       </div>
       <div class="fg" style="margin-bottom:18px"><label>Izoh</label><textarea class="fta" id="mNt" placeholder="Izoh..."></textarea></div>
@@ -1734,14 +1741,14 @@ let docFilter='all';
 let lastActivityAt=Date.now();
 let idleWarningShown=false;
 let idleAutoOfflineAt=null;
-const paymentAdjustments=[];
+let paymentAdjustments=[];
 let documents=[];
 const POSITION_ORDER=['LEARNER','TRAINEE','NEW_MANAGER','EMPLOYEE','RESIDENT_3','RESIDENT_2','RESIDENT_1'];
 const POSITION_DISPLAY_ORDER=[...POSITION_ORDER].reverse();
 const POSITION_LABELS={LEARNER:"O'rganuvchi",TRAINEE:'Amaliyotchi',NEW_MANAGER:'Yangi Menejer',EMPLOYEE:'Xodim',RESIDENT_3:'III-darajali Rezident',RESIDENT_2:'II-darajali Rezident',RESIDENT_1:'I-darajali Rezident'};
 const POSITION_GRADIENTS={LEARNER:'gradient-gray',TRAINEE:'gradient-amber',NEW_MANAGER:'gradient-amber',EMPLOYEE:'gradient-blue',RESIDENT_3:'gradient-green',RESIDENT_2:'gradient-teal',RESIDENT_1:'gradient-gold'};
 const COURSE_BONUSES={1:80000,2:100000,3:120000,4:160000,5:180000,6:240000};
-const KPI_TARGETS={dailyCalls:50,dailyFullCalls:4,dailySales:1,weeklyCalls:350,weeklyFullCalls:28,weeklySales:5,monthlySales:15,monthlyRevenue:20000000};
+const KPI_TARGETS={dailyFullCalls:4,dailySales:1,weeklyFullCalls:28,weeklySales:5,monthlySales:15,monthlyRevenue:20000000};
 
 function currentUser(){ return managers.find(m=>m.id===currentManagerId) || {id:null,name:'',role:'manager',status:'Offline',permissions:{crm:false},todayOnlineSeconds:0}; }
 function isAdmin(){ return currentUser().role==='admin'; }
@@ -1890,7 +1897,7 @@ async function api(path,options={}){
 function dealFromApi(d){
   const date=d.createdAt?formatDealDate(d.createdAt):'Bugun';
   const phones=dealPhones(d);
-  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,courseDuration:d.courseDuration||null,lostFromStage:d.lostFromStage||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
+  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,courseDuration:d.courseDuration||null,paymentType:d.paymentType||null,lostFromStage:d.lostFromStage||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
 }
 // localStorage ga deal extra fieldlarini saqlaymiz
 function saveDealExtra(id, fields){
@@ -1909,6 +1916,7 @@ function dealToApiPayload(d){
   const payload={customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,stageId:d.col,price:d.price,note:d.note,adSource:d.adSource,registeredAt:d.registeredAt,age:d.age,learningGoal:d.learningGoal,leadChannel:d.leadChannel,comments:d.comments,ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:d.appInstalled||false,qualAt:d.qualAt||null,sentToManager:d._sentToManager||d.sentToManager||false};
   if(d.closePassword)payload.closePassword=d.closePassword;
   if(d.courseDuration)payload.courseDuration=d.courseDuration;
+  if(d.paymentType)payload.paymentType=d.paymentType;
   return payload;
 }
 function taskFromApi(t){
@@ -2042,14 +2050,16 @@ async function logout(){
 async function loadApiData(){
   if(!apiToken)return false;
   try{
-    const [meData,stageData,teamData,dealData,taskData,docData]=await Promise.all([
+    const [meData,stageData,teamData,dealData,taskData,docData,adjustmentData]=await Promise.all([
       api('/api/auth/me'),
       api('/api/stages'),
       api('/api/team'),
       api('/api/deals'),
       api('/api/tasks'),
-      api('/api/docs')
+      api('/api/docs'),
+      api('/api/payment-adjustments').catch(()=>({adjustments:[]}))
     ]);
+    paymentAdjustments=adjustmentData.adjustments||[];
     if(meData.user){
       currentManagerId=meData.user.id;
       selectedTeamManagerId=selectedTeamManagerId || meData.user.id;
@@ -2762,11 +2772,13 @@ async function prepareStageTransition(deal,target,priceInput){
   }
   let closePassword='';
   let courseDuration=deal.courseDuration||null;
+  let paymentType=deal.paymentType||null;
   if(target===STAGE_WON && deal.col!==STAGE_WON){
     const receipt=document.getElementById('mReceipt');
     const receiptSelected=validateReceiptFile(receipt);
     closePassword=document.getElementById('mClosePassword')?.value.trim() || '';
     courseDuration=Number(document.getElementById('mCourseDuration')?.value || 0) || null;
+    paymentType=document.getElementById('mPaymentType')?.value || null;
     if(!modalOpen){
       openModal(deal.id,target);
       setTimeout(()=>document.getElementById('mReceipt')?.focus(),0);
@@ -2787,8 +2799,13 @@ async function prepareStageTransition(deal,target,priceInput){
       document.getElementById('mCourseDuration')?.focus();
       return null;
     }
+    if(!paymentType){
+      showToast("To'lov turini tanlang");
+      document.getElementById('mPaymentType')?.focus();
+      return null;
+    }
   }
-  return {price, closePassword, courseDuration};
+  return {price, closePassword, courseDuration, paymentType};
 }
 async function moveDealToStage(deal,target,options={}){
   const prepared=await prepareStageTransition(deal,target,options.priceInput);
@@ -2801,6 +2818,7 @@ async function moveDealToStage(deal,target,options={}){
       const body={stageId:target,price:prepared.price};
       if(prepared.closePassword)body.closePassword=prepared.closePassword;
       if(prepared.courseDuration)body.courseDuration=prepared.courseDuration;
+      if(prepared.paymentType)body.paymentType=prepared.paymentType;
       saveDealExtra(deal.id, {col: target});
       const data=await api(`/api/deals/${deal.id}`,{method:'PATCH',body});
       Object.assign(deal,dealFromApi(data.deal));
@@ -2927,6 +2945,7 @@ function openModal(id=null,defCol=null){
   document.getElementById('mClosePassword').value='';
   document.getElementById('mReceipt').value='';
   document.getElementById('mCourseDuration').value=d?.courseDuration||'';
+  document.getElementById('mPaymentType').value=d?.paymentType||'';
   updateModalStageFields();
   renderDealOwnerSelect(d);
   document.getElementById('mTaskRow').style.display=d?'flex':'none';
@@ -2994,7 +3013,7 @@ async function saveDeal(){
   const operatorId=isOperator()?currentManagerId:(existing?.operatorId||null);
   const prepared=await prepareStageTransition(existing || {price,col:null},col,priceInput);
   if(!prepared)return;
-  const payload={customerName,phone,phones,dealName,price:prepared.price,col,note,adSource,registeredAt,age,learningGoal,leadChannel,ownerId,operatorId,closePassword:prepared.closePassword,courseDuration:prepared.courseDuration};
+  const payload={customerName,phone,phones,dealName,price:prepared.price,col,note,adSource,registeredAt,age,learningGoal,leadChannel,ownerId,operatorId,closePassword:prepared.closePassword,courseDuration:prepared.courseDuration,paymentType:prepared.paymentType};
   if(apiToken){
     try{
       if(editId){
@@ -3418,20 +3437,29 @@ function managerPosition(user,salesList,totalRevenue){
   if(daysWorked>=3 || monthlyPlanCompleted)return 'NEW_MANAGER';
   return 'LEARNER';
 }
+// Haqiqiy ma'lumotga asoslangan KPI: full call (deal.fullCall/fullCallAt) va sotuv (real sana
+// oralig'i bo'yicha). "Qo'ng'iroqlar soni" hisoblanmaydi — buning uchun qo'ng'iroq davomiyligini
+// kuzatish texnik imkoni hali yo'q (faqat "full call bo'ldi/bo'lmadi" belgisi mavjud).
 function managerKpiCounts(user,salesList){
-  const calls=Array.isArray(user.calls)?user.calls:[];
-  const todayKey=new Date().toISOString().slice(0,10);
-  const dailyCalls=calls.filter(c=>String(c.date || '').slice(0,10)===todayKey);
-  const weeklyCalls=calls.slice(-KPI_TARGETS.weeklyCalls);
-  const dailySales=salesList.filter(d=>String(d.updatedAt || d.date || '').slice(0,10)===todayKey).length;
-  return {
-    dailyCalls:dailyCalls.length,
-    dailyFullCalls:dailyCalls.filter(c=>Number(c.durationSeconds||0)>=900).length,
-    dailySales,
-    weeklyCalls:weeklyCalls.length,
-    weeklyFullCalls:weeklyCalls.filter(c=>Number(c.durationSeconds||0)>=900).length,
-    weeklySales:salesList.length
+  const myDeals=deals.filter(d=>String(d.ownerId)===String(user.id));
+  const todayKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date());
+  const weekRange=analyticsDateRange('week');
+  const tashkentDateKey=iso=>iso?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)):'';
+  const isFullCallOn=(d,dateKey)=>{
+    if(d.fullCall)return tashkentDateKey(d.fullCallAt||d.createdAt)===dateKey;
+    if(d.col===STAGE_WON)return tashkentDateKey(d.updatedAt||d.createdAt)===dateKey;
+    return false;
   };
+  const isFullCallInRange=(d,range)=>{
+    if(d.fullCall)return inRange(d.fullCallAt||d.createdAt,range);
+    if(d.col===STAGE_WON)return inRange(d.updatedAt||d.createdAt,range);
+    return false;
+  };
+  const dailyFullCalls=myDeals.filter(d=>isFullCallOn(d,todayKey)).length;
+  const weeklyFullCalls=myDeals.filter(d=>isFullCallInRange(d,weekRange)).length;
+  const dailySales=salesList.filter(d=>tashkentDateKey(d.updatedAt||d.createdAt)===todayKey).length;
+  const weeklySales=salesList.filter(d=>inRange(d.updatedAt||d.createdAt,weekRange)).length;
+  return { dailyFullCalls, dailySales, weeklyFullCalls, weeklySales };
 }
 function calculateManagerCompensation(user,periodDate=new Date()){
   const salesList=completedSalesFor(user);
@@ -3443,9 +3471,11 @@ function calculateManagerCompensation(user,periodDate=new Date()){
   const cashBonus=cashSalesCount*50000;
   const tripleBonus=Math.floor(totalSalesCount/3)*100000;
   const fixedSalary=isEmployeePlus(position)?2000000:0;
-  const penalties=Math.abs(paymentAdjustments.filter(x=>x.amount<0 && (!x.managerId || String(x.managerId)===String(user.id))).reduce((s,x)=>s+x.amount,0));
-  const totalGross=fixedSalary+courseBonus+cashBonus+tripleBonus;
-  const netPayment=isEmployeePlus(position)?Math.max(0,totalGross-penalties):courseBonus+cashBonus+tripleBonus;
+  const myAdjustments=paymentAdjustments.filter(x=>!x.managerId || String(x.managerId)===String(user.id));
+  const bonusAdjustments=myAdjustments.filter(x=>x.amount>0).reduce((s,x)=>s+x.amount,0);
+  const penalties=Math.abs(myAdjustments.filter(x=>x.amount<0).reduce((s,x)=>s+x.amount,0));
+  const totalGross=fixedSalary+courseBonus+cashBonus+tripleBonus+bonusAdjustments;
+  const netPayment=isEmployeePlus(position)?Math.max(0,totalGross-penalties):Math.max(0,courseBonus+cashBonus+tripleBonus+bonusAdjustments-penalties);
   const taxAmount=Math.round(netPayment*.01);
   const kpi=managerKpiCounts(user,salesList);
   return {
@@ -3455,11 +3485,11 @@ function calculateManagerCompensation(user,periodDate=new Date()){
     avatarGradient:POSITION_GRADIENTS[position],
     period:{month:periodDate.getMonth()+1,year:periodDate.getFullYear()},
     kpi:{
-      daily:{calls:kpi.dailyCalls,fullCalls:kpi.dailyFullCalls,sales:kpi.dailySales,callsMet:kpi.dailyCalls>=KPI_TARGETS.dailyCalls,fullCallsMet:kpi.dailyFullCalls>=KPI_TARGETS.dailyFullCalls,salesMet:kpi.dailySales>=KPI_TARGETS.dailySales},
-      weekly:{calls:kpi.weeklyCalls,fullCalls:kpi.weeklyFullCalls,sales:kpi.weeklySales},
+      daily:{fullCalls:kpi.dailyFullCalls,sales:kpi.dailySales,fullCallsMet:kpi.dailyFullCalls>=KPI_TARGETS.dailyFullCalls,salesMet:kpi.dailySales>=KPI_TARGETS.dailySales},
+      weekly:{fullCalls:kpi.weeklyFullCalls,sales:kpi.weeklySales},
       monthly:{totalSales:totalSalesCount,totalRevenue,planStatus:totalSalesCount>=KPI_TARGETS.monthlySales || totalRevenue>=KPI_TARGETS.monthlyRevenue?'COMPLETED':'IN_PROGRESS'}
     },
-    earnings:{fixedSalary,courseBonus,cashBonus,tripleBonus,totalGross,penalties,netPayment,taxAmount},
+    earnings:{fixedSalary,courseBonus,cashBonus,tripleBonus,bonusAdjustments,totalGross,penalties,netPayment,taxAmount},
     planProgress:{byCount:Math.min(totalSalesCount/KPI_TARGETS.monthlySales*100,100),byRevenue:Math.min(totalRevenue/KPI_TARGETS.monthlyRevenue*100,100)}
   };
 }
@@ -4203,7 +4233,7 @@ function renderPaymentsPage(){
   const statData=[
     ['Fiks maosh',formatMoney(calc.earnings.fixedSalary),'good'],
     ['Kurs bonuslari',formatMoney(calc.earnings.courseBonus),'good'],
-    ['Qo‘shimcha bonuslar',formatMoney(calc.earnings.cashBonus+calc.earnings.tripleBonus),'good'],
+    ['Qo‘shimcha bonuslar',formatMoney(calc.earnings.cashBonus+calc.earnings.tripleBonus+calc.earnings.bonusAdjustments),'good'],
     ['Sof foyda',formatMoney(netAfterTax),'good']
   ];
   document.getElementById('payRoleBadge').textContent=POSITION_LABELS[calc.position] || roleLabel(currentUser().role);
@@ -4212,9 +4242,10 @@ function renderPaymentsPage(){
     const income=COURSE_BONUSES[saleDurationMonths(d)]||0;
     return `<tr><td>${esc(d.date||'Bugun')}</td><td>${esc(customerTitle(d))}</td><td>${esc(dealTitle(d))}</td><td class="pay-money">${formatMoney(d.price)}</td><td class="pay-income">${formatMoney(income)}</td></tr>`;
   }).join(''):`<tr><td colspan="5" style="text-align:center;color:var(--mu);padding:28px">Hali sotuv yo'q</td></tr>`;
-  document.getElementById('payAdjustments').innerHTML=paymentAdjustments.map(item=>`
-    <div class="pay-row"><span>${esc(item.label)}</span><strong style="color:${item.amount<0?'var(--red)':'var(--green)'}">${item.amount<0?'-':'+'}${formatMoney(Math.abs(item.amount))}</strong></div>
-  `).join('');
+  const myPayAdjustments=paymentAdjustments.filter(x=>!x.managerId || String(x.managerId)===String(currentUser().id));
+  document.getElementById('payAdjustments').innerHTML=myPayAdjustments.length?myPayAdjustments.map(item=>`
+    <div class="pay-row"><span>${esc(item.reason)}</span><strong style="color:${item.amount<0?'var(--red)':'var(--green)'}">${item.amount<0?'-':'+'}${formatMoney(Math.abs(item.amount))}</strong></div>
+  `).join(''):`<div class="pay-row"><span style="color:var(--mu)">Hali bonus/jarima yo'q</span></div>`;
   document.getElementById('payGross').textContent=formatMoney(gross);
   document.getElementById('payTax').textContent=`-${formatMoney(calc.earnings.taxAmount)}`;
   document.getElementById('payPenalty').textContent=`-${formatMoney(calc.earnings.penalties)}`;
@@ -4491,8 +4522,118 @@ function setCareerManager(id){
   selectedCareerManagerId=id;
   renderCareerPage();
 }
+function resizeImageToDataUrl(file,maxSize=320,quality=0.85){
+  return new Promise((resolve,reject)=>{
+    const img=new Image();
+    const reader=new FileReader();
+    reader.onload=()=>{ img.src=reader.result; };
+    reader.onerror=()=>reject(reader.error);
+    img.onload=()=>{
+      const scale=Math.min(1,maxSize/Math.max(img.width,img.height));
+      const w=Math.round(img.width*scale), h=Math.round(img.height*scale);
+      const canvas=document.createElement('canvas');
+      canvas.width=w; canvas.height=h;
+      canvas.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(canvas.toDataURL('image/jpeg',quality));
+    };
+    img.onerror=()=>reject(new Error('Rasmni o\'qib bo\'lmadi'));
+    reader.readAsDataURL(file);
+  });
+}
+async function uploadCareerPhoto(file){
+  if(!file)return;
+  if(!file.type.startsWith('image/')){showToast('Faqat rasm fayli yuklang');return;}
+  try{
+    const dataUrl=await resizeImageToDataUrl(file);
+    const u=currentUser();
+    if(apiToken){
+      const data=await api('/api/team/me/profile',{method:'PATCH',body:{photoUrl:dataUrl}});
+      const idx=managers.findIndex(m=>m.id===u.id);
+      if(idx>=0)managers[idx]={...managers[idx],...data.user};
+    }else{
+      const idx=managers.findIndex(m=>m.id===u.id);
+      if(idx>=0)managers[idx].photoUrl=dataUrl;
+    }
+    showToast('Rasm yangilandi ✓');
+    renderCareerPage();
+  }catch(err){
+    showToast(err.message || 'Rasm yuklashda xatolik');
+  }
+}
+async function saveOwnCareerProfile(fields){
+  const u=currentUser();
+  try{
+    if(apiToken){
+      const data=await api('/api/team/me/profile',{method:'PATCH',body:fields});
+      const idx=managers.findIndex(m=>m.id===u.id);
+      if(idx>=0)managers[idx]={...managers[idx],...data.user};
+    }else{
+      const idx=managers.findIndex(m=>m.id===u.id);
+      if(idx>=0)Object.assign(managers[idx],fields);
+    }
+    showToast('Yangilandi ✓');
+    renderCareerPage();
+  }catch(err){
+    showToast(err.message || 'Saqlashda xatolik');
+  }
+}
+function editCareerSocial(){
+  const value=prompt("Ijtimoiy tarmoq (masalan @ism_familya):",currentUser().socialHandle||'');
+  if(value===null)return;
+  saveOwnCareerProfile({socialHandle:value.trim()});
+}
+function editCareerBio(){
+  const value=prompt("O'zingiz haqingizda qisqacha:",currentUser().bio||'');
+  if(value===null)return;
+  saveOwnCareerProfile({bio:value.trim()});
+}
+async function addCareerAdjustment(){
+  if(!isAdmin())return;
+  const user=careerUser();
+  const amountInput=prompt(`${footerDisplayName(user)} uchun summa (musbat = bonus, manfiy = jarima, masalan: -50000 yoki 100000):`);
+  if(amountInput===null)return;
+  const amount=parseMoneyInput(amountInput) * (amountInput.trim().startsWith('-')?-1:1);
+  if(!amount){showToast('Summani to\'g\'ri kiriting');return;}
+  const reason=prompt('Sabab:');
+  if(!reason || !reason.trim()){showToast('Sabab kiritilishi shart');return;}
+  try{
+    if(apiToken){
+      const data=await api('/api/payment-adjustments',{method:'POST',body:{managerId:user.id,amount,reason:reason.trim()}});
+      paymentAdjustments.unshift(data.adjustment);
+    }else{
+      paymentAdjustments.unshift({id:Date.now(),managerId:user.id,amount,reason:reason.trim()});
+    }
+    showToast('Qo\'shildi ✓');
+    renderCareerPage();
+  }catch(err){showToast(err.message||'Xatolik');}
+}
+async function deleteCareerAdjustment(id){
+  if(!isAdmin())return;
+  if(!confirm('Ushbu yozuvni o\'chirishni tasdiqlaysizmi?'))return;
+  try{
+    if(apiToken)await api(`/api/payment-adjustments/${id}`,{method:'DELETE'});
+    paymentAdjustments=paymentAdjustments.filter(x=>x.id!==id);
+    showToast('O\'chirildi ✓');
+    renderCareerPage();
+  }catch(err){showToast(err.message||'Xatolik');}
+}
 function careerPhone(user,rows){
   return user.phone || rows.flatMap(dealPhones)[0] || '+998 90 000 00 00';
+}
+// Haqiqiy o'sish/e'tirof tarixi — qattiq yozilgan namunalar o'rniga, xodimning real yopgan
+// sotuvlariga asoslanadi (har bir sotuv = bir yutuq).
+function careerAchievements(user,limit=5){
+  const wonDeals=deals
+    .filter(d=>String(d.ownerId)===String(user.id) && d.col===STAGE_WON)
+    .sort((a,b)=>new Date(b.updatedAt||b.createdAt)-new Date(a.updatedAt||a.createdAt));
+  if(!wonDeals.length){
+    return [{icon:'🎯',title:"Hali yopilgan sotuv yo'q",sub:'Birinchi sotuvingiz shu yerda ko\'rinadi'}];
+  }
+  return wonDeals.slice(0,limit).map(d=>({
+    icon:'🏆',
+    title:`"${customerTitle(d)}" bilan shartnoma yopildi`,
+    sub:`${formatMoney(d.price)} · ${formatDealDate(d.updatedAt||d.createdAt)}`
+  }));
 }
 function renderCareerPage(){
   const people=document.getElementById('careerPeople');
@@ -4514,29 +4655,37 @@ function renderCareerPage(){
   const total=calc.kpi.monthly.totalRevenue;
   const positionIndex=POSITION_ORDER.indexOf(calc.position);
   const levelProgress=Math.round(Math.max(calc.planProgress.byCount,calc.planProgress.byRevenue));
-  const day=Math.round(((calc.kpi.daily.callsMet?1:0)+(calc.kpi.daily.fullCallsMet?1:0)+(calc.kpi.daily.salesMet?1:0))/3*100);
-  const week=Math.min(100,Math.round(((calc.kpi.weekly.calls/KPI_TARGETS.weeklyCalls)+(calc.kpi.weekly.fullCalls/KPI_TARGETS.weeklyFullCalls)+(calc.kpi.weekly.sales/KPI_TARGETS.weeklySales))/3*100));
+  const day=Math.round(((calc.kpi.daily.fullCallsMet?1:0)+(calc.kpi.daily.salesMet?1:0))/2*100);
+  const week=Math.min(100,Math.round(((calc.kpi.weekly.fullCalls/KPI_TARGETS.weeklyFullCalls)+(calc.kpi.weekly.sales/KPI_TARGETS.weeklySales))/2*100));
   const month=levelProgress;
   const quality=Math.min(100,Math.round(calc.kpi.daily.fullCalls/KPI_TARGETS.dailyFullCalls*100));
   const avatar=document.getElementById('careerAvatar');
   const ring=document.getElementById('careerRing');
   ring.className=`career-avatar-ring ${calc.avatarGradient || ''}`;
-  avatar.textContent=managerInitials(user);
-  avatar.style.background=user.color || 'linear-gradient(135deg,#60A5FA,#2563EB)';
+  if(user.photoUrl){
+    avatar.textContent='';
+    avatar.style.background=`url('${user.photoUrl}') center/cover no-repeat`;
+  }else{
+    avatar.textContent=managerInitials(user);
+    avatar.style.background=user.color || 'linear-gradient(135deg,#60A5FA,#2563EB)';
+  }
+  const photoBtn=document.getElementById('careerPhotoBtn');
+  if(photoBtn)photoBtn.style.display=String(user.id)===String(currentUser().id)?'flex':'none';
   document.getElementById('careerName').textContent=footerDisplayName(user);
   document.getElementById('careerRole').textContent=POSITION_LABELS[calc.position] || footerRoleTitle(user);
   document.getElementById('careerLevel').innerHTML=`<span class="career-level-dot"></span><span>${esc(POSITION_LABELS[calc.position] || calc.position)} · ${levelProgress}%</span>`;
+  const isOwnCareerProfile=String(user.id)===String(currentUser().id);
   document.getElementById('careerContacts').innerHTML=[
-    phoneIcon()+esc(careerPhone(user,rows)),
-    mailIcon()+esc(user.email||'email kiritilmagan'),
-    socialIcon()+esc('@myteacher_team')
-  ].map(html=>`<span class="career-chip">${html}</span>`).join('');
+    {html:phoneIcon()+esc(careerPhone(user,rows))},
+    {html:mailIcon()+esc(user.email||'email kiritilmagan')},
+    {html:socialIcon()+esc(user.socialHandle||"Ijtimoiy tarmoq yo'q"), editable:isOwnCareerProfile}
+  ].map(c=>`<span class="career-chip" ${c.editable?'onclick="editCareerSocial()" style="cursor:pointer" title="Tahrirlash uchun bosing"':''}>${c.html}${c.editable?' ✎':''}</span>`).join('');
   document.getElementById('careerStages').innerHTML=POSITION_DISPLAY_ORDER.map(position=>`
     <div class="career-stage ${POSITION_ORDER.indexOf(position)<=positionIndex?'active':''}"><i></i><span>${esc(POSITION_LABELS[position])}</span></div>
   `).join('');
   document.getElementById('careerMetrics').innerHTML=[
-    ['Kunlik KPI',`${day}%`,`${calc.kpi.daily.calls}/${KPI_TARGETS.dailyCalls} qo‘ng‘iroq · ${calc.kpi.daily.fullCalls}/${KPI_TARGETS.dailyFullCalls} full call · ${calc.kpi.daily.sales}/${KPI_TARGETS.dailySales} sotuv`],
-    ['Haftalik KPI',`${week}%`,`${calc.kpi.weekly.calls}/${KPI_TARGETS.weeklyCalls} qo‘ng‘iroq · ${calc.kpi.weekly.sales}/${KPI_TARGETS.weeklySales} sotuv`],
+    ['Kunlik KPI',`${day}%`,`${calc.kpi.daily.fullCalls}/${KPI_TARGETS.dailyFullCalls} full call · ${calc.kpi.daily.sales}/${KPI_TARGETS.dailySales} sotuv`],
+    ['Haftalik KPI',`${week}%`,`${calc.kpi.weekly.fullCalls}/${KPI_TARGETS.weeklyFullCalls} full call · ${calc.kpi.weekly.sales}/${KPI_TARGETS.weeklySales} sotuv`],
     ['Oylik kassa',formatMoney(total),'Menejerga biriktirilgan sotuvlar'],
     ['Reja holati',calc.kpi.monthly.planStatus==='COMPLETED'?'Bajarilgan':'Jarayonda',`${calc.kpi.monthly.totalSales}/${KPI_TARGETS.monthlySales} sotuv yoki ${formatMoney(KPI_TARGETS.monthlyRevenue)}`]
   ].map(item=>`<div class="career-stat"><div class="career-stat-label">${esc(item[0])}</div><div class="career-stat-value">${esc(item[1])}</div><div class="career-stat-note">${esc(item[2])}</div></div>`).join('');
@@ -4551,16 +4700,21 @@ function renderCareerPage(){
     ['Kirim',formatMoney(total),'good'],
     ['Fiks maosh',formatMoney(calc.earnings.fixedSalary),'good'],
     ['Kurs bonuslari',formatMoney(calc.earnings.courseBonus),'good'],
-    ['Qo‘shimcha bonuslar',formatMoney(calc.earnings.cashBonus+calc.earnings.tripleBonus),'good'],
+    ['Qo‘shimcha bonuslar',formatMoney(calc.earnings.cashBonus+calc.earnings.tripleBonus+calc.earnings.bonusAdjustments),'good'],
     ['Jarimalar',formatMoney(calc.earnings.penalties),'bad'],
     ['Net to‘lov',formatMoney(calc.earnings.netPayment),'good'],
     ['Soliq 1%',formatMoney(calc.earnings.taxAmount),'bad']
   ].map(([label,value,type])=>`<div class="career-fin-row ${type}"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join('');
-  document.getElementById('careerTimeline').innerHTML=[
-    ['★','Kunlik KPI',`Qo‘ng‘iroq: ${calc.kpi.daily.callsMet?'bajarilgan':'bajarilmagan'}, full call: ${calc.kpi.daily.fullCallsMet?'bajarilgan':'bajarilmagan'}, sotuv: ${calc.kpi.daily.salesMet?'bajarilgan':'bajarilmagan'}.`],
-    ['↗',"Oylik reja",calc.kpi.monthly.planStatus==='COMPLETED'?'Oylik reja bajarilgan.':'15 ta sotuv yoki 20 000 000 so‘m kassa rejasiga qarab hisoblanadi.'],
-    ['✓',"Soliq","O‘zini o‘zi band qilish bo‘yicha 1% soliq xodim tomonidan to‘lanadi."]
-  ].map(([icon,title,sub])=>`<div class="career-time-item"><div class="career-time-dot">${icon}</div><div><div class="career-time-title">${esc(title)}</div><div class="career-time-sub">${esc(sub)}</div></div></div>`).join('');
+  document.getElementById('careerFinanceBadge').textContent=new Intl.DateTimeFormat('uz',{month:'long',year:'numeric',timeZone:'Asia/Tashkent'}).format(new Date());
+  const careerUserAdjustments=paymentAdjustments.filter(x=>!x.managerId || String(x.managerId)===String(user.id));
+  document.getElementById('careerAdjustmentsList').innerHTML=careerUserAdjustments.map(item=>`
+    <div class="career-fin-row"><span>${esc(item.reason)}</span><strong style="color:${item.amount<0?'var(--red)':'var(--green)'}">${item.amount<0?'-':'+'}${formatMoney(Math.abs(item.amount))}</strong>${isAdmin()?`<button class="link-btn" style="padding:0 0 0 6px;color:var(--red)" onclick="deleteCareerAdjustment(${item.id})">✕</button>`:''}</div>
+  `).join('');
+  const addAdjBtn=document.getElementById('careerAddAdjustmentBtn');
+  if(addAdjBtn)addAdjBtn.style.display=isAdmin()?'block':'none';
+  document.getElementById('careerTimeline').innerHTML=careerAchievements(user).map(({icon,title,sub})=>
+    `<div class="career-time-item"><div class="career-time-dot">${icon}</div><div><div class="career-time-title">${esc(title)}</div><div class="career-time-sub">${esc(sub)}</div></div></div>`
+  ).join('');
   document.getElementById('careerOnlineBadge').textContent=user.status || 'Offline';
   document.getElementById('careerOnlineBadge').style.color=user.status==='Online'?'#15803D':'var(--blue)';
   document.getElementById('careerBio').innerHTML=[
@@ -4569,7 +4723,9 @@ function renderCareerPage(){
     ['Email',user.email||'Kiritilmagan'],
     ['Telefon',careerPhone(user,rows)],
     ['Bugungi online vaqt',formatDuration(userOnlineSeconds(user))]
-  ].map(([label,value])=>`<div class="career-fin-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join('');
+  ].map(([label,value])=>`<div class="career-fin-row"><span>${esc(label)}</span><strong>${esc(value)}</strong></div>`).join('')
+    +`<div class="career-fin-row" style="align-items:flex-start"><span>Bio</span><strong style="text-align:right;white-space:pre-wrap">${esc(user.bio||'Kiritilmagan')}</strong></div>`
+    +(isOwnCareerProfile?`<button class="link-btn" style="margin-top:8px" onclick="editCareerBio()">✎ Bio'ni tahrirlash</button>`:'');
 }
 function phoneIcon(){
   return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 13.5a19.79 19.79 0 01-3.07-8.67A2 2 0 012 2.84h3a2 2 0 012 1.72c.13.96.36 1.9.7 2.81a2 2 0 01-.45 2.11L6.09 10.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.91.34 1.85.57 2.81.7A2 2 0 0122 16.92z"/></svg>`;
