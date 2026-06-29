@@ -6,6 +6,7 @@ import { TaskEntity } from '../../features/tasks/infrastructure/task.entity';
 import { RefreshTokenEntity } from '../../features/auth/infrastructure/refresh-token.entity';
 import { UserEntity } from '../../features/users/infrastructure/user.entity';
 import { NotificationEntity } from '../../features/notifications/notification.entity';
+import { PaymentAdjustmentEntity } from '../../features/payment-adjustments/infrastructure/payment-adjustment.entity';
 
 export function typeOrmConfig(): TypeOrmModuleOptions {
   return {
@@ -15,7 +16,7 @@ export function typeOrmConfig(): TypeOrmModuleOptions {
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD ?? '',
     database: process.env.DB_NAME || 'mycrm',
-    entities: [UserEntity, RefreshTokenEntity, StageEntity, DealEntity, TaskEntity, DocEntity, NotificationEntity],
+    entities: [UserEntity, RefreshTokenEntity, StageEntity, DealEntity, TaskEntity, DocEntity, NotificationEntity, PaymentAdjustmentEntity],
     synchronize: process.env.TYPEORM_SYNC !== 'false',
     logging: process.env.TYPEORM_LOGGING === 'true'
   };

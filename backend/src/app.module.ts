@@ -7,6 +7,7 @@ import { DealsModule } from './features/deals/deals.module';
 import { DocsModule } from './features/docs/docs.module';
 import { IntegrationsModule } from './features/integrations/integrations.module';
 import { NotificationsModule } from './features/notifications/notifications.module';
+import { PaymentAdjustmentsModule } from './features/payment-adjustments/payment-adjustments.module';
 import { StagesModule } from './features/stages/stages.module';
 import { TasksModule } from './features/tasks/tasks.module';
 import { UsersModule } from './features/users/users.module';
@@ -25,6 +26,7 @@ import { SeedModule } from './seed/seed.module';
     DocsModule,
     DashboardModule,
     NotificationsModule,
+    PaymentAdjustmentsModule,
     SeedModule
   ],
   controllers: [RootController]

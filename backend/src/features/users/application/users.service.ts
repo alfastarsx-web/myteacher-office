@@ -102,6 +102,28 @@ export class UsersService {
     return this.publicUser(await this.users.save(fresh));
   }
 
+  async updateOwnProfile(user: UserEntity, body: any) {
+    const fresh = await this.findById(user.id);
+    if (!fresh) throw new NotFoundException('Foydalanuvchi topilmadi');
+    if (body.photoUrl !== undefined) {
+      const photoUrl = String(body.photoUrl || '');
+      if (photoUrl && !photoUrl.startsWith('data:image/')) {
+        throw new BadRequestException('Rasm formati noto‘g‘ri');
+      }
+      if (photoUrl.length > 3_000_000) {
+        throw new BadRequestException('Rasm hajmi juda katta — kichikroq rasm tanlang');
+      }
+      fresh.photoUrl = photoUrl || null;
+    }
+    if (body.socialHandle !== undefined) {
+      fresh.socialHandle = String(body.socialHandle || '').trim().slice(0, 100) || null;
+    }
+    if (body.bio !== undefined) {
+      fresh.bio = String(body.bio || '').trim().slice(0, 2000) || null;
+    }
+    return this.publicUser(await this.users.save(fresh));
+  }
+
   async startWorkSession(id: number) {
     const user = await this.findById(id);
     if (!user) throw new NotFoundException('Foydalanuvchi topilmadi');

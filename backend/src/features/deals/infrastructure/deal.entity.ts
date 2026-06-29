@@ -68,6 +68,8 @@ export class DealEntity {
   @Column({ nullable: true, type: 'int' })
   courseDuration: number | null;
   @Column({ nullable: true, type: 'varchar' })
+  paymentType: string | null;
+  @Column({ nullable: true, type: 'varchar' })
   lostFromStage: string | null;
   @Column()
   createdBy: number;

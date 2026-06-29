@@ -33,6 +33,15 @@ export class UserEntity {
   @Column({ default: 'linear-gradient(135deg,#93c5fd,#3b82f6)' })
   color: string;
 
+  @Column({ type: 'text', nullable: true })
+  photoUrl: string | null;
+
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  socialHandle: string | null;
+
+  @Column({ type: 'text', nullable: true })
+  bio: string | null;
+
   @Column({ type: 'jsonb', default: () => "'{}'" })
   permissions: Record<string, boolean>;
 
