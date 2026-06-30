@@ -296,6 +296,21 @@ export class DealsService {
     return { deleted: rows.length };
   }
 
+  // Bir martalik tuzatish: 'op_yangi' o'rniga 'yangi'ga tushib qolgan eski operator importlarini to'g'rilaydi
+  // (operatorId bor, ownerId yo'q, stageId hali ham 'yangi' — bu kombinatsiya faqat o'sha eski bug orqali yuzaga kelishi mumkin)
+  async fixMisplacedOperatorLeads(user: UserEntity) {
+    if (user.role !== UserRole.Admin) throw new ForbiddenException('Faqat Admin bu tuzatishni ishga tushira oladi');
+    const rows = await this.deals.createQueryBuilder('deal')
+      .where('deal.stageId = :stageId', { stageId: 'yangi' })
+      .andWhere('deal.operatorId IS NOT NULL')
+      .andWhere('deal.ownerId IS NULL')
+      .getMany();
+    if (!rows.length) return { fixed: 0 };
+    rows.forEach(deal => { deal.stageId = 'op_yangi'; });
+    await this.deals.save(rows);
+    return { fixed: rows.length, ids: rows.map(row => row.id) };
+  }
+
   async delete(id: number, user: UserEntity) {
     this.assertCrmAccess(user);
     if (user.role !== UserRole.Admin) throw new ForbiddenException('Faqat Admin shartnomani o‘chira oladi');

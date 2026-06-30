@@ -23,6 +23,11 @@ export class DealsController {
     return this.deals.importRows(body, req.user);
   }
 
+  @Post('fix-operator-stage')
+  async fixMisplacedOperatorLeads(@Req() req: AuthedRequest) {
+    return this.deals.fixMisplacedOperatorLeads(req.user);
+  }
+
   @Patch('bulk/owner')
   async bulkAssignOwner(@Body() body: any, @Req() req: AuthedRequest) {
     return { deals: await this.deals.bulkAssignOwner(body, req.user) };
