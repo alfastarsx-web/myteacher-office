@@ -24,14 +24,14 @@ jobs:
               . "$NVM_DIR/nvm.sh"
             fi
 
-            cd /var/www/mycrm
+            cd /var/www/myteacher-office
             git fetch origin main
             git reset --hard origin/main
 
             for webroot in /var/www/html /usr/share/nginx/html /var/www/office /var/www/myteacher-office; do
               if [ -d "$webroot" ]; then
-                cp -f /var/www/mycrm/index.html "$webroot/index.html"
-                cp -f /var/www/mycrm/deal-import-template.csv "$webroot/deal-import-template.csv" 2>/dev/null || true
+                cp -f /var/www/myteacher-office/index.html "$webroot/index.html"
+                cp -f /var/www/myteacher-office/deal-import-template.csv "$webroot/deal-import-template.csv" 2>/dev/null || true
                 mkdir -p "$webroot/assets"
                 cp -R /var/www/mycrm/assets/. "$webroot/assets/"
               fi
@@ -43,7 +43,7 @@ jobs:
               while IFS= read -r page; do
                 grep -q 'MyTeacher Office' "$page" || continue
                 webroot="$(dirname "$page")"
-                cp -f /var/www/mycrm/index.html "$page"
+                cp -f /var/www/myteacher-office/index.html "$page"
                 cp -f /var/www/mycrm/deal-import-template.csv "$webroot/deal-import-template.csv" 2>/dev/null || true
                 mkdir -p "$webroot/assets"
                 cp -R /var/www/mycrm/assets/. "$webroot/assets/"
@@ -51,7 +51,7 @@ jobs:
             done
             set -e
 
-            cd /var/www/mycrm/backend
+            cd /var/www/myteacher-office/backend
             npm ci
             npm run build
 
