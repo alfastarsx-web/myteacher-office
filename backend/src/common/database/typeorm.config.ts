@@ -1,4 +1,5 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
+import { AiInsightEntity } from '../../features/ai-insights/infrastructure/ai-insight.entity';
 import { DealEntity } from '../../features/deals/infrastructure/deal.entity';
 import { DocEntity } from '../../features/docs/infrastructure/doc.entity';
 import { StageEntity } from '../../features/stages/infrastructure/stage.entity';
@@ -16,7 +17,7 @@ export function typeOrmConfig(): TypeOrmModuleOptions {
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD ?? '',
     database: process.env.DB_NAME || 'mycrm',
-    entities: [UserEntity, RefreshTokenEntity, StageEntity, DealEntity, TaskEntity, DocEntity, NotificationEntity, PaymentAdjustmentEntity],
+    entities: [UserEntity, RefreshTokenEntity, StageEntity, DealEntity, TaskEntity, DocEntity, NotificationEntity, PaymentAdjustmentEntity, AiInsightEntity],
     synchronize: process.env.TYPEORM_SYNC !== 'false',
     logging: process.env.TYPEORM_LOGGING === 'true'
   };

@@ -6,9 +6,10 @@ import { DealEntity } from './infrastructure/deal.entity';
 import { DealsController } from './presentation/deals.controller';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { UsersModule } from '../users/users.module';
+import { TasksModule } from '../tasks/tasks.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DealEntity]), AuthModule, NotificationsModule, UsersModule],
+  imports: [TypeOrmModule.forFeature([DealEntity]), AuthModule, NotificationsModule, UsersModule, TasksModule],
   controllers: [DealsController],
   providers: [DealsService],
   exports: [DealsService]

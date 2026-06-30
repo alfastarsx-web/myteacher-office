@@ -1130,6 +1130,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <div class="si" id="sbTeam" title="Jamoa" onclick="goPage('jamoa')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg></div>
   <div class="si" id="sbCareer" title="MTC Career" onclick="goPage('career')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.47 6.03.88-4.36 4.25 1.03 6-5.4-2.84-5.4 2.84 1.03-6-4.36-4.25 6.03-.88L12 3z"/></svg></div>
   <div class="si" id="sbAnalytics" title="Analitika" onclick="goPage('analytics')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
+  <div class="si" id="sbAiInsights" title="AI tahlil" onclick="goPage('aiinsights')" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 00-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 001 1h6a1 1 0 001-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 00-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="10" y1="18" x2="14" y2="18"/></svg></div>
   <div class="si" id="sbDocs" title="Dokumentatsiya" onclick="goPage('docs')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg></div>
   <div class="sp"></div>
   <div class="si" id="sbNotif" title="Bildirishnomalar" onclick="toggleNotifPanel()" style="position:relative">
@@ -1426,6 +1427,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <!-- ═══ PAGE: ANALITIKA ═══ -->
   <div class="page" id="page-analytics">
     <div class="analytics-wrap" id="analyticsWrap"></div>
+  </div>
+
+  <!-- ═══ PAGE: AI TAHLIL (faqat Admin) ═══ -->
+  <div class="page" id="page-aiinsights">
+    <div class="analytics-wrap" id="aiInsightsWrap"></div>
   </div>
 
   <!-- ═══ PAGE: DOKUMENTATSIYA ═══ -->
@@ -2191,6 +2197,7 @@ const TAB_IDS = {shartnomalar:'tabS',vazifalar:'tabV',mijozlar:'tabM'};
 function isMobile(){ return window.innerWidth <= 760; }
 function goPage(p){
   if(!document.getElementById('page-'+p))p='shartnomalar';
+  if(p==='aiinsights' && !isAdmin())p='shartnomalar';
   curPage = p;
   localStorage.setItem('mtcrm_page',p);
   // Mobileda sahifa o'tganda yuqoriga scroll
@@ -2217,6 +2224,7 @@ function goPage(p){
   if(p==='docs') renderDocsPage();
   if(p==='payments') renderPaymentsPage();
   if(p==='analytics') renderAnalyticsPage();
+  if(p==='aiinsights') renderAiInsightsPage();
   if(p==='settings') renderSetContent('crmsoz');
 }
 
@@ -2230,8 +2238,11 @@ function renderSidebarState(p){
   if(p==='career')document.getElementById('sbCareer')?.classList.add('on');
   if(p==='docs')document.getElementById('sbDocs')?.classList.add('on');
   if(p==='analytics')document.getElementById('sbAnalytics')?.classList.add('on');
+  if(p==='aiinsights')document.getElementById('sbAiInsights')?.classList.add('on');
   if(p==='settings')document.getElementById('sbSettings')?.classList.add('on');
   if(p==='dashboard')document.getElementById('sbDash')?.classList.add('on');
+  const aiIcon=document.getElementById('sbAiInsights');
+  if(aiIcon)aiIcon.style.display=isAdmin()?'flex':'none';
 }
 
 function renderHdrRight(p){
@@ -2767,6 +2778,26 @@ async function prepareStageTransition(deal,target,priceInput){
   let price = Number(deal.price||0);
   const modalOpen = document.getElementById('dealOvl')?.classList.contains('show');
 
+  // Bosqich haqiqatan o'zgarayotgan bo'lsa, kamida 4 so'zli yangi izoh yoki ochiq vazifa talab qilamiz
+  // (admin bundan mustasno) — "k", "ochiq" kabi mazmunsiz belgilar bilan lid siljitilmasin
+  if(deal.col!==target && !isAdmin()){
+    const hasOpenTask=(deal.tasks||[]).some(t=>!t.done);
+    if(!hasOpenTask){
+      const text=(window.prompt(`"${customerTitle(deal)}" — "${targetLabel}"ga o'tkazish uchun kamida 4 so'zdan iborat izoh yozing (yoki Bekor qiling va avval Vazifa qo'ying):`)||'').trim();
+      const wordCount=text.split(/\s+/).filter(Boolean).length;
+      if(!text){
+        showToast('Bosqichni o\'zgartirish uchun izoh yoki ochiq vazifa kerak');
+        return null;
+      }
+      if(wordCount<4){
+        showToast("Izoh kamida 4 so'zdan iborat bo'lishi kerak");
+        return null;
+      }
+      deal.comments=[...(deal.comments||[]), {text, from: currentUser().name||'Men', time: new Date().toISOString()}];
+      deal._pendingStageComment=true;
+    }
+  }
+
   // Operator kolonlari uchun narx va parol tekshiruvi kerak emas
   const isOperatorStage = OPERATOR_COLS.some(c=>c.id===target);
   if(isOperatorStage) return {price, closePassword:''};
@@ -2831,6 +2862,7 @@ async function moveDealToStage(deal,target,options={}){
   try{
     if(apiToken){
       const body={stageId:target,price:prepared.price};
+      if(deal._pendingStageComment){body.comments=deal.comments;delete deal._pendingStageComment;}
       if(prepared.closePassword)body.closePassword=prepared.closePassword;
       if(prepared.courseDuration)body.courseDuration=prepared.courseDuration;
       if(prepared.paymentType)body.paymentType=prepared.paymentType;
@@ -3941,6 +3973,57 @@ function renderAnalyticsPage(){
     renderOperatorAnalytics(wrap, user, range, periodLabel);
   } else {
     renderManagerAnalytics(wrap, user, range, periodLabel);
+  }
+}
+
+let aiInsightsLoading=false;
+async function renderAiInsightsPage(){
+  const wrap = document.getElementById('aiInsightsWrap');
+  if(!wrap || !isAdmin()) return;
+  wrap.innerHTML = `
+    <div class="analytics-hero">
+      <div class="analytics-hero-text">
+        <h2>🤖 AI tahlil</h2>
+        <p>Har kuni soat 20:00 da (Toshkent vaqti) avtomatik ishlaydi — lidlarga qo'yilgan izoh va vazifalar asosida ish sifatini baholaydi</p>
+      </div>
+      <button class="apt active" id="aiInsightsGenBtn" onclick="generateAiInsightNow()" ${aiInsightsLoading?'disabled':''}>${aiInsightsLoading?'Tahlil qilinmoqda…':'Hozir tahlil qil'}</button>
+    </div>
+    <div id="aiInsightsList" style="display:flex;flex-direction:column;gap:14px;margin-top:18px"></div>
+  `;
+  const list = document.getElementById('aiInsightsList');
+  list.innerHTML = `<div style="padding:20px;color:var(--mu)">Yuklanmoqda…</div>`;
+  try{
+    const data = await api('/api/ai-insights');
+    const insights = data.insights || [];
+    if(!insights.length){
+      list.innerHTML = `<div style="padding:20px;color:var(--mu)">Hali tahlil yo'q. "Hozir tahlil qil" tugmasini bosing.</div>`;
+      return;
+    }
+    list.innerHTML = insights.map((ins,i)=>`
+      <div class="pay-card" style="white-space:pre-wrap;line-height:1.6">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <strong>${esc(ins.date)}</strong>
+          ${i===0?'<span class="pay-badge">Eng oxirgi</span>':''}
+        </div>
+        <div>${esc(ins.summary)}</div>
+      </div>
+    `).join('');
+  }catch(err){
+    list.innerHTML = `<div style="padding:20px;color:#EF4444">${esc(err.message || "Tahlilni yuklab bo'lmadi")}</div>`;
+  }
+}
+async function generateAiInsightNow(){
+  if(aiInsightsLoading) return;
+  aiInsightsLoading=true;
+  renderAiInsightsPage();
+  try{
+    await api('/api/ai-insights/generate',{method:'POST'});
+    showToast('AI tahlil tayyor');
+  }catch(err){
+    showToast(err.message || 'AI tahlil ishlamadi');
+  }finally{
+    aiInsightsLoading=false;
+    renderAiInsightsPage();
   }
 }
 
