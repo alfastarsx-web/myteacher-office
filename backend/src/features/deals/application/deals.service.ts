@@ -16,6 +16,7 @@ const BULK_BLOCKED_STAGE_IDS = [AGREED_STAGE_ID, WON_STAGE_ID];
 const OPERATOR_QUAL_STAGE_ID = 'op_malakali';
 const QUALIFIED_LEAD_TARGET_EMAIL = 'sarafroz@gmail.com';
 const VALID_PAYMENT_TYPES = ['naqd', 'karta', 'otkazma'];
+const OPERATOR_STAGE_IDS = ['op_yangi', 'op_qayta', 'op_malakali', 'op_yutqazilgan'];
 
 @Injectable()
 export class DealsService {
@@ -294,6 +295,23 @@ export class DealsService {
     if (!rows.length) throw new NotFoundException('Shartnomalar topilmadi');
     await this.deals.delete(rows.map(row => row.id));
     return { deleted: rows.length };
+  }
+
+  // Bir martalik tuzatish: operatorga tegishli (operatorId bor, ownerId yo'q), lekin stageId operator
+  // voronkasi (op_yangi/op_qayta/op_malakali/op_yutqazilgan) ga mos kelmaydigan lidlarni "op_yangi"ga
+  // ko'chiradi. Eski import bug'i tufayli import faylidagi "Bosqich" ustunidagi ixtiyoriy matn
+  // (masalan "Yangi") to'g'ridan-to'g'ri stageId sifatida yozilib qolgan edi.
+  async fixMisplacedOperatorLeads(user: UserEntity) {
+    if (user.role !== UserRole.Admin) throw new ForbiddenException('Faqat Admin bu tuzatishni ishga tushira oladi');
+    const rows = await this.deals.createQueryBuilder('deal')
+      .where('deal.operatorId IS NOT NULL')
+      .andWhere('deal.ownerId IS NULL')
+      .andWhere('deal.stageId NOT IN (:...stageIds)', { stageIds: OPERATOR_STAGE_IDS })
+      .getMany();
+    if (!rows.length) return { fixed: 0 };
+    rows.forEach(deal => { deal.stageId = 'op_yangi'; });
+    await this.deals.save(rows);
+    return { fixed: rows.length, ids: rows.map(row => row.id) };
   }
 
   async delete(id: number, user: UserEntity) {
