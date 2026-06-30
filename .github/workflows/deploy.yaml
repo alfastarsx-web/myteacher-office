@@ -18,7 +18,7 @@ jobs:
             source ~/.nvm/nvm.sh 2>/dev/null || true
             source ~/.profile 2>/dev/null || true
             cd /var/www/myteacher-office
-            git pull -f head
+            git pull
             cd backend
             npm i -f
             npm run build
