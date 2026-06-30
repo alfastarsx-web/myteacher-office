@@ -33,7 +33,7 @@ jobs:
                 cp -f /var/www/myteacher-office/index.html "$webroot/index.html"
                 cp -f /var/www/myteacher-office/deal-import-template.csv "$webroot/deal-import-template.csv" 2>/dev/null || true
                 mkdir -p "$webroot/assets"
-                cp -R /var/www/mycrm/assets/. "$webroot/assets/"
+                cp -R /var/www/myteacher-office/assets/. "$webroot/assets/"
               fi
             done
 
@@ -44,9 +44,9 @@ jobs:
                 grep -q 'MyTeacher Office' "$page" || continue
                 webroot="$(dirname "$page")"
                 cp -f /var/www/myteacher-office/index.html "$page"
-                cp -f /var/www/mycrm/deal-import-template.csv "$webroot/deal-import-template.csv" 2>/dev/null || true
+                cp -f /var/www/myteacher-office/deal-import-template.csv "$webroot/deal-import-template.csv" 2>/dev/null || true
                 mkdir -p "$webroot/assets"
-                cp -R /var/www/mycrm/assets/. "$webroot/assets/"
+                cp -R /var/www/myteacher-office/assets/. "$webroot/assets/"
               done < <(find "$searchroot" -maxdepth 5 -type f -name index.html 2>/dev/null)
             done
             set -e
