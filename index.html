@@ -2382,7 +2382,6 @@ function tableToDealRows(rows){
       phone:item.phone || item.telefon || item['telefon raqam'],
       phones:[...splitImportPhones(item.phones || item.telefonlar), item.phone || item.telefon || item['telefon raqam'], item.phone2 || item.telefon2 || item['telefon 2'], item.phone3 || item.telefon3 || item['telefon 3']].filter(Boolean),
       price:parseImportNumber(item.price || item.summa || item.narx),
-      stageId:item.stageid || item.stage || item.bosqich,
       note:item.note || item.izoh,
       adSource:item.adsource || item.reklama || item['qaysi reklamadan kelgan'],
       registeredAt:item.registeredat || item.vaqt || item['ro‘yxatdan o‘tgan vaqti'] || item['royxatdan otgan vaqti'],
