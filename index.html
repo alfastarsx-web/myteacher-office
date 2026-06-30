@@ -2777,9 +2777,10 @@ async function prepareStageTransition(deal,target,priceInput){
   let price = Number(deal.price||0);
   const modalOpen = document.getElementById('dealOvl')?.classList.contains('show');
 
-  // Bosqich haqiqatan o'zgarayotgan bo'lsa, kamida 4 so'zli yangi izoh yoki ochiq vazifa talab qilamiz
-  // (admin bundan mustasno) — "k", "ochiq" kabi mazmunsiz belgilar bilan lid siljitilmasin
-  if(deal.col!==target && !isAdmin()){
+  // Bosqich haqiqatan o'zgarayotgan bo'lsa (mavjud lid uchun, yangi yaratilayotganda emas), kamida
+  // 4 so'zli yangi izoh yoki ochiq vazifa talab qilamiz (admin bundan mustasno) —
+  // "k", "ochiq" kabi mazmunsiz belgilar bilan lid siljitilmasin
+  if(deal.id!=null && deal.col!==target && !isAdmin()){
     const hasOpenTask=(deal.tasks||[]).some(t=>!t.done);
     if(!hasOpenTask){
       const text=(window.prompt(`"${customerTitle(deal)}" — "${targetLabel}"ga o'tkazish uchun kamida 4 so'zdan iborat izoh yozing (yoki Bekor qiling va avval Vazifa qo'ying):`)||'').trim();
@@ -3138,7 +3139,7 @@ async function saveDeal(){
   const operatorId=isOperator()?currentManagerId:(existing?.operatorId||null);
   const prepared=await prepareStageTransition(existing || {price,col:null},col,priceInput);
   if(!prepared)return;
-  const payload={customerName,phone,phones,dealName,price:prepared.price,col,note,adSource,registeredAt,age,learningGoal,leadChannel,ownerId,operatorId,closePassword:prepared.closePassword,courseDuration:prepared.courseDuration,paymentType:prepared.paymentType};
+  const payload={customerName,phone,phones,dealName,price:prepared.price,col,note,adSource,registeredAt,age,learningGoal,leadChannel,ownerId,operatorId,comments:existing?.comments||[],closePassword:prepared.closePassword,courseDuration:prepared.courseDuration,paymentType:prepared.paymentType};
   if(apiToken){
     try{
       if(editId){
