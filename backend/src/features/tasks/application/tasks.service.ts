@@ -57,6 +57,10 @@ export class TasksService {
     return this.tasks.save(task);
   }
 
+  async hasOpenTaskForDeal(dealId: number) {
+    return (await this.tasks.count({ where: { dealId, done: false } })) > 0;
+  }
+
   private canManageAll(user: UserEntity) {
     return user.role === UserRole.Admin || user.permissions?.all === true;
   }

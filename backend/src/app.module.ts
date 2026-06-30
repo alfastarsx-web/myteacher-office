@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from './common/database/typeorm.config';
+import { AiInsightsModule } from './features/ai-insights/ai-insights.module';
 import { AuthModule } from './features/auth/auth.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
 import { DealsModule } from './features/deals/deals.module';
@@ -17,6 +19,7 @@ import { SeedModule } from './seed/seed.module';
 @Module({
   imports: [
     TypeOrmModule.forRoot(typeOrmConfig()),
+    ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
     StagesModule,
@@ -27,6 +30,7 @@ import { SeedModule } from './seed/seed.module';
     DashboardModule,
     NotificationsModule,
     PaymentAdjustmentsModule,
+    AiInsightsModule,
     SeedModule
   ],
   controllers: [RootController]

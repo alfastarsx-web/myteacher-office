@@ -7,6 +7,7 @@ import { UserEntity } from '../../users/infrastructure/user.entity';
 import { UsersService } from '../../users/application/users.service';
 import { DealEntity } from '../infrastructure/deal.entity';
 import { NotificationsGateway } from '../../notifications/notifications.gateway';
+import { TasksService } from '../../tasks/application/tasks.service';
 
 const AGREED_STAGE_ID = 'sotib_olishga_rozi';
 const WON_STAGE_ID = 'yutgan';
@@ -22,7 +23,8 @@ export class DealsService {
     @InjectRepository(DealEntity) private readonly deals: Repository<DealEntity>,
     private readonly passwords: PasswordService,
     private readonly notifications: NotificationsGateway,
-    private readonly users: UsersService
+    private readonly users: UsersService,
+    private readonly tasks: TasksService
   ) {}
 
   canSee(user: UserEntity, deal: DealEntity) {
@@ -120,6 +122,9 @@ export class DealsService {
     const nextStageId = body.stageId !== undefined ? String(body.stageId) : deal.stageId;
     const nextPrice = body.price !== undefined ? this.parsePrice(body.price) : this.parsePrice(deal.price);
     this.assertStageRules(nextStageId, nextPrice, body, user, deal);
+    if (nextStageId !== prevStageId && user.role !== UserRole.Admin && user.permissions?.all !== true) {
+      await this.assertStageChangeJustified(deal, body, prevCommentsLength);
+    }
     ['customerName', 'dealName', 'stageId', 'note', 'adSource', 'registeredAt', 'learningGoal', 'leadChannel'].forEach(key => {
       if (body[key] !== undefined) deal[key] = String(body[key]);
     });
@@ -322,6 +327,18 @@ export class DealsService {
     if (user.role !== UserRole.Admin && user.permissions?.crm === false) {
       throw new ForbiddenException('CRM ruxsati yopilgan');
     }
+  }
+
+  // Bosqich o'zgarganda, kamida 4 so'zli yangi izoh yoki ochiq vazifa talab qilamiz —
+  // aks holda lidlar "k", "ochiq" kabi mazmunsiz belgilar bilan siljib, yo'qotish sababi hech qachon yozilmay qoladi.
+  private async assertStageChangeJustified(deal: DealEntity, body: any, prevCommentsLength: number) {
+    if (await this.tasks.hasOpenTaskForDeal(deal.id)) return;
+    const comments = Array.isArray(body.comments) ? body.comments : null;
+    if (comments && comments.length > prevCommentsLength) {
+      const text = String(comments[comments.length - 1]?.text || '').trim();
+      if (text.split(/\s+/).filter(Boolean).length >= 4) return;
+    }
+    throw new BadRequestException('Bosqichni o‘zgartirish uchun kamida 4 so‘zdan iborat izoh yozing yoki ochiq vazifa qo‘ying');
   }
 
   private assertStageRules(stageId: string, price: number, body: any, user: UserEntity, deal: DealEntity | null) {
