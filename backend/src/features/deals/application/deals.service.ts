@@ -51,13 +51,17 @@ export class DealsService {
     const customerName = String(body.customerName || '').trim();
     if (!customerName) throw new BadRequestException('Mijoz nomi kerak');
     const phones = this.normalizePhones(body);
-    this.assertStageRules(body.stageId || 'yangi', this.parsePrice(body.price), body, user, null);
+    // Operator yaratgan/import qilgan lid (stageId ko'rsatilmagan bo'lsa) operator voronkasining
+    // "Yangi" bosqichiga (op_yangi) tushishi kerak, menejer voronkasining 'yangi'siga emas —
+    // aks holda lid hech qaysi kanbanda to'g'ri ko'rinmaydi va "Bosqich" deb noaniq belgilanadi.
+    const defaultStageId = user.role === UserRole.Operator ? 'op_yangi' : 'yangi';
+    this.assertStageRules(body.stageId || defaultStageId, this.parsePrice(body.price), body, user, null);
     const deal = this.deals.create({
       customerName,
       dealName: String(body.dealName || '').trim(),
       phone: phones[0] || '',
       phones,
-      stageId: body.stageId || 'yangi',
+      stageId: body.stageId || defaultStageId,
       price: this.parsePrice(body.price),
       note: String(body.note || ''),
       adSource: String(body.adSource || ''),
@@ -96,7 +100,7 @@ export class DealsService {
           dealName: String(row.dealName || row.contract || row.shartnoma || '').trim(),
           phone: row.phone || row.telefon || '',
           phones: row.phones,
-          stageId: row.stageId || row.stage || 'yangi',
+          stageId: row.stageId || row.stage || (user.role === UserRole.Operator ? 'op_yangi' : 'yangi'),
           price: row.price || row.summa || 0,
           note: row.note || row.izoh || '',
           adSource: row.adSource || row.reklama || row['qaysi reklamadan kelgan'] || '',
