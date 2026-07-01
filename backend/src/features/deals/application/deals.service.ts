@@ -14,7 +14,6 @@ const WON_STAGE_ID = 'yutgan';
 const LOST_STAGE_ID = 'yutqazilgan';
 const BULK_BLOCKED_STAGE_IDS = [AGREED_STAGE_ID, WON_STAGE_ID];
 const OPERATOR_QUAL_STAGE_ID = 'op_malakali';
-const QUALIFIED_LEAD_TARGET_EMAIL = 'sarafroz@gmail.com';
 const VALID_PAYMENT_TYPES = ['naqd', 'karta', 'otkazma'];
 const OPERATOR_STAGE_IDS = ['op_yangi', 'op_qayta', 'op_malakali', 'op_yutqazilgan'];
 
@@ -41,8 +40,12 @@ export class DealsService {
         .orderBy('deal.id', 'ASC')
         .getMany();
     }
+    // Menejer: o'ziga biriktirilgan YOKI hali biriktirilmagan (operator tomonidan malakali qilingan) lidlarni ko'radi
     return this.deals.createQueryBuilder('deal')
-      .where('deal.ownerId = :id', { id: user.id })
+      .where('(deal.ownerId = :id OR (deal.ownerId IS NULL AND deal.stageId NOT IN (:...opStages)))', {
+        id: user.id,
+        opStages: OPERATOR_STAGE_IDS,
+      })
       .orderBy('deal.id', 'ASC')
       .getMany();
   }
@@ -209,13 +212,11 @@ export class DealsService {
     return this.deals.save(deal);
   }
 
-  // Operator lidni "Malakali" qilganda, server tomonida menejer voronkasiga Malakali bosqichida yuboramiz.
-  // Frontend buni o'zi qila olmaydi, chunki operator sessiyasida boshqa foydalanuvchilar (menejerlar) ko'rinmaydi.
+  // Operator lidni "Malakali" qilganda, menejer voronkasiga ownerId=null bilan ko'chiramiz.
+  // Barcha menejerlar ko'radi, admin keyin biriktirib qo'yadi.
   private async handoffQualifiedLead(deal: DealEntity, user: UserEntity) {
     deal.sentToManager = true;
     deal.qualAt = new Date().toISOString();
-    const manager = await this.users.findByEmail(QUALIFIED_LEAD_TARGET_EMAIL);
-    if (!manager) return;
     const handoff = this.deals.create({
       customerName: deal.customerName,
       dealName: deal.dealName || deal.customerName,
@@ -229,19 +230,11 @@ export class DealsService {
       learningGoal: deal.learningGoal,
       leadChannel: deal.leadChannel,
       qualAt: deal.qualAt,
-      ownerId: manager.id,
+      ownerId: null,
       operatorId: deal.operatorId || user.id,
       createdBy: user.id
     });
-    const saved = await this.deals.save(handoff);
-    this.notifications.sendToUser(manager.id, {
-      type: 'deal_assigned',
-      title: 'Yangi shartnoma biriktirildi',
-      body: `"${deal.customerName}" — operator tomonidan malakali qilindi`,
-      dealId: saved.id,
-      fromUserId: user.id,
-      userId: manager.id
-    }).catch(() => {});
+    await this.deals.save(handoff);
   }
 
   async bulkAssignOwner(body: any, user: UserEntity) {
