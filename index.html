@@ -2736,7 +2736,8 @@ function renderKanban(){
   renderDealStats();
   const rows=visibleDeals();
   document.getElementById('sBoard').innerHTML=visibleStages().map(col=>{
-    const cd=rows.filter(d=>d.col===col.id).map(d=>({...d,_kanbanTask:kanbanTaskInfo(d)})).sort((a,b)=>(a._kanbanTask.sort-b._kanbanTask.sort) || (Number(b.id||0)-Number(a.id||0)));
+    // Admin uchun: operator tomonidan malakali qilingan lidlar ('op_malakali') ham 'malakali' kolonnasida ko'rinadi
+    const cd=rows.filter(d=>d.col===col.id || (isAdmin() && col.id==='malakali' && d.col==='op_malakali')).map(d=>({...d,_kanbanTask:kanbanTaskInfo(d)})).sort((a,b)=>(a._kanbanTask.sort-b._kanbanTask.sort) || (Number(b.id||0)-Number(a.id||0)));
     const tot=cd.reduce((s,d)=>s+d.price,0);
     return `<div class="col">
       <div class="col-hdr">
