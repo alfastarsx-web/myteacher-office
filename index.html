@@ -1877,9 +1877,11 @@ function closeWorkWelcome(){
 }
 function customerTitle(d){ return d.customerName || d.sub || 'Nomsiz mijoz'; }
 function daysSinceUpdate(d){
-  const ts=d.updatedAt||d.createdAt;
-  if(!ts)return 0;
-  const diff=Date.now()-new Date(ts).getTime();
+  // Deal yoki unga bog'liq vazifalardan eng so'nggi faollik sanasini olish
+  const timestamps=[d.updatedAt,d.createdAt,...(d.tasks||[]).map(t=>t.createdAt||t.updatedAt)].filter(Boolean);
+  if(!timestamps.length)return 0;
+  const latest=Math.max(...timestamps.map(ts=>new Date(ts).getTime()));
+  const diff=Date.now()-latest;
   return diff>0?Math.floor(diff/86400000):0;
 }
 function dealTitle(d){ return d.dealName || d.name || 'Shartnoma nomi yo‘q'; }
