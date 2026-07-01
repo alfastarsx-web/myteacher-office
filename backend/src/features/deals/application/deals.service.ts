@@ -8,6 +8,7 @@ import { UsersService } from '../../users/application/users.service';
 import { DealEntity } from '../infrastructure/deal.entity';
 import { NotificationsGateway } from '../../notifications/notifications.gateway';
 import { TasksService } from '../../tasks/application/tasks.service';
+import { TelegramService } from '../../../common/telegram/telegram.service';
 
 const AGREED_STAGE_ID = 'sotib_olishga_rozi';
 const WON_STAGE_ID = 'yutgan';
@@ -24,7 +25,8 @@ export class DealsService {
     private readonly passwords: PasswordService,
     private readonly notifications: NotificationsGateway,
     private readonly users: UsersService,
-    private readonly tasks: TasksService
+    private readonly tasks: TasksService,
+    private readonly telegram: TelegramService
   ) {}
 
   canSee(user: UserEntity, deal: DealEntity) {
@@ -208,6 +210,18 @@ export class DealsService {
     }
     if (nextStageId === OPERATOR_QUAL_STAGE_ID && prevStageId !== OPERATOR_QUAL_STAGE_ID && !deal.sentToManager) {
       await this.handoffQualifiedLead(deal, user);
+    }
+    if (nextStageId === WON_STAGE_ID && prevStageId !== WON_STAGE_ID) {
+      const managerName = user.name || user.email || 'Menejer';
+      const price = deal.price ? `${Number(deal.price).toLocaleString('uz-UZ')} so’m` : 'narx ko’rsatilmagan';
+      const phone = deal.phone || (deal.phones?.[0]) || '—';
+      this.telegram.sendMessage(
+        '🎉 <b>Yangi to’lov!</b>\n\n' +
+        `👤 Mijoz: <b>${deal.customerName}</b>\n` +
+        `📞 Tel: ${phone}\n` +
+        `💰 Summa: <b>${price}</b>\n` +
+        `👨‍💼 Menejer: ${managerName}`
+      ).catch(() => {});
     }
     return this.deals.save(deal);
   }

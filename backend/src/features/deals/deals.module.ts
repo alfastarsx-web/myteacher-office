@@ -7,9 +7,10 @@ import { DealsController } from './presentation/deals.controller';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { UsersModule } from '../users/users.module';
 import { TasksModule } from '../tasks/tasks.module';
+import { TelegramModule } from '../../common/telegram/telegram.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DealEntity]), AuthModule, NotificationsModule, UsersModule, TasksModule],
+  imports: [TypeOrmModule.forFeature([DealEntity]), AuthModule, NotificationsModule, UsersModule, TasksModule, TelegramModule],
   controllers: [DealsController],
   providers: [DealsService],
   exports: [DealsService]
