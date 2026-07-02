@@ -160,6 +160,14 @@ table.crm-t{width:100%;border-collapse:collapse}
 .stat-card{background:var(--wh);border:1px solid var(--br);border-radius:8px;padding:12px 14px;box-shadow:var(--shadow-sm)}
 .stat-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.35px;color:var(--mu);margin-bottom:5px}
 .stat-value{font-size:20px;font-weight:700;color:var(--td)}
+/* KPI chip — admin uchun ixcham bir qatorli statistika */
+.kpi-chips{display:flex;flex-wrap:wrap;gap:6px;padding:4px 0}
+/* chips bo'lsa grid ustunlarini bekor qilish */
+#dealStats:has(.kpi-chips){display:block;padding:8px 24px}
+.kpi-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px 5px 8px;border-radius:999px;border:1px solid var(--kpi-accent);background:var(--kpi-bg);white-space:nowrap;font-size:12px;font-weight:700;color:var(--kpi-color)}
+.kpi-chip-icon{font-size:13px;line-height:1}
+.kpi-chip-val{font-size:14px;font-weight:900}
+.kpi-chip-label{opacity:.75;font-weight:600}
 /* KPI kartochkalari — Operator/Admin/Menejer dashboard kartochkalari (renderDealStats) */
 .kpi-card{background:var(--kpi-bg);border:1px solid var(--kpi-accent);border-radius:14px;padding:14px 16px;position:relative;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.04);transition:transform .15s,box-shadow .15s}
 .kpi-card:hover{transform:translateY(-2px);box-shadow:0 8px 20px rgba(0,0,0,.09)}
@@ -2477,6 +2485,14 @@ function renderKpiCards(cards){
     </div>
   `).join('');
 }
+function renderKpiChips(cards){
+  document.getElementById('dealStats').innerHTML = `<div class="kpi-chips">${cards.map(card=>`
+    <div class="kpi-chip" style="--kpi-bg:${card.bg};--kpi-accent:${card.accent};--kpi-color:${card.color}" title="${esc(card.sub)}">
+      <span class="kpi-chip-icon">${card.icon}</span>
+      <span class="kpi-chip-val">${card.value}${card.unit?' '+card.unit:''}</span>
+      <span class="kpi-chip-label">${esc(card.label)}</span>
+    </div>`).join('')}</div>`;
+}
 function renderDealStats(){
   renderPoolAlert();
   if(isOperator()){
@@ -2493,15 +2509,15 @@ function renderDealStats(){
   }
   if(isAdmin()){
     const a = calculateAdminOverview();
-    const cards = [
-      {icon:'👥', label:'Ishga olingan', value:a.todayProcessed, unit:'ta lid', sub:'Bugun barcha xodimlar bo\'yicha', color:'#2563EB', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', accent:'#BFDBFE'},
-      {icon:'📱', label:'Install', value:a.todayApp, unit:'ta', sub:'Bugun o\'rnatilgan', color:'#0891B2', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', accent:'#A5F3FC'},
-      {icon:'🎯', label:'Qual', value:a.todayQual, unit:'ta', sub:'Bugun malakali qilingan', color:'#7C3AED', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', accent:'#C4B5FD'},
-      {icon:'📞', label:'Full call', value:a.todayFullCall, unit:'ta', sub:'15+ daqiqa yoki sotuv', color:'#DB2777', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', accent:'#FBCFE8'},
-      {icon:'🏆', label:'Sotuv', value:a.todaySoldCount, unit:'ta', sub:'Bugungi muvaffaqiyatli', color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC'},
-      {icon:'💰', label:'Sotuv summasi', value:formatMoney(a.todayCash), unit:'', sub:`Bu oy: ${formatMoney(a.monthCash)}`, color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', accent:'#FDE68A'},
+    const chips = [
+      {icon:'👥', label:'Ishga olingan', value:a.todayProcessed, unit:'ta', sub:'Bugun barcha xodimlar bo\'yicha', color:'#2563EB', bg:'#EFF6FF', accent:'#BFDBFE'},
+      {icon:'📱', label:'Install', value:a.todayApp, unit:'ta', sub:'Bugun o\'rnatilgan', color:'#0891B2', bg:'#ECFEFF', accent:'#A5F3FC'},
+      {icon:'🎯', label:'Qual', value:a.todayQual, unit:'ta', sub:'Bugun malakali qilingan', color:'#7C3AED', bg:'#F5F3FF', accent:'#C4B5FD'},
+      {icon:'📞', label:'Full call', value:a.todayFullCall, unit:'ta', sub:'15+ daqiqa yoki sotuv', color:'#DB2777', bg:'#FDF2F8', accent:'#FBCFE8'},
+      {icon:'🏆', label:'Sotuv', value:a.todaySoldCount, unit:'ta', sub:'Bugungi muvaffaqiyatli', color:'#16A34A', bg:'#F0FDF4', accent:'#86EFAC'},
+      {icon:'💰', label:'Summa', value:formatMoney(a.todayCash), unit:'', sub:`Bu oy: ${formatMoney(a.monthCash)}`, color:'#D97706', bg:'#FFFBEB', accent:'#FDE68A'},
     ];
-    renderKpiCards(cards);
+    renderKpiChips(chips);
     return;
   }
   // Menejer metrikalar
