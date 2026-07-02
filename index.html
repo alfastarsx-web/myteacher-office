@@ -1901,7 +1901,13 @@ function currentUserDeals(){
 }
 function managerById(id){ return managers.find(m=>String(m.id)===String(id)); }
 function managerInitials(m){ return (m?.avatar || m?.name?.split(' ').map(x=>x[0]).join('') || '—').slice(0,2).toUpperCase(); }
-function dealOwnerLabel(d){ const m=managerById(d.ownerId); return m ? m.name : 'Biriktirilmagan'; }
+function dealOwnerLabel(d){
+  const m=managerById(d.ownerId);
+  if(m) return m.name;
+  const op=managers.find(o=>String(o.id)===String(d.operatorId));
+  if(op) return op.name+' (op)';
+  return 'Biriktirilmagan';
+}
 function ensureRequiredStages(){
   const required=[
     {id:STAGE_AGREED,label:'Sotib olishga rozi',color:'#0EA5E9'},
@@ -2754,7 +2760,7 @@ function renderKanban(){
           return `
           <div class="kcard" draggable="true" data-id="${d.id}">
             <div class="kcard-top">
-              <div><div class="dn">${esc(customerTitle(d))}</div><div class="ds">${isAdmin()?esc(managerById(d.ownerId)?.name || 'Biriktirilmagan'):esc(dealTitle(d))}</div></div>
+              <div><div class="dn">${esc(customerTitle(d))}</div><div class="ds">${isAdmin()?esc(dealOwnerLabel(d)):esc(dealTitle(d))}</div></div>
               <span class="kcard-date">${d.date}</span>
             </div>
             <div class="kcard-foot">
