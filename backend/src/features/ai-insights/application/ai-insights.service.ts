@@ -6,7 +6,7 @@ import { DealEntity } from '../../deals/infrastructure/deal.entity';
 import { TaskEntity } from '../../tasks/infrastructure/task.entity';
 import { AiInsightEntity } from '../infrastructure/ai-insight.entity';
 
-const ANTHROPIC_MODEL = 'claude-sonnet-4-6';
+const GEMINI_MODEL = 'gemini-2.0-flash';
 const WON_STAGE_ID = 'yutgan';
 
 @Injectable()
@@ -34,13 +34,13 @@ export class AiInsightsService {
   }
 
   async generateDaily() {
-    if (!process.env.ANTHROPIC_API_KEY) {
-      throw new BadRequestException('ANTHROPIC_API_KEY sozlanmagan — serverga qo‘shilgach AI tahlil ishlay boshlaydi');
+    if (!process.env.GEMINI_API_KEY) {
+      throw new BadRequestException('GEMINI_API_KEY sozlanmagan — serverga qo‘shilgach AI tahlil ishlay boshlaydi');
     }
     const date = this.todayKey();
     const stats = await this.computeStats(date);
     const previous = await this.insights.findOne({ where: {}, order: { date: 'DESC' } });
-    const summary = await this.callClaude(stats, previous?.stats || null, previous?.date || null);
+    const summary = await this.callGemini(stats, previous?.stats || null, previous?.date || null);
     const existing = await this.insights.findOne({ where: { date } });
     if (existing) {
       existing.stats = stats;
@@ -101,7 +101,7 @@ export class AiInsightsService {
     };
   }
 
-  private async callClaude(today: any, yesterday: any | null, yesterdayDate: string | null) {
+  private async callGemini(today: any, yesterday: any | null, yesterdayDate: string | null) {
     const prompt = [
       'Sen MyTeacher CRM uchun professional sotuv va marketing tahlilchisan.',
       'Quyida bugungi va (mavjud bo\'lsa) kechagi statistika berilgan. Shu asosda, jamoaga tushunarli, ',
@@ -113,26 +113,21 @@ export class AiInsightsService {
       yesterday ? `\nOLDINGI TAHLIL (${yesterdayDate}):\n${JSON.stringify(yesterday, null, 1)}` : '\nOldingi kunlik tahlil mavjud emas — bu birinchi tahlil.'
     ].join('\n');
 
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    const res = await fetch(url, {
       method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY as string,
-        'anthropic-version': '2023-06-01'
-      },
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({
-        model: ANTHROPIC_MODEL,
-        max_tokens: 1200,
-        messages: [{ role: 'user', content: prompt }]
+        contents: [{ parts: [{ text: prompt }] }]
       })
     });
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      throw new Error(`Claude API xatosi (${res.status}): ${text.slice(0, 300)}`);
+      throw new Error(`Gemini API xatosi (${res.status}): ${text.slice(0, 300)}`);
     }
     const data: any = await res.json();
-    const text = (data.content || []).map((block: any) => block.text || '').join('\n').trim();
-    if (!text) throw new Error('Claude API bo‘sh javob qaytardi');
+    const text = (data.candidates?.[0]?.content?.parts || []).map((part: any) => part.text || '').join('\n').trim();
+    if (!text) throw new Error('Gemini API bo‘sh javob qaytardi');
     return text;
   }
 
