@@ -273,8 +273,7 @@ export class DealsService {
       rows.forEach(deal => { deal.ownerId = ownerId; });
     }
 
-    const saved = await this.deals.save(rows);
-    return { deals: saved };
+    return this.deals.save(rows);
   }
 
   async bulkAssignStage(body: any, user: UserEntity) {
