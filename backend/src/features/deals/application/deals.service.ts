@@ -9,6 +9,7 @@ import { DealEntity } from '../infrastructure/deal.entity';
 import { NotificationsGateway } from '../../notifications/notifications.gateway';
 import { TasksService } from '../../tasks/application/tasks.service';
 import { TelegramService } from '../../../common/telegram/telegram.service';
+import { AUTO_ASSIGN_CURSOR_KEY, AUTO_ASSIGN_LEADS_KEY, SettingsService } from '../../settings/application/settings.service';
 
 const AGREED_STAGE_ID = 'sotib_olishga_rozi';
 const WON_STAGE_ID = 'yutgan';
@@ -26,8 +27,25 @@ export class DealsService {
     private readonly notifications: NotificationsGateway,
     private readonly users: UsersService,
     private readonly tasks: TasksService,
-    private readonly telegram: TelegramService
+    private readonly telegram: TelegramService,
+    private readonly settings: SettingsService
   ) {}
+
+  // Avtomatik taqsimlash yoqilgan bo'lsa, hali biriktirilmagan yangi lidni navbatdagi
+  // "Online" operatorga round-robin usulida biriktiradi va operator voronkasiga o'tkazadi.
+  async autoAssignToOnlineOperator(deal: DealEntity): Promise<DealEntity> {
+    if (deal.ownerId || deal.operatorId) return deal;
+    const enabled = await this.settings.getBool(AUTO_ASSIGN_LEADS_KEY);
+    if (!enabled) return deal;
+    const operators = await this.users.findOnlineOperators();
+    if (!operators.length) return deal;
+    const cursor = Number(await this.settings.get(AUTO_ASSIGN_CURSOR_KEY)) || 0;
+    const next = operators.find(o => o.id > cursor) || operators[0];
+    deal.operatorId = next.id;
+    deal.stageId = 'op_yangi';
+    await this.settings.set(AUTO_ASSIGN_CURSOR_KEY, String(next.id));
+    return this.deals.save(deal);
+  }
 
   canSee(user: UserEntity, deal: DealEntity) {
     return user.role === UserRole.Admin || user.permissions?.all === true || deal.ownerId === user.id || (user.role === UserRole.Operator && deal.operatorId === user.id);

@@ -15,6 +15,7 @@ import { TasksModule } from './features/tasks/tasks.module';
 import { UsersModule } from './features/users/users.module';
 import { RootController } from './root.controller';
 import { SeedModule } from './seed/seed.module';
+import { SettingsModule } from './features/settings/settings.module';
 
 @Module({
   imports: [
@@ -31,6 +32,7 @@ import { SeedModule } from './seed/seed.module';
     NotificationsModule,
     PaymentAdjustmentsModule,
     AiInsightsModule,
+    SettingsModule,
     SeedModule
   ],
   controllers: [RootController]

@@ -17,7 +17,7 @@ export class IntegrationsController {
     const admin = await this.users.findFirstAdmin();
     if (!admin) throw new UnauthorizedException('Admin topilmadi');
 
-    const deal = await this.deals.create({
+    let deal = await this.deals.create({
       customerName: body.customerName || body.name || body.mijoz || body.ism,
       dealName: body.dealName || body.contract || body.shartnoma || body.kurs,
       phone: body.phone || body.telefon,
@@ -32,6 +32,8 @@ export class IntegrationsController {
       leadChannel: body.leadChannel || body.channel || body.kanal || body.source || '',
       ownerId: body.ownerId || null
     }, admin);
+
+    deal = await this.deals.autoAssignToOnlineOperator(deal);
 
     return { ok: true, deal };
   }
