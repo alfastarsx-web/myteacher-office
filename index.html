@@ -91,6 +91,18 @@ body{font-family:var(--f);background:var(--bg);color:var(--td);display:flex;heig
 .deal-search input::placeholder{color:var(--tl)}
 .btn-flt{display:flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--br);background:var(--wh);border-radius:6px;font-family:var(--f);font-size:12px;color:var(--mu);cursor:pointer}
 .btn-flt svg{width:15px;height:15px}
+.btn-flt.flt-active{border-color:#2563EB;color:#2563EB;background:#EFF6FF}
+.flt-badge{background:#2563EB;color:#fff;border-radius:999px;font-size:10px;font-weight:800;padding:1px 6px;margin-left:2px}
+/* Filtr paneli */
+.filter-panel{display:none;flex-wrap:wrap;gap:10px;padding:10px 24px 12px;border-bottom:1px solid var(--br);background:#F8FAFC;align-items:flex-end}
+.filter-panel.fp-open{display:flex}
+.fp-group{display:flex;flex-direction:column;gap:4px;min-width:140px}
+.fp-group label{font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.3px}
+.fp-group input,.fp-group select{height:32px;border:1px solid var(--br);border-radius:7px;background:var(--wh);font-family:var(--f);font-size:12px;color:var(--td);padding:0 9px;min-width:0}
+.fp-group input:focus,.fp-group select:focus{outline:none;border-color:#2563EB}
+.fp-actions{display:flex;gap:6px;align-items:flex-end;margin-left:auto}
+.fp-clear{padding:6px 14px;border:1px solid var(--br);background:var(--wh);border-radius:7px;font-family:var(--f);font-size:12px;color:var(--mu);cursor:pointer}
+.fp-clear:hover{background:#F1F5F9}
 
 /* ── PAGE (each page is hidden/shown) ── */
 .page{flex:1;display:none;flex-direction:column;overflow:hidden}
@@ -1190,10 +1202,59 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       </div>
       <div class="tbtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83-2.83l.06-.06A1.65 1.65 0 004.68 15a1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 012.83-2.83l.06.06A1.65 1.65 0 009 4.68a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg></div>
     </div>
-    <button class="btn-flt">
+    <button class="btn-flt" id="btnDealFilter" onclick="toggleFilterPanel()">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="6" x2="16" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="6" y1="18" x2="14" y2="18"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="16" cy="18" r="2"/></svg>
-      Filter
+      Filtr<span class="flt-badge" id="fltBadge" style="display:none"></span>
     </button>
+  </div>
+
+  <!-- Filtr paneli -->
+  <div class="filter-panel" id="dealFilterPanel">
+    <div class="fp-group">
+      <label>Sana (dan)</label>
+      <input type="date" id="fpDateFrom" onchange="applyDealFilters()">
+    </div>
+    <div class="fp-group">
+      <label>Sana (gacha)</label>
+      <input type="date" id="fpDateTo" onchange="applyDealFilters()">
+    </div>
+    <div class="fp-group">
+      <label>Agent</label>
+      <select id="fpAgent" onchange="applyDealFilters()">
+        <option value="">Barchasi</option>
+      </select>
+    </div>
+    <div class="fp-group">
+      <label>Bosqich</label>
+      <select id="fpStage" onchange="applyDealFilters()">
+        <option value="">Barchasi</option>
+      </select>
+    </div>
+    <div class="fp-group">
+      <label>Kanal</label>
+      <select id="fpChannel" onchange="applyDealFilters()">
+        <option value="">Barchasi</option>
+        <option value="tg">Telegram</option>
+        <option value="fb">Facebook</option>
+        <option value="ig">Instagram</option>
+        <option value="yt">YouTube</option>
+        <option value="ref">Tavsiya</option>
+        <option value="call">Qo'ng'iroq</option>
+        <option value="walk">Walk-in</option>
+        <option value="other">Boshqa</option>
+      </select>
+    </div>
+    <div class="fp-group">
+      <label>Ilova</label>
+      <select id="fpApp" onchange="applyDealFilters()">
+        <option value="">Barchasi</option>
+        <option value="yes">O'rnatilgan</option>
+        <option value="no">O'rnatilmagan</option>
+      </select>
+    </div>
+    <div class="fp-actions">
+      <button class="fp-clear" onclick="clearDealFilters()">Tozalash</button>
+    </div>
   </div>
 
   <!-- ═══ PAGE: SHARTNOMALAR ═══ -->
@@ -1781,6 +1842,7 @@ let apiToken=localStorage.getItem('mtcrm_token') || '';
 let refreshToken=localStorage.getItem('mtcrm_refresh_token') || '';
 let apiOnline=false;
 let docFilter='all';
+let dealFilters={dateFrom:'',dateTo:'',agentId:'',stageId:'',channel:'',app:''};
 let lastActivityAt=Date.now();
 let idleWarningShown=false;
 let idleAutoOfflineAt=null;
@@ -2176,6 +2238,54 @@ async function loadApiData(){
   }
 }
 function getDealQuery(){ return document.getElementById('dealSearch')?.value.trim().toLowerCase() || ''; }
+
+function toggleFilterPanel(){
+  const panel=document.getElementById('dealFilterPanel');
+  const btn=document.getElementById('btnDealFilter');
+  const open=panel.classList.toggle('fp-open');
+  btn.classList.toggle('flt-active',open);
+  if(open) populateFilterSelects();
+}
+function populateFilterSelects(){
+  // Agent select
+  const agSel=document.getElementById('fpAgent');
+  const agVal=agSel.value;
+  agSel.innerHTML='<option value="">Barchasi</option>'+
+    managers.filter(m=>m.role==='manager'||m.role==='operator').map(m=>`<option value="${m.id}">${esc(m.name)} (${m.role==='operator'?'op':'mn'})</option>`).join('');
+  agSel.value=agVal;
+  // Stage select
+  const stSel=document.getElementById('fpStage');
+  const stVal=stSel.value;
+  const allStages=[...COLS,...OPERATOR_COLS];
+  stSel.innerHTML='<option value="">Barchasi</option>'+
+    allStages.map(c=>`<option value="${c.id}">${esc(c.label)}</option>`).join('');
+  stSel.value=stVal;
+}
+function applyDealFilters(){
+  dealFilters.dateFrom=document.getElementById('fpDateFrom').value;
+  dealFilters.dateTo=document.getElementById('fpDateTo').value;
+  dealFilters.agentId=document.getElementById('fpAgent').value;
+  dealFilters.stageId=document.getElementById('fpStage').value;
+  dealFilters.channel=document.getElementById('fpChannel').value;
+  dealFilters.app=document.getElementById('fpApp').value;
+  // Badge
+  const active=Object.values(dealFilters).filter(Boolean).length;
+  const badge=document.getElementById('fltBadge');
+  if(badge){badge.style.display=active?'':'none';badge.textContent=active;}
+  renderCurrentDeals();
+}
+function clearDealFilters(){
+  dealFilters={dateFrom:'',dateTo:'',agentId:'',stageId:'',channel:'',app:''};
+  ['fpDateFrom','fpDateTo','fpAgent','fpStage','fpChannel','fpApp'].forEach(id=>{
+    const el=document.getElementById(id); if(el)el.value='';
+  });
+  const badge=document.getElementById('fltBadge');
+  if(badge)badge.style.display='none';
+  document.getElementById('btnDealFilter')?.classList.remove('flt-active');
+  document.getElementById('dealFilterPanel')?.classList.remove('fp-open');
+  renderCurrentDeals();
+}
+
 function visibleDeals(){
   const q=getDealQuery();
   const myDeals=currentUserDeals();
@@ -2184,6 +2294,15 @@ function visibleDeals(){
     const pool=managers.find(m=>m.name==='Pool');
     base=base.filter(d=>pool && d.ownerId===pool.id && ![STAGE_WON,'yutqazilgan'].includes(d.col));
   }
+  // Filtrlar
+  const f=dealFilters;
+  if(f.dateFrom) base=base.filter(d=>d.createdAt && d.createdAt.slice(0,10)>=f.dateFrom);
+  if(f.dateTo)   base=base.filter(d=>d.createdAt && d.createdAt.slice(0,10)<=f.dateTo);
+  if(f.agentId)  base=base.filter(d=>String(d.ownerId)===f.agentId || String(d.operatorId)===f.agentId);
+  if(f.stageId)  base=base.filter(d=>d.col===f.stageId);
+  if(f.channel)  base=base.filter(d=>d.leadChannel===f.channel);
+  if(f.app==='yes') base=base.filter(d=>d.appInstalled);
+  if(f.app==='no')  base=base.filter(d=>!d.appInstalled);
   if(!q)return base;
   return base.filter(d=>[customerTitle(d),dealTitle(d),...dealPhones(d),d.date].some(v=>String(v||'').toLowerCase().includes(q)));
 }
