@@ -28,6 +28,10 @@ export class UsersService {
     return this.users.findOne({ where: { role: UserRole.Admin }, order: { id: 'ASC' } });
   }
 
+  async findOnlineOperators() {
+    return this.users.find({ where: { role: UserRole.Operator, status: 'Online' }, order: { id: 'ASC' } });
+  }
+
   publicUser(user: UserEntity) {
     this.reconcileStaleSession(user);
     const { passwordHash: _passwordHash, ...safe } = user;

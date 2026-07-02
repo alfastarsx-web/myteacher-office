@@ -8,9 +8,10 @@ import { NotificationsModule } from '../notifications/notifications.module';
 import { UsersModule } from '../users/users.module';
 import { TasksModule } from '../tasks/tasks.module';
 import { TelegramModule } from '../../common/telegram/telegram.module';
+import { SettingsModule } from '../settings/settings.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([DealEntity]), AuthModule, NotificationsModule, UsersModule, TasksModule, TelegramModule],
+  imports: [TypeOrmModule.forFeature([DealEntity]), AuthModule, NotificationsModule, UsersModule, TasksModule, TelegramModule, SettingsModule],
   controllers: [DealsController],
   providers: [DealsService],
   exports: [DealsService]

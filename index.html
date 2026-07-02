@@ -5568,6 +5568,13 @@ function renderSetContent(key){
       </div>
       <div id="stab-pl">
         <p class="set-desc">Bitimlar bo'limi sizga mijozlar bilan ishlashda yordam beradi. Siz mijozlar so'rovlarini kuzatishingiz, savdo jarayonini bosqichlarga ajratishingiz va har bir bosqich uchun vazifalar belgilashingiz mumkin.</p>
+        ${isAdmin()?`
+        <div class="stage-card" style="margin-bottom:14px">
+          <div class="stage-card-head">
+            <div><div class="stage-title">Lidlarni avtomatik taqsimlash</div><div class="stage-sub">Yoqilganda yangi kelgan lidlar ishda (Online) bo'lgan operatorlarga navbat bilan avtomatik biriktiriladi</div></div>
+            <button id="autoAssignToggle" onclick="toggleAutoAssign()" style="width:40px;height:22px;border-radius:11px;border:none;background:var(--br);position:relative;cursor:pointer;flex-shrink:0"><span style="position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.15s;box-shadow:0 1px 3px rgba(0,0,0,.2)"></span></button>
+          </div>
+        </div>`:''}
         <div class="stage-card">
           <div class="stage-card-head">
             <div><div class="stage-title">Kanban bosqichlari</div><div class="stage-sub">Ustunlar tartibi va nomlari shu yerdan boshqariladi</div></div>
@@ -5609,10 +5616,40 @@ function renderSetContent(key){
       <div id="stab-veb" style="display:none"><p class="set-desc">CRM hodisalari uchun webhook URL larini sozlang.</p><button class="add-lnk"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Yangi webhook</button><div class="empty-msg" style="color:var(--mu);font-weight:400;margin-top:12px">Hech qanday webhook sozlanmagan</div></div>`;
     renderPipelineStages();
     renderTags('');
+    loadCrmSettings();
   } else {
     const labels={kanallar:'Kanallar',jamaodoshlar:'Jamaodoshlar',kredit:'Kredit chaqiruvchi',atribut:'Atribut sozlamalari',kengayt:'Kengaytmalar',chatyo:"Chatlarni yo'naltirish",rescue:'Chat rescue',ilova:'Ilova sozlamalari',profil:'Mening profilim',chiqish:'Chiqish',danchiqish:'CRM dan chiqish'};
     c.innerHTML=`<div class="set-page-title">${labels[key]||key}</div><p class="set-desc">Bu bo'lim hali sozlanmagan.</p>`;
   }
+}
+let crmSettings={autoAssignLeads:false};
+function updateAutoAssignToggle(){
+  const btn=document.getElementById('autoAssignToggle');
+  if(!btn)return;
+  btn.style.background=crmSettings.autoAssignLeads?'#22C55E':'var(--br)';
+  btn.querySelector('span').style.left=crmSettings.autoAssignLeads?'20px':'2px';
+}
+async function loadCrmSettings(){
+  if(!isAdmin()||!apiToken){updateAutoAssignToggle();return;}
+  try{
+    const data=await api('/api/settings');
+    crmSettings={...crmSettings,...data.settings};
+  }catch(err){console.warn('settings fallback',err);}
+  updateAutoAssignToggle();
+}
+async function toggleAutoAssign(){
+  if(!isAdmin()){showToast('Bu sozlama faqat Admin uchun');return;}
+  const next=!crmSettings.autoAssignLeads;
+  if(apiToken){
+    try{
+      const data=await api('/api/settings',{method:'PATCH',body:{autoAssignLeads:next}});
+      crmSettings={...crmSettings,...data.settings};
+    }catch(err){showToast(err.message||'Saqlanmadi');return;}
+  }else{
+    crmSettings.autoAssignLeads=next;
+  }
+  updateAutoAssignToggle();
+  showToast(crmSettings.autoAssignLeads?'Avtomatik taqsimlash yoqildi ✓':'Avtomatik taqsimlash o\'chirildi');
 }
 function switchStab(el,key){
   document.querySelectorAll('.stab').forEach(t=>t.classList.remove('active'));
