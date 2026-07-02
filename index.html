@@ -781,8 +781,8 @@ table.crm-t{width:100%;border-collapse:collapse}
 
 /* Deal workspace */
 .deal-modal{width:min(1120px,calc(100vw - 34px));height:min(760px,calc(100vh - 34px));max-height:none;display:flex;flex-direction:column;overflow:hidden}
-.deal-workspace{display:grid;grid-template-columns:minmax(0,1fr) 330px;min-height:0;flex:1;background:var(--bg)}
-.deal-chat{display:flex;flex-direction:column;min-width:0;background:var(--wh);border-right:1px solid var(--br)}
+.deal-workspace{display:grid;grid-template-columns:minmax(0,1fr) 330px;grid-template-rows:minmax(0,1fr);min-height:0;flex:1;background:var(--bg)}
+.deal-chat{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--wh);border-right:1px solid var(--br)}
 .deal-chat-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 20px 14px;border-bottom:1px solid var(--br);flex-shrink:0}
 .deal-title{font-size:18px;font-weight:700;color:var(--td)}
 .deal-subtitle{font-size:12px;color:var(--mu);margin-top:5px}
@@ -3402,7 +3402,7 @@ function renderWorkspaceTimeline(d){
       <div class="task-card-btns"><button class="btn-toldirish" onclick="toggleWorkspaceTask(${t.id || 0})">${t.done?'Qaytarish':"To'ldirish"}</button></div>
     </div>
   `).join('');
-  const commentCards=(d.comments||[]).map(c=>`
+  const commentCards=[...(d.comments||[])].sort((a,b)=>new Date(a.time||0)-new Date(b.time||0)).map(c=>`
     <div class="msg-row">
       <div class="msg-av adm">🧑</div>
       <div class="msg-b">
@@ -3429,6 +3429,8 @@ function renderWorkspaceTimeline(d){
         ${taskCards || '<div class="msg-system">Hozircha vazifa yo‘q</div>'}
       </div>
     </div>`;
+  const tl=document.getElementById('dwTimeline');
+  tl.scrollTop=tl.scrollHeight;
 }
 function renderWorkspaceTasks(d){
   const tasks=d.tasks||[];
