@@ -2266,9 +2266,9 @@ function populateFilterSelects(){
   // Stage select
   const stSel=document.getElementById('fpStage');
   const stVal=stSel.value;
-  const allStages=[...COLS,...OPERATOR_COLS];
   stSel.innerHTML='<option value="">Barchasi</option>'+
-    allStages.map(c=>`<option value="${c.id}">${esc(c.label)}</option>`).join('');
+    `<optgroup label="Menejer voronkasi">${COLS.map(c=>`<option value="${c.id}">${esc(c.label)}</option>`).join('')}</optgroup>`+
+    `<optgroup label="Operator voronkasi">${OPERATOR_COLS.map(c=>`<option value="${c.id}">${esc(c.label)}</option>`).join('')}</optgroup>`;
   stSel.value=stVal;
 }
 function applyDealFilters(){
@@ -2317,7 +2317,17 @@ function visibleDeals(){
   return base.filter(d=>[customerTitle(d),dealTitle(d),...dealPhones(d),d.date].some(v=>String(v||'').toLowerCase().includes(q)));
 }
 function visibleStages(){
-  if(isAdmin()) return COLS;
+  if(isAdmin()){
+    const f=dealFilters;
+    // Bosqich filtri tanlangan bo'lsa faqat o'sha ustunni ko'rsatamiz (operator bosqichi ham bo'lishi mumkin)
+    if(f.stageId) return [...COLS,...OPERATOR_COLS].filter(c=>c.id===f.stageId);
+    // Operator agent tanlangan bo'lsa uning lidlari op_* bosqichlarda — operator ustunlarini ham qo'shamiz
+    if(f.agentId){
+      const ag=managers.find(m=>String(m.id)===f.agentId);
+      if(ag && ag.role==='operator') return [...OPERATOR_COLS,...COLS];
+    }
+    return COLS;
+  }
   if(isOperator()) return OPERATOR_COLS;
   return COLS.filter(c=>c.id!=='yutqazilgan');
 }
