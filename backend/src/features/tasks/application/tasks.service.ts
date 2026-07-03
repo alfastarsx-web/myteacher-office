@@ -5,12 +5,14 @@ import { UserRole } from '../../users/domain/user-role.enum';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { TaskEntity } from '../infrastructure/task.entity';
 import { NotificationsGateway } from '../../notifications/notifications.gateway';
+import { UsersService } from '../../users/application/users.service';
 
 @Injectable()
 export class TasksService {
   constructor(
     @InjectRepository(TaskEntity) private readonly tasks: Repository<TaskEntity>,
-    private readonly notifications: NotificationsGateway
+    private readonly notifications: NotificationsGateway,
+    private readonly users: UsersService
   ) {}
 
   list(user: UserEntity) {
@@ -21,6 +23,7 @@ export class TasksService {
 
   async create(body: any, user: UserEntity) {
     this.assertCrmAccess(user);
+    await this.users.markActiveOnAction(user.id);
     const title = String(body.title || '').trim();
     if (!title) throw new BadRequestException('Vazifa nomi kerak');
     const ownerId = this.canManageAll(user) ? Number(body.ownerId || user.id) : user.id;
@@ -47,6 +50,7 @@ export class TasksService {
 
   async update(id: number, body: any, user: UserEntity) {
     this.assertCrmAccess(user);
+    await this.users.markActiveOnAction(user.id);
     const task = await this.tasks.findOne({ where: { id } });
     if (!task || (!this.canManageAll(user) && task.ownerId !== user.id)) throw new NotFoundException('Vazifa topilmadi');
     ['title', 'due'].forEach(key => {
