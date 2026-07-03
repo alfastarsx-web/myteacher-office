@@ -268,11 +268,17 @@ export class DealsService {
       phones: deal.phones,
       stageId: 'malakali',
       price: 0,
-      note: 'Operator tomonidan malakali qilindi',
+      note: deal.note ? `${deal.note} · Operator tomonidan malakali qilindi` : 'Operator tomonidan malakali qilindi',
       adSource: deal.adSource,
       registeredAt: deal.registeredAt,
+      age: deal.age,
       learningGoal: deal.learningGoal,
       leadChannel: deal.leadChannel,
+      // Operator yozgan commentlar menejerga ham ko'rinishi kerak — aks holda
+      // mijoz bilan bo'lgan butun muloqot tarixi yo'qolib qoladi.
+      comments: Array.isArray(deal.comments) ? [...deal.comments] : [],
+      appInstalled: deal.appInstalled,
+      appInstalledAt: deal.appInstalledAt,
       qualAt: deal.qualAt,
       ownerId: null,
       operatorId: deal.operatorId || user.id,
