@@ -1592,7 +1592,10 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       <section class="deal-chat">
         <div class="deal-chat-head">
           <div>
-            <div class="deal-title" id="dwCustomer">Mijoz nomi</div>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+              <div class="deal-title" id="dwCustomer">Mijoz nomi</div>
+              <span id="dwHeadPhone" style="font-size:16px;font-weight:800;color:var(--blue);white-space:nowrap"></span>
+            </div>
             <div class="deal-subtitle" id="dwDealName">Shartnoma nomi</div>
           </div>
           <div class="deal-head-actions">
@@ -1956,6 +1959,13 @@ function daysSinceUpdate(d){
 }
 function dealTitle(d){ return d.dealName || d.name || 'Shartnoma nomi yo‘q'; }
 function dealPhones(d){ return [...new Set([...(Array.isArray(d.phones)?d.phones:[]), d.phone].map(v=>String(v||'').trim()).filter(Boolean))]; }
+// +998949137570 -> "+998 94 913-75-70" ko'rinishida, o'qishga oson formatlaydi
+function formatPhoneUz(phone){
+  const digits=String(phone||'').replace(/\D/g,'');
+  if(digits.length===12&&digits.startsWith('998'))return `+998 ${digits.slice(3,5)} ${digits.slice(5,8)}-${digits.slice(8,10)}-${digits.slice(10)}`;
+  if(digits.length===9)return `${digits.slice(0,2)} ${digits.slice(2,5)}-${digits.slice(5,7)}-${digits.slice(7)}`;
+  return String(phone||'').trim();
+}
 // Telefon raqamini bosilganda qurilmaning qo'ng'iroq qilish ekraniga o'tadigan link qilib chiqaradi
 function telLink(phone){
   if(!phone)return '—';
@@ -3345,12 +3355,13 @@ function renderDealWorkspace(){
   if(!d)return;
   ensureDealActivity(d);
   document.getElementById('dwCustomer').textContent=customerTitle(d);
+  document.getElementById('dwHeadPhone').innerHTML=dealPhones(d).length?telLink(formatPhoneUz(dealPhones(d)[0])):'';
   document.getElementById('dwDealName').textContent=dealTitle(d);
   document.getElementById('dwSideCustomer').textContent=customerTitle(d);
   document.getElementById('dwUserName').textContent=customerTitle(d);
   document.getElementById('dwSideDeal').textContent=dealTitle(d);
   document.getElementById('dwSideDate').textContent=d.date;
-  document.getElementById('dwPhones').innerHTML=dealPhones(d).length?dealPhones(d).map(p=>`<div class="phone-line">${telLink(p)}</div>`).join(''):'<div class="phone-line">Telefon yo‘q</div>';
+  document.getElementById('dwPhones').innerHTML=dealPhones(d).length?dealPhones(d).map(p=>`<div class="phone-line">${telLink(formatPhoneUz(p))}</div>`).join(''):'<div class="phone-line">Telefon yo‘q</div>';
   document.getElementById('dwPrice').value=d.price ? formatMoney(d.price) : '';
   document.getElementById('dwAdSource').textContent=d.adSource || '—';
   document.getElementById('dwRegisteredAt').textContent=d.registeredAt || '—';
