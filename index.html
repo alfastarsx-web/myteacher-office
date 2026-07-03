@@ -2080,7 +2080,7 @@ function kanbanTaskInfo(deal){
   if(!task)return {sort:Number.MAX_SAFE_INTEGER,html:`<span class="vlink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/></svg><span class="vlink-label">Vazifa yo'q</span></span>`};
   const mins=Math.ceil((task.dueTime-Date.now())/60000);
   const cls=mins<=3?'task-red task-alert':mins<=30?'task-yellow':mins<=180?'task-blue':'';
-  return {sort:task.dueTime,html:`<span class="vlink ${cls}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/></svg><span class="vlink-label">Bog‘lanish shart · ${esc(task.due)}</span></span>`};
+  return {sort:task.dueTime,html:`<span class="vlink ${cls}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/></svg><span class="vlink-label">${esc(task.due)}</span></span>`};
 }
 function parseMoneyInput(value){
   return parseInt(String(value||'').replace(/[^\d]/g,''),10)||0;
