@@ -72,6 +72,7 @@ export class DealsService {
 
   async create(body: any, user: UserEntity) {
     this.assertCrmAccess(user);
+    await this.users.markActiveOnAction(user.id);
     const customerName = String(body.customerName || '').trim();
     if (!customerName) throw new BadRequestException('Mijoz nomi kerak');
     const phones = this.normalizePhones(body);
@@ -143,6 +144,7 @@ export class DealsService {
 
   async update(id: number, body: any, user: UserEntity) {
     this.assertCrmAccess(user);
+    await this.users.markActiveOnAction(user.id);
     const deal = await this.deals.findOne({ where: { id } });
     if (!deal || !this.canSee(user, deal)) throw new NotFoundException('Shartnoma topilmadi');
     const prevStageId = deal.stageId;

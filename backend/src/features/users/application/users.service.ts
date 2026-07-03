@@ -28,6 +28,19 @@ export class UsersService {
     return this.users.findOne({ where: { role: UserRole.Admin }, order: { id: 'ASC' } });
   }
 
+  // Taymer avtomatik OFF bo'lib qolgan xodim haqiqiy ish harakati (comment, vazifa,
+  // bosqich o'zgartirish) qilsa, uni qayta Online qilib taymerni davom ettiramiz.
+  // Oddiy ko'rish (GET) so'rovlari bunga kirmaydi — bu metod faqat mutatsiyalarda chaqiriladi.
+  async markActiveOnAction(userId: number) {
+    const user = await this.findById(userId);
+    if (!user || user.status === 'Online') return;
+    // Admin hisobiga tegmaymiz: n8n webhook lidlari admin nomidan yaratiladi va
+    // ular haqiqiy ish harakati emas — aks holda admin taymeri o'z-o'zidan yonib ketardi.
+    if (user.role === UserRole.Admin) return;
+    this.applyStatus(user, 'Online');
+    await this.users.save(user);
+  }
+
   async findOnlineOperators() {
     return this.users.find({ where: { role: UserRole.Operator, status: 'Online' }, order: { id: 'ASC' } });
   }
