@@ -195,6 +195,10 @@ export class DealsService {
     if (body.ownerId !== undefined && user.role === UserRole.Admin) {
       const prevOwnerId = deal.ownerId;
       deal.ownerId = this.parseOwnerId(body.ownerId);
+      // Operator voronkasidagi lid menejerga biriktirilsa, bosqichi ham menejer voronkasiga o'tadi
+      if (deal.ownerId && body.stageId === undefined && OPERATOR_STAGE_IDS.includes(deal.stageId)) {
+        deal.stageId = this.mapOperatorStageToManager(deal.stageId);
+      }
       // Deal yangi menejerga biriktirildi — unga xabar yuboramiz
       if (deal.ownerId && deal.ownerId !== prevOwnerId) {
         this.notifications.sendToUser(deal.ownerId, {
@@ -246,6 +250,12 @@ export class DealsService {
     return this.deals.save(deal);
   }
 
+  private mapOperatorStageToManager(stageId: string) {
+    if (stageId === 'op_malakali') return 'malakali';
+    if (stageId === 'op_yutqazilgan') return 'yutqazilgan';
+    return 'yangi'; // op_yangi, op_qayta
+  }
+
   // Operator lidni "Malakali" qilganda, menejer voronkasiga ownerId=null bilan ko'chiramiz.
   // Barcha menejerlar ko'radi, admin keyin biriktirib qo'yadi.
   private async handoffQualifiedLead(deal: DealEntity, user: UserEntity) {
@@ -290,7 +300,14 @@ export class DealsService {
     } else {
       // Menejerga biriktirish
       const ownerId = this.parseOwnerId(body.ownerId);
-      rows.forEach(deal => { deal.ownerId = ownerId; });
+      rows.forEach(deal => {
+        deal.ownerId = ownerId;
+        // Operator voronkasidagi lid menejerga o'tsa, bosqichini ham menejer voronkasiga
+        // o'tkazamiz — aks holda menejer kanbanida op_* ustuni yo'qligi uchun lid ko'rinmaydi.
+        if (ownerId && OPERATOR_STAGE_IDS.includes(deal.stageId)) {
+          deal.stageId = this.mapOperatorStageToManager(deal.stageId);
+        }
+      });
     }
 
     const saved = await this.deals.save(rows);
@@ -335,10 +352,21 @@ export class DealsService {
       .andWhere('deal.ownerId IS NULL')
       .andWhere('deal.stageId NOT IN (:...stageIds)', { stageIds: OPERATOR_STAGE_IDS })
       .getMany();
-    if (!rows.length) return { fixed: 0 };
-    rows.forEach(deal => { deal.stageId = 'op_yangi'; });
-    await this.deals.save(rows);
-    return { fixed: rows.length, ids: rows.map(row => row.id) };
+    if (rows.length) {
+      rows.forEach(deal => { deal.stageId = 'op_yangi'; });
+      await this.deals.save(rows);
+    }
+    // Teskari holat: menejerga biriktirilgan (ownerId bor), lekin bosqichi hali operator
+    // voronkasida qolib ketgan lidlar — menejer kanbanida ko'rinmay qoladi, shularni ham tuzatamiz.
+    const stuck = await this.deals.createQueryBuilder('deal')
+      .where('deal.ownerId IS NOT NULL')
+      .andWhere('deal.stageId IN (:...stageIds)', { stageIds: OPERATOR_STAGE_IDS })
+      .getMany();
+    if (stuck.length) {
+      stuck.forEach(deal => { deal.stageId = this.mapOperatorStageToManager(deal.stageId); });
+      await this.deals.save(stuck);
+    }
+    return { fixed: rows.length + stuck.length, ids: [...rows, ...stuck].map(row => row.id) };
   }
 
   async delete(id: number, user: UserEntity) {
