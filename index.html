@@ -1606,19 +1606,19 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
         <div class="deal-timeline" id="dwTimeline"></div>
         <div class="deal-composer">
           <div class="composer-tabs">
-            <button class="composer-tab active" onclick="switchComposer(this,'chat')">Chat</button>
-            <button class="composer-tab" onclick="switchComposer(this,'sms')">SMS</button>
-            <button class="composer-tab" onclick="switchComposer(this,'comment')">Comment</button>
+            <button class="composer-tab active" onclick="switchComposer(this,'comment')">Comment</button>
             <button class="composer-tab" onclick="switchComposer(this,'task')">Vazifa</button>
+            <button class="composer-tab" onclick="switchComposer(this,'chat')">Chat</button>
+            <button class="composer-tab" onclick="switchComposer(this,'sms')">SMS</button>
           </div>
           <div class="composer-body">
-            <div class="composer-hint" id="dwComposerHint"></div>
+            <div class="composer-hint show" id="dwComposerHint">Comment faqat jamoa ichida ko‘rinadi va shartnomaga saqlanadi.</div>
             <div class="workspace-task-form" id="dwTaskForm">
               <input id="dwTaskDate" type="date">
               <input id="dwTaskTime" type="time">
               <select id="dwTaskOwner"></select>
             </div>
-            <textarea class="composer-input" id="dwComposerText" placeholder="Mijozga xabar yozing..."></textarea>
+            <textarea class="composer-input" id="dwComposerText" placeholder="Ichki comment yozing..."></textarea>
             <div class="composer-tools">
               <button class="composer-tool" title="Format"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="4 7 4 4 20 4 20 7"/><line x1="9" y1="20" x2="15" y2="20"/><line x1="12" y1="4" x2="12" y2="20"/></svg></button>
               <button class="composer-tool" title="Emoji"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg></button>
@@ -1839,7 +1839,7 @@ const BAR_DATA = [];
 let deals = [];
 let managers = [];
 let currentManagerId=null, selectedTeamManagerId=null, selectedCareerManagerId=null;
-let nid=4, curView='kanban', editId=null, dragId=null, workspaceDealId=null, composerMode='chat';
+let nid=4, curView='kanban', editId=null, dragId=null, workspaceDealId=null, composerMode='comment';
 let selectedDealIds=new Set();
 let apiToken=localStorage.getItem('mtcrm_token') || '';
 let refreshToken=localStorage.getItem('mtcrm_refresh_token') || '';
