@@ -1,7 +1,7 @@
-import { Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Get, Patch, UseGuards } from '@nestjs/common';
 import { AdminGuard } from '../../auth/presentation/admin.guard';
 import { JwtAuthGuard } from '../../auth/presentation/jwt-auth.guard';
-import { AUTO_ASSIGN_LEADS_KEY, SettingsService } from '../application/settings.service';
+import { AUTO_ASSIGN_LEADS_KEY, COMP_SETTINGS_KEY, SettingsService } from '../application/settings.service';
 
 @Controller('settings')
 export class SettingsController {
@@ -18,6 +18,12 @@ export class SettingsController {
   async update(@Body() body: any) {
     if (body.autoAssignLeads !== undefined) {
       await this.settings.set(AUTO_ASSIGN_LEADS_KEY, body.autoAssignLeads ? 'true' : 'false');
+    }
+    if (body.compSettings !== undefined) {
+      if (typeof body.compSettings !== 'object' || body.compSettings === null) {
+        throw new BadRequestException('compSettings obyekt bo\'lishi kerak');
+      }
+      await this.settings.set(COMP_SETTINGS_KEY, JSON.stringify(body.compSettings));
     }
     return { settings: await this.settings.publicSettings() };
   }

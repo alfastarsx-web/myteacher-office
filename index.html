@@ -1531,7 +1531,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
         <div class="set-nav-group">SISTEMA</div>
         <div class="nav-item" onclick="setNavItem(this,'kanallar')">Kanallar</div>
         <div class="nav-item" onclick="setNavItem(this,'jamaodoshlar')">Jamaodoshlar</div>
-        <div class="nav-item" onclick="setNavItem(this,'kredit')">Kredit chaqiruvchi</div>
+        <div class="nav-item" onclick="setNavItem(this,'kpibonus')">KPI va Bonuslar</div>
         <div class="nav-item active" onclick="setNavItem(this,'crmsoz')">CRM sozlamalari</div>
         <div class="nav-item" onclick="setNavItem(this,'atribut')">Atribut sozlamalari</div>
         <div class="nav-item" onclick="setNavItem(this,'kengayt')">Kengaytmalar</div>
@@ -1855,8 +1855,87 @@ const POSITION_ORDER=['LEARNER','TRAINEE','NEW_MANAGER','EMPLOYEE','RESIDENT_3',
 const POSITION_DISPLAY_ORDER=[...POSITION_ORDER].reverse();
 const POSITION_LABELS={LEARNER:"O'rganuvchi",TRAINEE:'Amaliyotchi',NEW_MANAGER:'Yangi Menejer',EMPLOYEE:'Xodim',RESIDENT_3:'III-darajali Rezident',RESIDENT_2:'II-darajali Rezident',RESIDENT_1:'I-darajali Rezident'};
 const POSITION_GRADIENTS={LEARNER:'gradient-gray',TRAINEE:'gradient-amber',NEW_MANAGER:'gradient-amber',EMPLOYEE:'gradient-blue',RESIDENT_3:'gradient-green',RESIDENT_2:'gradient-teal',RESIDENT_1:'gradient-gold'};
-const COURSE_BONUSES={1:80000,2:100000,3:120000,4:160000,5:180000,6:240000};
 const KPI_TARGETS={dailyFullCalls:4,dailySales:1,weeklyFullCalls:28,weeklySales:5,monthlySales:15,monthlyRevenue:20000000};
+// ════════════════════════════════════════
+//  KPI VA BONUS SOZLAMALARI (Admin → KPI va Bonuslar sahifasidan boshqariladi)
+//  Barcha bonus hisob-kitoblari compSettings dan o'qiydi; quyidagi defaultlar
+//  backend sozlamasi bo'lmaganda (yoki demo rejimda) ishlatiladi.
+// ════════════════════════════════════════
+const DEFAULT_COMP_SETTINGS={
+  positions:[
+    {id:'operator',label:'Operator',builtin:true},
+    {id:'sales_manager',label:'Sales manager',builtin:true},
+    {id:'academic_manager',label:'Academic Menejer',builtin:true},
+    {id:'mentor',label:'Mentor',builtin:true},
+    {id:'developer',label:'Developer',builtin:true},
+    {id:'ceo_assistant',label:'CEO Assistant',builtin:true},
+    {id:'marketing_manager',label:'Marketing manager',builtin:true},
+    {id:'administrator',label:'Administrator',builtin:true}
+  ],
+  manager:{
+    fixSalary:2000000,                                  // EMPLOYEE+ darajadagi menejer uchun oylik fix
+    fullCall:{limit:10,rate:5000,rateAbove:7000},       // limit tagacha rate, oshsa hammasi rateAbove
+    saleReward:{mode:'course'},                         // 'course' — kurs oyiga qarab, 'percent' — sotuv summasidan foiz
+    courseBonuses:{1:80000,2:100000,3:120000,4:160000,5:180000,6:240000},
+    percentTiers:[{upTo:20000000,percent:5},{upTo:null,percent:7}], // upTo:null = undan yuqori
+    cashBonus:50000,                                    // har bir naqd sotuv uchun
+    tripleEvery:3,tripleBonus:100000                    // har tripleEvery sotuv uchun tripleBonus
+  },
+  operator:{
+    qual:{limit:5,rate:7000,rateAbove:10000},
+    app:{limit:10,rate:500,rateAbove:500},
+    saleBonus:20000,                                    // operator lidi sotilganda
+    fastSale:{days:3,amount:0}                          // qual N kun ichida sotilsa, shu qual uchun qo'shimcha
+  }
+};
+let compSettings=JSON.parse(JSON.stringify(DEFAULT_COMP_SETTINGS));
+function mergeCompSettings(saved){
+  const base=JSON.parse(JSON.stringify(DEFAULT_COMP_SETTINGS));
+  if(!saved || typeof saved!=='object')return base;
+  const deepMerge=(dst,src)=>{
+    Object.keys(src||{}).forEach(k=>{
+      if(src[k] && typeof src[k]==='object' && !Array.isArray(src[k]) && dst[k] && typeof dst[k]==='object' && !Array.isArray(dst[k]))deepMerge(dst[k],src[k]);
+      else if(src[k]!==undefined)dst[k]=src[k];
+    });
+    return dst;
+  };
+  const merged=deepMerge(base,saved);
+  if(Array.isArray(saved.positions) && saved.positions.length)merged.positions=saved.positions;
+  if(Array.isArray(saved.manager?.percentTiers) && saved.manager.percentTiers.length)merged.manager.percentTiers=saved.manager.percentTiers;
+  return merged;
+}
+async function loadCompSettings(){
+  if(!apiToken){
+    try{compSettings=mergeCompSettings(JSON.parse(localStorage.getItem('mtcrm_comp_settings')||'null'));}catch{compSettings=mergeCompSettings(null);}
+    return;
+  }
+  try{
+    const data=await api('/api/settings');
+    compSettings=mergeCompSettings(data.settings?.compSettings);
+  }catch(err){console.warn('comp settings fallback:',err.message);}
+}
+// limit tagacha har biri rate, limitdan oshsa HAMMASI rateAbove stavkasida
+function tierBonus(count,tier){
+  if(!count)return 0;
+  return count<=Number(tier.limit||0)?count*Number(tier.rate||0):count*Number(tier.rateAbove||0);
+}
+// Sotuv summasiga mos foizni topish: birinchi upTo>=revenue qatlam, upTo:null = cheksiz
+function percentForRevenue(revenue,tiers){
+  const list=(tiers||[]).slice().sort((a,b)=>(a.upTo==null?Infinity:a.upTo)-(b.upTo==null?Infinity:b.upTo));
+  for(const t of list){ if(t.upTo==null || revenue<=Number(t.upTo))return Number(t.percent||0); }
+  return list.length?Number(list[list.length-1].percent||0):0;
+}
+// Menejer sotuv mukofoti: rejimga qarab kurs bonuslari yig'indisi yoki summadan foiz.
+// percent rejimida foiz stavkasi rateRevenue (odatda oy boshidan jami) bo'yicha aniqlanadi.
+function managerSalesReward(salesList,rateRevenue){
+  const mc=compSettings.manager;
+  const revenue=salesList.reduce((s,d)=>s+Number(d.price||0),0);
+  if(mc.saleReward.mode==='percent'){
+    const pct=percentForRevenue(rateRevenue!=null?rateRevenue:revenue,mc.percentTiers);
+    return Math.round(revenue*pct/100);
+  }
+  return salesList.reduce((sum,d)=>sum+(Number(mc.courseBonuses[saleDurationMonths(d)])||0),0);
+}
 
 function currentUser(){ return managers.find(m=>m.id===currentManagerId) || {id:null,name:'',role:'manager',status:'Offline',permissions:{crm:false},todayOnlineSeconds:0}; }
 function isAdmin(){ return currentUser().role==='admin'; }
@@ -2180,16 +2259,18 @@ async function logout(){
 async function loadApiData(){
   if(!apiToken)return false;
   try{
-    const [meData,stageData,teamData,dealData,taskData,docData,adjustmentData]=await Promise.all([
+    const [meData,stageData,teamData,dealData,taskData,docData,adjustmentData,settingsData]=await Promise.all([
       api('/api/auth/me'),
       api('/api/stages'),
       api('/api/team'),
       api('/api/deals'),
       api('/api/tasks'),
       api('/api/docs'),
-      api('/api/payment-adjustments').catch(()=>({adjustments:[]}))
+      api('/api/payment-adjustments').catch(()=>({adjustments:[]})),
+      api('/api/settings').catch(()=>({settings:{}}))
     ]);
     paymentAdjustments=adjustmentData.adjustments||[];
+    compSettings=mergeCompSettings(settingsData.settings?.compSettings);
     if(meData.user){
       currentManagerId=meData.user.id;
       selectedTeamManagerId=selectedTeamManagerId || meData.user.id;
@@ -2636,12 +2717,13 @@ function renderDealStats(){
   renderPoolAlert();
   if(isOperator()){
     const op = calculateOperatorBonus(currentUser());
-    const qualProgress = Math.min(100, op.todayQual >= 6 ? 100 : Math.round(op.todayQual / 5 * 100));
+    const qualLimit = Number(compSettings.operator.qual.limit) || 5;
+    const qualProgress = Math.min(100, op.todayQual > qualLimit ? 100 : Math.round(op.todayQual / qualLimit * 100));
     const cards = [
       {icon:'👥', label:'Ishga olingan', value:op.todayProcessed, unit:'ta lid', sub:`Bugun +${op.todayContacts} yangi`, color:'#2563EB', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', accent:'#BFDBFE', progress:Math.min(100,op.todayProcessed*5)},
       {icon:'🏅', label:'Bu oydagi bonuslarim', value:formatMoney(op.monthBonus), unit:'', sub:`Qual: ${op.monthQual} ta · Sotuv: ${op.monthSold} ta · Ilova: ${op.monthAppBonus?formatMoney(op.monthAppBonus):'0 UZS'}`, color:'#7C3AED', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', accent:'#C4B5FD', progress:Math.min(100,Math.round(op.monthBonus/500000*100))},
       {icon:'📱', label:'Ilova o\'rnatilgan', value:op.todayApp, unit:'ta', sub:`Bonus oladi: ${op.todayAppBonus} ta · +${formatMoney(op.appBonus)}`, color:'#0891B2', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', accent:'#A5F3FC', progress:Math.min(100,op.todayApp*10)},
-      {icon:'💰', label:'Bugungi bonus', value:formatMoney(op.todayBonus), unit:'', sub:`Q: ${formatMoney(op.qualBonus)} · S: ${formatMoney(op.saleBonus)} · I: ${formatMoney(op.appBonus)}`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC', progress:Math.min(100,Math.round(op.todayBonus/100000*100))},
+      {icon:'💰', label:'Bugungi bonus', value:formatMoney(op.todayBonus), unit:'', sub:`Q: ${formatMoney(op.qualBonus)} · S: ${formatMoney(op.saleBonus)} · I: ${formatMoney(op.appBonus)}${op.fastBonus?` · Tez: ${formatMoney(op.fastBonus)}`:''}`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC', progress:Math.min(100,Math.round(op.todayBonus/100000*100))},
     ];
     renderKpiCards(cards);
     return;
@@ -2661,7 +2743,9 @@ function renderDealStats(){
   }
   // Menejer metrikalar
   const m = calculateManagerOverview(currentUser());
-  const salesBonus = calculateManagerCompensation(currentUser()).earnings.netPayment;
+  // Bugungi bonus = bugun yutilgan sotuvlar mukofoti + bugungi full call bonusi
+  // (avval bu yerda butun davr bo'yicha netPayment ishlatilgan edi — bu xato edi)
+  const salesBonus = m.todaySalesBonus;
   const todayBonus = salesBonus + m.fullCallBonus;
   const managerCards = [
     {icon:'🎯', label:'Olingan Qual lid', value:`${m.todayQualReceived} ta`, sub:'Bugun operatordan kelgan', color:'#7C3AED', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', accent:'#C4B5FD'},
@@ -3041,7 +3125,7 @@ async function moveDealToStage(deal,target,options={}){
       if(deal.operatorId){
         deal.wonAt = new Date().toISOString();
         const opUser = managerById(deal.operatorId);
-        if(opUser) showToast(`🎯 Operator ${esc(opUser.name.split(' ')[0])} uchun +20 000 so'm bonus yozildi`);
+        if(opUser) showToast(`🎯 Operator ${esc(opUser.name.split(' ')[0])} uchun +${formatMoney(compSettings.operator.saleBonus)} bonus yozildi`);
       }
     }
     // Operator malakali qilganda → menejer voronkasiga yangi lid qo'shish
@@ -3592,7 +3676,7 @@ async function toggleAppInstalled(){
     btn.querySelector('span').style.left=d.appInstalled?'18px':'2px';
   }
   if(d.appInstalled && d.operatorId){
-    showToast('📱 Ilova o‘rnatildi — +500 so‘m bonus yozildi');
+    showToast(`📱 Ilova o‘rnatildi — +${formatMoney(compSettings.operator.app.rate)} bonus yozildi`);
   }
   saveDealExtra(d.id, {appInstalled: d.appInstalled, appInstalledAt: d.appInstalledAt});
   if(apiToken){
@@ -3759,11 +3843,11 @@ function calculateManagerCompensation(user,periodDate=new Date()){
   const totalSalesCount=salesList.length;
   const totalRevenue=salesList.reduce((sum,d)=>sum+Number(d.price||0),0);
   const position=managerPosition(user,salesList,totalRevenue);
-  const courseBonus=salesList.reduce((sum,d)=>sum+(COURSE_BONUSES[saleDurationMonths(d)]||0),0);
+  const courseBonus=managerSalesReward(salesList,totalRevenue);
   const cashSalesCount=salesList.filter(isCashSale).length;
-  const cashBonus=cashSalesCount*50000;
-  const tripleBonus=Math.floor(totalSalesCount/3)*100000;
-  const fixedSalary=isEmployeePlus(position)?2000000:0;
+  const cashBonus=cashSalesCount*Number(compSettings.manager.cashBonus||0);
+  const tripleBonus=Math.floor(totalSalesCount/Math.max(1,Number(compSettings.manager.tripleEvery||3)))*Number(compSettings.manager.tripleBonus||0);
+  const fixedSalary=isEmployeePlus(position)?Number(compSettings.manager.fixSalary||0):0;
   const myAdjustments=paymentAdjustments.filter(x=>!x.managerId || String(x.managerId)===String(user.id));
   const bonusAdjustments=myAdjustments.filter(x=>x.amount>0).reduce((s,x)=>s+x.amount,0);
   const penalties=Math.abs(myAdjustments.filter(x=>x.amount<0).reduce((s,x)=>s+x.amount,0));
@@ -3807,17 +3891,22 @@ function calculateManagerOverview(user){
     return false;
   };
   const todayFullCall = myDeals.filter(isFullCallToday).length;
-  // Full call bonusi: 10 tagacha har biri 5000 so'm, 11+ bo'lsa hammasi 7000 so'mdan
-  const fullCallBonus = todayFullCall === 0 ? 0
-    : todayFullCall <= 10 ? todayFullCall * 5000
-    : todayFullCall * 7000;
+  // Full call bonusi: sozlamadagi limit tagacha rate, oshsa hammasi rateAbove
+  const fullCallBonus = tierBonus(todayFullCall, compSettings.manager.fullCall);
 
   // Bugungi sotuv
   const wonToday = myDeals.filter(d => d.col === STAGE_WON && tashkentDateKey(d.updatedAt || d.createdAt) === todayKey);
   const todaySoldCount = wonToday.length;
   const todaySoldAmount = wonToday.reduce((sum,d) => sum + Number(d.price || 0), 0);
+  // Bugungi sotuv mukofoti — faqat bugun yutilgan bitimlar bo'yicha; percent rejimida
+  // foiz stavkasi oy boshidan jami sotuv summasi bo'yicha aniqlanadi
+  const monthKey = todayKey.slice(0,7);
+  const monthRevenue = myDeals
+    .filter(d => d.col === STAGE_WON && tashkentDateKey(d.updatedAt || d.createdAt).slice(0,7) === monthKey)
+    .reduce((sum,d) => sum + Number(d.price || 0), 0);
+  const todaySalesBonus = managerSalesReward(wonToday, monthRevenue);
 
-  return {todayQualReceived, todayFullCall, fullCallBonus, todaySoldCount, todaySoldAmount};
+  return {todayQualReceived, todayFullCall, fullCallBonus, todaySoldCount, todaySoldAmount, todaySalesBonus};
 }
 // ════════════════════════════════════════
 //  ADMIN UMUMIY KO'RSATKICHLARI (barcha xodimlar bo'yicha, bugun)
@@ -3936,13 +4025,25 @@ function calculateOperatorBonus(user){
   const todayApp = appDeals.filter(isAppToday).length;
   const todayAppBonus = appBonusDeals.filter(isAppToday).length;
 
-  // Bonus hisoblash
-  const qualBonus = todayQual === 0 ? 0
-    : todayQual <= 5 ? todayQual * 7000
-    : todayQual * 10000;
-  const saleBonus = todaySold * 20000;
-  const appBonus = todayAppBonus * 500;
-  const todayBonus = qualBonus + saleBonus + appBonus;
+  // Tez sotuv bonusi: qual qilingan lid sozlamadagi N kun ichida sotilsa, shu qual uchun qo'shimcha
+  const fastCfg = compSettings.operator.fastSale;
+  const isFastSale = d => {
+    if (!d.qualAt || !Number(fastCfg.amount)) return false;
+    const soldTs = new Date(d.wonAt || d.updatedAt || d.createdAt).getTime();
+    const qualTs = new Date(d.qualAt).getTime();
+    return soldTs >= qualTs && soldTs - qualTs <= Number(fastCfg.days || 3) * 86400000;
+  };
+  const fastDeals = soldDeals.filter(isFastSale);
+  const soldDateKey = d => tashkentDateKey(d.wonAt || d.updatedAt || d.createdAt);
+  const todayFast = fastDeals.filter(d => soldDateKey(d) === todayKey).length;
+
+  // Bonus hisoblash (stavkalar Admin → KPI va Bonuslar sahifasidan)
+  const oc = compSettings.operator;
+  const qualBonus = tierBonus(todayQual, oc.qual);
+  const saleBonus = todaySold * Number(oc.saleBonus || 0);
+  const appBonus = tierBonus(todayAppBonus, oc.app);
+  const fastBonus = todayFast * Number(fastCfg.amount || 0);
+  const todayBonus = qualBonus + saleBonus + appBonus + fastBonus;
 
   // Shu oydagi jami bonus
   const monthKey = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit'}).format(new Date()).slice(0,7);
@@ -3953,17 +4054,20 @@ function calculateOperatorBonus(user){
   const monthQual = dedupeQualLeads(qualDeals.filter(isQualThisMonth)).length;
   const monthSold = soldDeals.filter(isThisMonth).length;
   const monthAppCount = appBonusDeals.filter(isAppThisMonth).length;
+  const monthFast = fastDeals.filter(d => soldDateKey(d).slice(0,7) === monthKey).length;
 
-  const monthQualBonus = monthQual === 0 ? 0 : monthQual <= 5 ? monthQual * 7000 : monthQual * 10000;
-  const monthSaleBonus = monthSold * 20000;
-  const monthAppBonus = monthAppCount * 500;
-  const monthBonus = monthQualBonus + monthSaleBonus + monthAppBonus;
+  const monthQualBonus = tierBonus(monthQual, oc.qual);
+  const monthSaleBonus = monthSold * Number(oc.saleBonus || 0);
+  const monthAppBonus = monthAppCount * Number(oc.app.rate || 0);
+  const monthFastBonus = monthFast * Number(fastCfg.amount || 0);
+  const monthBonus = monthQualBonus + monthSaleBonus + monthAppBonus + monthFastBonus;
 
   return {
     totalContacts, todayContacts, todayProcessed, todayQual, todaySold,
     soldDeals, qualDeals, todayApp, todayAppBonus,
     appDeals, appBonusDeals, todayBonus, qualBonus, saleBonus, appBonus,
-    monthBonus, monthQual, monthSold, monthQualBonus, monthSaleBonus, monthAppBonus
+    todayFast, fastBonus,
+    monthBonus, monthQual, monthSold, monthQualBonus, monthSaleBonus, monthAppBonus, monthFastBonus
   };
 }
 
@@ -4101,19 +4205,26 @@ function calcOperatorAnalytics(user, range){
   const soldDeals = myDeals.filter(d => d.col===STAGE_WON && inRange(d.wonAt||d.updatedAt, range));
   const lostDeals = myDeals.filter(d => d.col==='op_yutqazilgan' && inRange(d.updatedAt, range)).length;
   const convRate = newContacts ? Math.round(qualDeals/newContacts*100) : 0;
-  // Qual bonusining 5-tagacha=7000/6+=10000 stavkasi KUNLIK rag'bat — shu sababli hafta/oy uchun
+  // Qual bonusining bosqichli stavkasi KUNLIK rag'bat — shu sababli hafta/oy uchun
   // butun davr yig'indisiga emas, har bir kunga alohida qo'llab, keyin yig'indilaymiz. Aks holda
   // (masalan) 7 kunlik 35 ta qual — barchasi yuqori stavkada hisoblanib, bonus sun'iy oshib ketardi.
   const tashkentDateKey = iso => iso ? new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)) : '';
+  const oc = compSettings.operator;
   const qualByDay = {};
   qualMatchesDeduped.forEach(d => {
     const key = tashkentDateKey(d.qualAt || d.createdAt);
     qualByDay[key] = (qualByDay[key] || 0) + 1;
   });
-  const qualBonus = Object.values(qualByDay).reduce((sum, n) => sum + (n <= 5 ? n * 7000 : n * 10000), 0);
-  const saleBonus = soldDeals.length*20000;
-  const appBonus = appInstalled*500;
-  return {newContacts, qualDeals, appInstalled, soldDeals:soldDeals.length, lostDeals, convRate, qualBonus, saleBonus, appBonus, totalBonus:qualBonus+saleBonus+appBonus};
+  const qualBonus = Object.values(qualByDay).reduce((sum, n) => sum + tierBonus(n, oc.qual), 0);
+  const saleBonus = soldDeals.length*Number(oc.saleBonus||0);
+  const appBonus = appInstalled*Number(oc.app.rate||0);
+  const fastBonus = soldDeals.filter(d => {
+    if (!d.qualAt || !Number(oc.fastSale.amount)) return false;
+    const soldTs = new Date(d.wonAt || d.updatedAt || d.createdAt).getTime();
+    const qualTs = new Date(d.qualAt).getTime();
+    return soldTs >= qualTs && soldTs - qualTs <= Number(oc.fastSale.days || 3) * 86400000;
+  }).length * Number(oc.fastSale.amount || 0);
+  return {newContacts, qualDeals, appInstalled, soldDeals:soldDeals.length, lostDeals, convRate, qualBonus, saleBonus, appBonus, fastBonus, totalBonus:qualBonus+saleBonus+appBonus+fastBonus};
 }
 
 function recentDealActions(user, limit=8){
@@ -4479,7 +4590,7 @@ function renderOperatorAnalytics(wrap, user, range, periodLabel){
       <div class="score-card" style="--sc-color:#A855F7">
         <div class="score-label">Ilova o'rnatish</div>
         <div class="score-value">${op.appInstalled}</div>
-        <div class="score-sub">Har biri +500 so'm · Bonus: ${formatMoney(op.appBonus)}</div>
+        <div class="score-sub">Har biri +${formatMoney(compSettings.operator.app.rate)} · Bonus: ${formatMoney(op.appBonus)}</div>
         <div class="score-trend ${op.appInstalled>0?'up':'neutral'}">${op.appInstalled>0?`+${formatMoney(op.appBonus)}`:'Hali yo\'q'}</div>
       </div>
       <div class="score-card" style="--sc-color:#F59E0B">
@@ -4498,9 +4609,10 @@ function renderOperatorAnalytics(wrap, user, range, periodLabel){
         </div>
         <div class="an-panel-body">
           ${[
-            ['Qual bonus (1-5 ta = 7000, 6+ = 10000)', op.qualDeals, op.qualBonus, '#10B981', `${op.qualDeals} ta qual`],
-            ['Sotuv bonusi (har biri 20 000)', op.soldDeals, op.saleBonus, '#2563EB', `${op.soldDeals} ta sotuv`],
-            ['Ilova bonusi (har biri 500)', op.appInstalled, op.appBonus, '#A855F7', `${op.appInstalled} ta ilova`],
+            [`Qual bonus (1-${compSettings.operator.qual.limit} ta = ${formatMoney(compSettings.operator.qual.rate)}, ${Number(compSettings.operator.qual.limit)+1}+ = ${formatMoney(compSettings.operator.qual.rateAbove)})`, op.qualDeals, op.qualBonus, '#10B981', `${op.qualDeals} ta qual`],
+            [`Sotuv bonusi (har biri ${formatMoney(compSettings.operator.saleBonus)})`, op.soldDeals, op.saleBonus, '#2563EB', `${op.soldDeals} ta sotuv`],
+            [`Ilova bonusi (har biri ${formatMoney(compSettings.operator.app.rate)})`, op.appInstalled, op.appBonus, '#A855F7', `${op.appInstalled} ta ilova`],
+            ...(Number(compSettings.operator.fastSale.amount)>0?[[`Tez sotuv bonusi (${compSettings.operator.fastSale.days} kun ichida, har biri ${formatMoney(compSettings.operator.fastSale.amount)})`, '', op.fastBonus, '#F59E0B', 'Qual tez sotilgani uchun']]:[]),
           ].map(([label,count,bonus,color,sub])=>`
             <div class="quality-row">
               <div>
@@ -4595,8 +4707,11 @@ function renderPaymentsPage(){
   ];
   document.getElementById('payRoleBadge').textContent=POSITION_LABELS[calc.position] || roleLabel(currentUser().role);
   document.getElementById('payStats').innerHTML=statData.map(s=>`<div class="pay-stat ${s[2]}"><div class="pay-stat-label">${s[0]}</div><div class="pay-stat-value">${s[1]}</div></div>`).join('');
+  const payTotalRevenue=rows.reduce((s,d)=>s+Number(d.price||0),0);
   document.getElementById('payRows').innerHTML=rows.length?rows.map(d=>{
-    const income=COURSE_BONUSES[saleDurationMonths(d)]||0;
+    const income=compSettings.manager.saleReward.mode==='percent'
+      ? Math.round(Number(d.price||0)*percentForRevenue(payTotalRevenue,compSettings.manager.percentTiers)/100)
+      : (Number(compSettings.manager.courseBonuses[saleDurationMonths(d)])||0);
     return `<tr><td>${esc(d.date||'Bugun')}</td><td>${esc(customerTitle(d))}</td><td>${esc(dealTitle(d))}</td><td class="pay-money">${formatMoney(d.price)}</td><td class="pay-income">${formatMoney(income)}</td></tr>`;
   }).join(''):`<tr><td colspan="5" style="text-align:center;color:var(--mu);padding:28px">Hali sotuv yo'q</td></tr>`;
   const myPayAdjustments=paymentAdjustments.filter(x=>!x.managerId || String(x.managerId)===String(currentUser().id));
@@ -5638,10 +5753,178 @@ function renderSetContent(key){
     renderPipelineStages();
     renderTags('');
     loadCrmSettings();
+  } else if(key==='kpibonus'){
+    financeDraft=null; // sahifaga qayta kirilganda joriy sozlamalardan yangi nusxa olinadi
+    renderFinancePage();
   } else {
-    const labels={kanallar:'Kanallar',jamaodoshlar:'Jamaodoshlar',kredit:'Kredit chaqiruvchi',atribut:'Atribut sozlamalari',kengayt:'Kengaytmalar',chatyo:"Chatlarni yo'naltirish",rescue:'Chat rescue',ilova:'Ilova sozlamalari',profil:'Mening profilim',chiqish:'Chiqish',danchiqish:'CRM dan chiqish'};
+    const labels={kanallar:'Kanallar',jamaodoshlar:'Jamaodoshlar',atribut:'Atribut sozlamalari',kengayt:'Kengaytmalar',chatyo:"Chatlarni yo'naltirish",rescue:'Chat rescue',ilova:'Ilova sozlamalari',profil:'Mening profilim',chiqish:'Chiqish',danchiqish:'CRM dan chiqish'};
     c.innerHTML=`<div class="set-page-title">${labels[key]||key}</div><p class="set-desc">Bu bo'lim hali sozlanmagan.</p>`;
   }
+}
+// ════════════════════════════════════════
+//  KPI VA BONUSLAR SAHIFASI (Finance)
+// ════════════════════════════════════════
+let financeDraft=null;
+function fdGet(path){
+  return path.split('.').reduce((o,k)=>o?.[k],financeDraft);
+}
+function fdSet(path,value){
+  const keys=path.split('.');
+  const last=keys.pop();
+  const target=keys.reduce((o,k)=>o[k],financeDraft);
+  target[last]=value===''?0:Number(value);
+}
+function fdMode(mode){
+  financeDraft.manager.saleReward.mode=mode;
+  renderFinancePage();
+}
+function fdTierAdd(){
+  const tiers=financeDraft.manager.percentTiers;
+  // Oxirgi qatlam har doim "undan yuqori" (upTo:null) bo'lib qolishi uchun yangisini undan oldin qo'shamiz
+  const lastUpTo=tiers.length>1?Number(tiers[tiers.length-2].upTo||0):0;
+  tiers.splice(Math.max(0,tiers.length-1),0,{upTo:lastUpTo+10000000,percent:5});
+  renderFinancePage();
+}
+function fdTierDel(i){
+  financeDraft.manager.percentTiers.splice(i,1);
+  if(!financeDraft.manager.percentTiers.length)financeDraft.manager.percentTiers=[{upTo:null,percent:5}];
+  renderFinancePage();
+}
+function fdTierSet(i,field,value){
+  const t=financeDraft.manager.percentTiers[i];
+  if(field==='upTo')t.upTo=value===''?null:Number(value);
+  else t.percent=Number(value)||0;
+}
+function fdPosAdd(){
+  const inp=document.getElementById('fdNewPosition');
+  const label=(inp?.value||'').trim();
+  if(!label){showToast('Lavozim nomini kiriting');return;}
+  const id=label.toLowerCase().replace(/[^a-z0-9а-яё']+/gi,'_').replace(/^_+|_+$/g,'')||('pos_'+Date.now());
+  if(financeDraft.positions.some(p=>p.label.toLowerCase()===label.toLowerCase())){showToast('Bu lavozim allaqachon mavjud');return;}
+  financeDraft.positions.push({id,label});
+  renderFinancePage();
+}
+function fdPosDel(i){
+  const p=financeDraft.positions[i];
+  if(!p || p.builtin){showToast('Asosiy lavozimni o\'chirib bo\'lmaydi');return;}
+  financeDraft.positions.splice(i,1);
+  renderFinancePage();
+}
+function fdReset(){
+  financeDraft=JSON.parse(JSON.stringify(DEFAULT_COMP_SETTINGS));
+  renderFinancePage();
+  showToast('Standart qiymatlar yuklandi — saqlashni unutmang');
+}
+async function fdSave(){
+  if(!isAdmin()){showToast('Bu sozlama faqat Admin uchun');return;}
+  const next=mergeCompSettings(JSON.parse(JSON.stringify(financeDraft)));
+  // percent qatlamlarini tartiblab, bo'shlarini olib tashlaymiz
+  next.manager.percentTiers=next.manager.percentTiers
+    .filter(t=>Number(t.percent)>0)
+    .sort((a,b)=>(a.upTo==null?Infinity:a.upTo)-(b.upTo==null?Infinity:b.upTo));
+  if(!next.manager.percentTiers.length)next.manager.percentTiers=[{upTo:null,percent:0}];
+  if(apiToken){
+    try{
+      await api('/api/settings',{method:'PATCH',body:{compSettings:next}});
+    }catch(err){showToast(err.message||'Saqlanmadi');return;}
+  }else{
+    localStorage.setItem('mtcrm_comp_settings',JSON.stringify(next));
+  }
+  compSettings=next;
+  financeDraft=JSON.parse(JSON.stringify(next));
+  showToast('KPI va bonus sozlamalari saqlandi ✓');
+  renderDealStats();
+  if(curPage==='dashboard')renderDashboard();
+  if(curPage==='payments')renderPaymentsPage();
+  renderFinancePage();
+}
+function renderFinancePage(){
+  const c=document.getElementById('setContent');
+  if(!c)return;
+  if(!isAdmin()){
+    c.innerHTML=`<div class="set-page-title">KPI va Bonuslar</div><p class="set-desc">Bu bo'limni faqat Admin boshqaradi. Sizning bonuslaringiz shu yerdagi qoidalar asosida avtomatik hisoblanadi.</p>`;
+    return;
+  }
+  if(!financeDraft)financeDraft=JSON.parse(JSON.stringify(compSettings));
+  const d=financeDraft;
+  const num=(path,w=120,suffix='')=>`<span style="display:inline-flex;align-items:center;gap:6px"><input type="number" min="0" class="detail-input" style="width:${w}px;padding:7px 10px" value="${fdGet(path)??''}" oninput="fdSet('${path}',this.value)">${suffix?`<span style="font-size:12px;color:var(--mu)">${suffix}</span>`:''}</span>`;
+  const fieldRow=(label,html,hint='')=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:14px;padding:11px 0;border-bottom:1px solid var(--brl);flex-wrap:wrap">
+      <div style="min-width:220px"><div style="font-size:13px;font-weight:600">${label}</div>${hint?`<div style="font-size:11.5px;color:var(--mu);margin-top:2px">${hint}</div>`:''}</div>
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">${html}</div>
+    </div>`;
+  const card=(title,sub,body)=>`
+    <div class="stage-card" style="margin-bottom:14px">
+      <div class="stage-card-head"><div><div class="stage-title">${title}</div><div class="stage-sub">${sub}</div></div></div>
+      ${body}
+    </div>`;
+
+  const positionsBody=`
+    <div style="display:flex;flex-wrap:wrap;gap:8px;margin:10px 0">
+      ${d.positions.map((p,i)=>`
+        <span style="display:inline-flex;align-items:center;gap:7px;padding:7px 12px;border:1px solid var(--br);border-radius:20px;font-size:13px;font-weight:600;background:var(--bg)">
+          ${esc(p.label)}
+          ${p.builtin?'':`<span onclick="fdPosDel(${i})" title="O'chirish" style="cursor:pointer;color:var(--red);font-weight:800">×</span>`}
+        </span>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input class="detail-input" id="fdNewPosition" placeholder="Yangi lavozim nomi..." style="max-width:260px" onkeydown="if(event.key==='Enter')fdPosAdd()">
+      <button class="btn-ico btn-primary" onclick="fdPosAdd()">+ Qo'shish</button>
+    </div>`;
+
+  const modeCourse=d.manager.saleReward.mode!=='percent';
+  const saleRewardBody=modeCourse
+    ? `<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:8px">
+        ${[1,2,3,4,5,6].map(mn=>`<div style="text-align:center"><div style="font-size:11px;color:var(--mu);margin-bottom:4px">${mn} oylik kurs</div><input type="number" min="0" class="detail-input" style="width:104px;padding:7px 8px" value="${d.manager.courseBonuses[mn]??0}" oninput="fdSet('manager.courseBonuses.${mn}',this.value)"></div>`).join('')}
+      </div>`
+    : `<div style="margin-top:8px">
+        ${d.manager.percentTiers.map((t,i)=>`
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap">
+            ${t.upTo==null
+              ?`<span style="font-size:13px;color:var(--mu);min-width:210px">Yuqoridagi chegaradan oshgan bo'lsa</span>`
+              :`<input type="number" min="0" class="detail-input" style="width:150px;padding:7px 10px" value="${t.upTo}" oninput="fdTierSet(${i},'upTo',this.value)"><span style="font-size:12px;color:var(--mu)">so'mgacha sotsa</span>`}
+            <span style="font-size:13px;font-weight:700">→</span>
+            <input type="number" min="0" max="100" step="0.5" class="detail-input" style="width:70px;padding:7px 10px" value="${t.percent}" oninput="fdTierSet(${i},'percent',this.value)">
+            <span style="font-size:12px;color:var(--mu)">% (sotgan summasidan)</span>
+            ${t.upTo==null?'':`<span onclick="fdTierDel(${i})" title="O'chirish" style="cursor:pointer;color:var(--red);font-weight:800;padding:0 4px">×</span>`}
+          </div>`).join('')}
+        <button class="add-lnk" onclick="fdTierAdd()">+ Yangi chegara qo'shish</button>
+      </div>`;
+
+  c.innerHTML=`
+    <div class="set-page-title">KPI va Bonuslar</div>
+    <p class="set-desc">Bonus va KPI stavkalari shu yerdan boshqariladi — CRM barcha hisob-kitoblarni (dashboard, analitika, to'lovlar) aynan shu qiymatlar asosida qiladi. O'zgartirishdan so'ng "Saqlash" tugmasini bosing.</p>
+
+    ${card('Lavozimlar',"Jamoadagi lavozimlar ro'yxati. Yangi lavozim qo'shishingiz mumkin; asosiy lavozimlar o'chirilmaydi",positionsBody)}
+
+    ${card('Sales manager — sotuv bonuslari','Menejerning sotuvdan oladigan pullari',`
+      ${fieldRow('Fix oylik',num('manager.fixSalary',150,"so'm/oy"),"Xodim (EMPLOYEE) darajasiga yetgan menejerlarga to'lanadi")}
+      ${fieldRow('Full call bonusi',`${num('manager.fullCall.limit',70,'tagacha, har biri')}${num('manager.fullCall.rate',110,"so'm; oshsa hammasi")}${num('manager.fullCall.rateAbove',110,"so'mdan")}`,'Kuniga qilingan full call lar uchun')}
+      <div style="padding:11px 0;border-bottom:1px solid var(--brl)">
+        <div style="font-size:13px;font-weight:600;margin-bottom:2px">Sotuv mukofoti turi</div>
+        <div style="font-size:11.5px;color:var(--mu);margin-bottom:8px">Kurs davomiyligiga qarab fiks summa yoki sotuv summasidan foiz</div>
+        <div style="display:flex;gap:14px;margin-bottom:4px">
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="radio" name="fdSaleMode" ${modeCourse?'checked':''} onchange="fdMode('course')"> Kurs oyi bo'yicha fiks</label>
+          <label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer"><input type="radio" name="fdSaleMode" ${modeCourse?'':'checked'} onchange="fdMode('percent')"> Sotuv summasidan foiz</label>
+        </div>
+        ${saleRewardBody}
+      </div>
+      ${fieldRow('Naqd sotuv bonusi',num('manager.cashBonus',120,"so'm / har naqd sotuv"),'Naqd pulda amalga oshirilgan har bir sotuv uchun')}
+      ${fieldRow('Seriya bonusi',`<span style="font-size:12px;color:var(--mu)">Har</span>${num('manager.tripleEvery',60,'ta sotuv uchun')}${num('manager.tripleBonus',120,"so'm")}`,'Jami sotuvlar soniga qarab beriladigan qo\'shimcha')}
+    `)}
+
+    ${card('Operator — bonuslari','Operatorning lidlar bilan ishlashdan oladigan pullari',`
+      ${fieldRow('Qual lid bonusi',`${num('operator.qual.limit',70,'tagacha, har biri')}${num('operator.qual.rate',110,"so'm; oshsa hammasi")}${num('operator.qual.rateAbove',110,"so'mdan")}`,'Kuniga malakali qilingan lidlar uchun')}
+      ${fieldRow('Ilova o\'rnatish bonusi',`${num('operator.app.limit',70,'tagacha, har biri')}${num('operator.app.rate',110,"so'm; oshsa hammasi")}${num('operator.app.rateAbove',110,"so'mdan")}`,'Mijoz ilovani o\'rnatganda')}
+      ${fieldRow('Sotilgan lid bonusi',num('operator.saleBonus',120,"so'm / har sotuv"),'Operator yuborgan lid menejer tomonidan sotilganda')}
+      ${fieldRow('Tez sotuv bonusi',`<span style="font-size:12px;color:var(--mu)">Qual</span>${num('operator.fastSale.days',60,'kun ichida sotilsa, +')}${num('operator.fastSale.amount',120,"so'm")}`,'Qual qilingan lid belgilangan muddat ichida sotilsa, shu qual uchun qo\'shimcha')}
+    `)}
+
+    <div style="display:flex;gap:10px;align-items:center;margin-top:4px">
+      <button class="btn-ico btn-primary" style="padding:10px 22px;font-size:14px" onclick="fdSave()">💾 Saqlash</button>
+      <button class="btn-outline" onclick="fdReset()">Standartga qaytarish</button>
+      ${apiToken?'':'<span style="font-size:12px;color:var(--mu)">Demo rejim: sozlamalar shu brauzerda saqlanadi</span>'}
+    </div>`;
 }
 let crmSettings={autoAssignLeads:false};
 function updateAutoAssignToggle(){
@@ -6001,6 +6284,7 @@ async function initApp(){
     apiToken='';
     localStorage.removeItem('mtcrm_token');
   }
+  await loadCompSettings(); // demo rejim: localStorage dagi sozlamalar
   goPage(curPage);
   apiOnline=false;
   renderWorkStatus();
