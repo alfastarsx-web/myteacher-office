@@ -411,36 +411,47 @@ table.crm-t{width:100%;border-collapse:collapse}
 /* ══════════════════════════════════════
    PAGE: DASHBOARD
 ══════════════════════════════════════ */
-.dash-wrap{flex:1;overflow:auto;background:var(--bg);padding:24px}
+.dash-wrap{flex:1;overflow:auto;background:linear-gradient(180deg,#F8FAFC 0,#F3F7FC 100%);padding:24px}
 .dash-grid{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;gap:14px;margin-bottom:18px}
-.dash-card{background:var(--wh);border:1px solid var(--br);border-radius:12px;padding:16px;box-shadow:var(--shadow-sm);min-width:0}
-.dash-card.primary{background:linear-gradient(135deg,#fff,#F8FBFF)}
-.dash-label{font-size:12px;color:var(--mu);font-weight:700;margin-bottom:8px}
-.dash-big{font-size:28px;font-weight:700;color:#16A34A}
-.dash-money{font-size:22px;font-weight:700;color:var(--td);margin-top:6px}
-.dash-goal{font-size:12px;color:#16A34A;margin-top:4px}
-.dash-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.dash-pill{background:var(--bg);color:var(--tm);font-size:12px;border-radius:20px;padding:6px 10px}
-.performer-card{position:relative;overflow:hidden;min-height:142px;color:#fff;border:0}
-.performer-card.blue{background:linear-gradient(135deg,#60A5FA,#2563EB)}
-.performer-card.pink{background:linear-gradient(135deg,#F472D0,#C026D3)}
-.performer-card.yellow{background:linear-gradient(135deg,#FBBF24,#F59E0B)}
-.performer-card::before{content:'';position:absolute;inset:-40px auto auto -20px;width:150px;height:150px;background:rgba(255,255,255,.12);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
-.performer-avatar{width:58px;height:58px;border-radius:50%;background:rgba(255,255,255,.86);color:var(--td);display:flex;align-items:center;justify-content:center;font-weight:700;margin:4px auto 12px;position:relative;z-index:1}
-.performer-name{text-align:center;font-size:15px;font-weight:700;position:relative;z-index:1}
-.performer-meta{display:flex;justify-content:space-between;font-size:11px;margin-top:20px;position:relative;z-index:1;opacity:.92}
+.dash-card{background:var(--wh);border:1px solid var(--brl);border-radius:16px;padding:18px;box-shadow:0 1px 3px rgba(15,23,42,.05);min-width:0;transition:box-shadow .15s,transform .15s}
+.dash-card:hover{box-shadow:0 8px 22px rgba(15,23,42,.07);transform:translateY(-1px)}
+.dash-card.primary{background:linear-gradient(135deg,#fff 30%,#F0F7FF)}
+.dash-label{font-size:11px;color:var(--mu);font-weight:800;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.dash-big{font-size:27px;font-weight:800;color:#16A34A;line-height:1.1}
+.dash-money{font-size:15px;font-weight:700;color:var(--tm);margin-top:8px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dash-goal{font-size:12px;color:var(--mu);margin-top:6px}
+.dash-goal-bar{height:6px;background:#EDF2F9;border-radius:6px;margin-top:8px;overflow:hidden}
+.dash-goal-bar span{display:block;height:100%;border-radius:6px;background:linear-gradient(90deg,#4ADE80,#16A34A);transition:width .4s}
+.dash-pills{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.dash-pill{background:#F4F7FB;color:var(--tm);font-size:11.5px;border-radius:20px;padding:5px 10px;font-weight:600}
+.performer-card{position:relative;overflow:hidden;min-height:142px;border:1px solid var(--brl)}
+.performer-card.blue{background:linear-gradient(150deg,#EFF6FF,#DBEAFE);color:#1E40AF}
+.performer-card.pink{background:linear-gradient(150deg,#FDF2F8,#FCE7F3);color:#9D174D}
+.performer-card.yellow{background:linear-gradient(150deg,#FFFBEB,#FEF3C7);color:#92400E}
+.performer-card::before{content:'';position:absolute;inset:-40px auto auto -20px;width:150px;height:150px;background:rgba(255,255,255,.5);clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)}
+.performer-medal{position:absolute;top:10px;right:12px;font-size:18px;z-index:1}
+.performer-avatar{width:54px;height:54px;border-radius:50%;background:#fff;color:var(--td);display:flex;align-items:center;justify-content:center;font-weight:800;margin:4px auto 10px;position:relative;z-index:1;box-shadow:0 2px 8px rgba(15,23,42,.1)}
+.performer-name{text-align:center;font-size:14.5px;font-weight:800;position:relative;z-index:1}
+.performer-sub{text-align:center;font-size:11px;opacity:.75;margin-top:2px;position:relative;z-index:1}
+.performer-meta{display:flex;justify-content:space-between;font-size:11px;margin-top:16px;position:relative;z-index:1;opacity:.9;font-weight:600}
 .dash-main{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(360px,.9fr);gap:18px}
-.dash-tabs{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px}
-.seg-tabs{display:flex;gap:0;border:1px solid var(--blue);border-radius:8px;overflow:hidden;background:#fff}
-.seg-tab{padding:8px 12px;border:0;background:#fff;color:var(--blue);font-family:var(--f);font-weight:700;cursor:pointer}
+.dash-tabs{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.seg-tabs{display:flex;gap:2px;border:1px solid var(--brl);border-radius:10px;overflow:hidden;background:#fff;padding:3px;box-shadow:0 1px 2px rgba(15,23,42,.04)}
+.seg-tab{padding:7px 13px;border:0;border-radius:7px;background:transparent;color:var(--tm);font-family:var(--f);font-size:12.5px;font-weight:700;cursor:pointer;transition:.15s}
+.seg-tab:hover{background:#F4F7FB}
 .seg-tab.active{background:var(--blue);color:#fff}
-.dash-table-card,.chart-card{background:var(--wh);border:1px solid var(--br);border-radius:12px;box-shadow:var(--shadow-sm);overflow:hidden}
+.dash-table-card,.chart-card{background:var(--wh);border:1px solid var(--brl);border-radius:16px;box-shadow:0 1px 3px rgba(15,23,42,.05);overflow:hidden}
+.dash-table-note{font-size:11.5px;color:var(--mu);text-align:center;margin-top:10px}
 .leader-table{width:100%;border-collapse:collapse}
-.leader-table th{background:#F8FAFC;color:var(--mu);font-size:11px;text-align:left;padding:12px 14px;border-bottom:1px solid var(--br);white-space:nowrap}
+.leader-table th{background:#FBFCFE;color:var(--mu);font-size:11px;text-align:left;padding:12px 14px;border-bottom:1px solid var(--brl);white-space:nowrap;text-transform:uppercase;letter-spacing:.3px}
 .leader-table td{padding:12px 14px;border-bottom:1px solid var(--brl);font-size:13px;color:var(--tm)}
-.rank-cell{font-weight:700;color:var(--td)}
+.leader-table tr:last-child td{border-bottom:0}
+.leader-table tbody tr{transition:background .12s}
+.leader-table tbody tr:hover{background:#F8FBFF}
+.rank-cell{font-weight:800;color:var(--td);white-space:nowrap}
 .trend{display:flex;align-items:center;gap:8px;min-width:155px}
-.trend-line{height:4px;background:var(--br);border-radius:4px;flex:1;position:relative;overflow:hidden}
+.trend-pct{font-size:12px;font-weight:800;white-space:nowrap}
+.trend-line{height:5px;background:#EDF2F9;border-radius:4px;flex:1;position:relative;overflow:hidden}
 .trend-line span{position:absolute;inset:0 auto 0 0;background:var(--green);border-radius:4px}
 .trend.red .trend-line span{background:var(--red)}
 .trend.yellow .trend-line span{background:var(--yellow)}
@@ -449,16 +460,17 @@ table.crm-t{width:100%;border-collapse:collapse}
 .chart-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
 .chart-title{font-size:14px;font-weight:700;color:var(--td)}
 .chart-up{font-size:12px;color:#16A34A;font-weight:700}
-.bar-chart{height:178px;display:flex;align-items:flex-end;gap:8px;border-bottom:1px solid var(--br);padding:8px 6px 0;background:repeating-linear-gradient(to top, transparent 0 35px, #EEF2F7 36px)}
-.plan-stick{flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;min-width:10px}
-.plan-tube{width:100%;max-width:18px;height:var(--plan);border:1px solid rgba(37,99,235,.35);border-radius:999px 999px 5px 5px;background:linear-gradient(180deg,#fff,#EFF6FF);position:relative;overflow:hidden;box-shadow:inset 0 0 0 2px rgba(255,255,255,.6)}
-.plan-fill{position:absolute;left:0;right:0;bottom:0;height:var(--done);background:linear-gradient(180deg,#60A5FA,#2563EB);border-radius:999px 999px 4px 4px}
-.plan-mark{position:absolute;left:2px;right:2px;top:10%;border-top:2px dashed rgba(245,158,11,.9)}
+.chart-up.down{color:var(--red)}
+.bar-chart{height:178px;display:flex;align-items:flex-end;gap:7px;border-bottom:1px solid var(--brl);padding:8px 6px 0;background:repeating-linear-gradient(to top, transparent 0 35px, #F3F6FA 36px)}
+.plan-stick{flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;min-width:8px}
+.plan-tube{width:100%;max-width:16px;height:var(--plan);border:1px solid rgba(37,99,235,.22);border-radius:999px 999px 5px 5px;background:linear-gradient(180deg,#fff,#F0F6FF);position:relative;overflow:hidden}
+.plan-fill{position:absolute;left:0;right:0;bottom:0;height:var(--done);background:linear-gradient(180deg,#7CB1FB,#3B82F6);border-radius:999px 999px 4px 4px}
 .chart-legend{display:flex;gap:18px;font-size:12px;color:var(--tm);margin-top:10px}
-.legend-box{width:10px;height:10px;border-radius:2px;display:inline-block;margin-right:6px}
-.line-chart{height:210px;position:relative;background:repeating-linear-gradient(to top, transparent 0 34px, #EEF2F7 35px);border-bottom:1px solid var(--br);overflow:hidden}
+.legend-box{width:10px;height:10px;border-radius:3px;display:inline-block;margin-right:6px}
+.line-chart{height:210px;position:relative;background:repeating-linear-gradient(to top, transparent 0 34px, #F3F6FA 35px);border-bottom:1px solid var(--brl);overflow:hidden}
 .line-chart svg{width:100%;height:100%;display:block}
 .month-axis{display:grid;grid-template-columns:repeat(12,1fr);font-size:10px;color:var(--mu);margin-top:7px;text-align:center}
+.dash-empty{padding:34px 20px;text-align:center;color:var(--mu);font-size:13px}
 
 
 /* ══════════════════════════════════════
@@ -1341,42 +1353,46 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <!-- ═══ PAGE: DASHBOARD ═══ -->
   <div class="page" id="page-dashboard">
     <div class="dash-wrap">
-      <div class="dash-grid">
+      <div class="dash-grid" id="dashTopCards">
         <div class="dash-card primary">
           <div class="dash-label">Bugun</div>
           <div class="dash-big">0 UZS</div>
-          <div class="dash-money">Oylik: 0 UZS <span class="role-badge role-manager">0%</span></div>
+          <div class="dash-money">Oylik: 0 UZS</div>
           <div class="dash-goal">Maqsad: belgilanmagan</div>
-          <div class="dash-pills"><span class="dash-pill">Real ma’lumotlar importdan keyin chiqadi</span></div>
         </div>
-        <div class="dash-card performer-card blue"><div class="performer-avatar">—</div><div class="performer-name">Menejer yo‘q</div><div class="performer-meta"><span>Natija: 0 UZS</span><span>Maoshi: 0 UZS</span></div></div>
-        <div class="dash-card performer-card pink"><div class="performer-avatar">—</div><div class="performer-name">Menejer yo‘q</div><div class="performer-meta"><span>Natija: 0 UZS</span><span>Maoshi: 0 UZS</span></div></div>
-        <div class="dash-card performer-card yellow"><div class="performer-avatar">—</div><div class="performer-name">Menejer yo‘q</div><div class="performer-meta"><span>Natija: 0 UZS</span><span>Maoshi: 0 UZS</span></div></div>
       </div>
       <div class="dash-main">
         <section>
           <div class="dash-tabs">
-            <div class="seg-tabs"><button class="seg-tab active">Liderboard</button><button class="seg-tab">Kassa bo'yicha</button><button class="seg-tab">Reja bajarish</button><button class="seg-tab">Konversiya</button></div>
-            <div style="display:flex;gap:10px;align-items:center"><div class="seg-tabs"><button class="seg-tab">Kunlik</button><button class="seg-tab active">Oylik</button></div><button class="btn-ico" onclick="showSalePopup()">Sotuv popup</button></div>
+            <div class="seg-tabs" id="dashMetricTabs">
+              <button class="seg-tab active" onclick="setDashMetric('leader',this)">Liderboard</button>
+              <button class="seg-tab" onclick="setDashMetric('kassa',this)">Kassa bo'yicha</button>
+              <button class="seg-tab" onclick="setDashMetric('reja',this)">Reja bajarish</button>
+              <button class="seg-tab" onclick="setDashMetric('konv',this)">Konversiya</button>
+            </div>
+            <div class="seg-tabs" id="dashPeriodTabs">
+              <button class="seg-tab" onclick="setDashPeriod('day',this)">Kunlik</button>
+              <button class="seg-tab active" onclick="setDashPeriod('month',this)">Oylik</button>
+            </div>
           </div>
           <div class="dash-table-card">
             <table class="leader-table">
-              <thead><tr><th>№</th><th>Sotuv menejerlari</th><th>Oylik rejasi</th><th>Bajargani</th><th>Oylik maoshi</th><th>O'sish/Kamayish</th></tr></thead>
+              <thead id="dashboardHead"></thead>
               <tbody id="dashboardRows"></tbody>
             </table>
           </div>
-          <div class="dash-pills" style="justify-content:center;margin-top:16px"><span class="dash-pill">‹</span><span class="dash-pill">1</span><span class="dash-pill" style="background:var(--blue);color:#fff">2</span><span class="dash-pill">3</span><span class="dash-pill">...</span><span class="dash-pill">18</span><span class="dash-pill">19</span><span class="dash-pill">20</span><span class="dash-pill">10 page⌄</span></div>
+          <div class="dash-table-note" id="dashTableNote"></div>
         </section>
         <section class="chart-stack">
           <div class="chart-card">
-            <div class="chart-head"><div class="chart-title">Reja va amaldagi ko'rsatkichlar</div><div class="chart-up">↗ 12%</div></div>
+            <div class="chart-head"><div class="chart-title">Reja va amaldagi ko'rsatkichlar</div><div class="chart-up" id="dashTrendPct"></div></div>
             <div class="bar-chart" id="barChart"></div>
-            <div class="chart-legend"><span><i class="legend-box" style="background:var(--blue)"></i>Bajarilgan qism</span><span><i class="legend-box" style="border:1px solid rgba(37,99,235,.45);background:#EFF6FF"></i>Kunlik reja</span><span><i class="legend-box" style="background:#F59E0B"></i>Plan chizig'i</span></div>
+            <div class="chart-legend"><span><i class="legend-box" style="background:var(--blue)"></i>Bajarilgan</span><span><i class="legend-box" style="border:1px solid rgba(37,99,235,.35);background:#EFF6FF"></i>Kunlik reja</span></div>
           </div>
           <div class="chart-card">
-            <div class="chart-head"><div class="chart-title">Oyma-oy ko'rsatkichlar</div></div>
-            <div class="line-chart"><svg viewBox="0 0 520 210" preserveAspectRatio="none"><path d="M0,205 L55,58 L105,45 L160,150 L215,72 L270,112 L325,108 L380,42 L430,10 L475,160 L515,20" fill="none" stroke="#2563EB" stroke-width="3"/><path d="M0,205 L55,58 L105,45 L160,150 L215,72 L270,112 L325,108 L380,42 L430,10 L475,160 L515,20 L515,210 L0,210 Z" fill="rgba(37,99,235,.08)"/></svg></div>
-            <div class="month-axis"><span>Ya</span><span>Fe</span><span>Mar</span><span>Ap</span><span>May</span><span>Iyun</span><span>Iyul</span><span>Av</span><span>Se</span><span>Ok</span><span>No</span><span>De</span></div>
+            <div class="chart-head"><div class="chart-title">Oyma-oy ko'rsatkichlar</div><div class="chart-up" id="dashMonthTotal"></div></div>
+            <div class="line-chart" id="lineChart"></div>
+            <div class="month-axis" id="monthAxis"></div>
           </div>
         </section>
       </div>
@@ -1833,8 +1849,6 @@ const STAGE_WON='yutgan';
 const STAGE_OP_QUAL='op_malakali';
 const REQUIRED_STAGE_IDS=[STAGE_AGREED,STAGE_WON];
 const SC = {yangi:'#2563EB',malakali:'#A855F7',muzokaralar:'#22C55E',taklif:'#F59E0B',sotib_olishga_rozi:'#0EA5E9',yutgan:'#22C55E',yutqazilgan:'#EF4444',op_yangi:'#2563EB',op_qayta:'#F59E0B',op_malakali:'#10B981',op_yutqazilgan:'#EF4444'};
-const DASH_ROWS = [];
-const BAR_DATA = [];
 
 let deals = [];
 let managers = [];
@@ -3776,20 +3790,212 @@ function showDetail(name,phone,init,email){
 // ════════════════════════════════════════
 //  DASHBOARD
 // ════════════════════════════════════════
-function renderDashExtras(){
-  const rowEl=document.getElementById('dashboardRows');
-  if(rowEl)rowEl.innerHTML=DASH_ROWS.map((r,i)=>`
-    <tr>
-      <td class="rank-cell">${i+1}. ${i<3?'🎖️':''}</td>
-      <td><div class="ac"><div class="av" style="background:${i===0?'linear-gradient(135deg,#60A5FA,#2563EB)':i===1?'linear-gradient(135deg,#F472D0,#C026D3)':i===2?'linear-gradient(135deg,#FBBF24,#F59E0B)':'linear-gradient(135deg,#f9a8d4,#ec4899)'}">${r[1]}</div><div class="dn">${r[0]}</div></div></td>
-      <td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td>
-      <td><div class="trend ${r[5]}"><span style="color:${r[5]==='red'?'var(--red)':r[5]==='yellow'?'var(--yellow)':'var(--green)'}">↗ 12%</span><div class="trend-line"><span style="width:${r[6]}"></span></div><span>${r[6]}</span></div></td>
-    </tr>`).join('');
-  const barEl=document.getElementById('barChart');
-  if(barEl)barEl.innerHTML=BAR_DATA.map(([plan,done],i)=>{
-    const fill=Math.min(100,Math.round(done/plan*100));
-    return `<div class="plan-stick" title="${i+1}-kun: reja ${plan}, bajarildi ${done} (${fill}%)"><div class="plan-tube" style="--plan:${plan}%;--done:${fill}%"><span class="plan-mark"></span><span class="plan-fill"></span></div></div>`;
+let dashMetric='leader'; // leader | kassa | reja | konv
+let dashPeriod='month';  // day | month
+function setDashMetric(m,el){
+  dashMetric=m;
+  document.querySelectorAll('#dashMetricTabs .seg-tab').forEach(t=>t.classList.remove('active'));
+  el?.classList.add('active');
+  renderDashLeaderboard();
+}
+function setDashPeriod(p,el){
+  dashPeriod=p;
+  document.querySelectorAll('#dashPeriodTabs .seg-tab').forEach(t=>t.classList.remove('active'));
+  el?.classList.add('active');
+  renderDashLeaderboard();
+}
+const DASH_TK=iso=>iso?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)):'';
+const dashSoldDate=d=>d.wonAt||d.updatedAt||d.createdAt;
+// Har bir menejer bo'yicha davr ko'rsatkichlari (davr: 'day' — bugun, 'month' — joriy oy)
+function dashManagerStats(period){
+  const todayKey=DASH_TK(new Date().toISOString());
+  const monthKey=todayKey.slice(0,7);
+  const inPeriod=iso=>period==='day'?DASH_TK(iso)===todayKey:DASH_TK(iso).slice(0,7)===monthKey;
+  // Menejer faqat o'z bitimlarini ko'radi (API cheklovi) — boshqalar 0 bo'lib chiqmasligi uchun faqat o'zini ko'rsatamiz
+  const sellers=managers.filter(m=>m.role==='manager' && (isAdmin() || String(m.id)===String(currentUser().id)));
+  return sellers.map(m=>{
+    const owned=deals.filter(d=>String(d.ownerId)===String(m.id));
+    const wonInPeriod=owned.filter(d=>d.col===STAGE_WON && inPeriod(dashSoldDate(d)));
+    const revenue=wonInPeriod.reduce((s,d)=>s+Number(d.price||0),0);
+    const cash=wonInPeriod.filter(isCashSale).reduce((s,d)=>s+Number(d.price||0),0);
+    const leadsInPeriod=owned.filter(d=>inPeriod(d.createdAt)).length;
+    const salary=calculateManagerCompensation(m).earnings.netPayment;
+    return {m,revenue,cash,salesCount:wonInPeriod.length,leadsInPeriod,salary,
+      conv:leadsInPeriod?Math.round(wonInPeriod.length/leadsInPeriod*100):0};
+  });
+}
+function renderDashboard(){
+  renderDashTopCards();
+  renderDashLeaderboard();
+  renderDashBarChart();
+  renderDashLineChart();
+}
+function renderDashTopCards(){
+  const el=document.getElementById('dashTopCards');
+  if(!el)return;
+  const todayKey=DASH_TK(new Date().toISOString());
+  const monthKey=todayKey.slice(0,7);
+  const won=deals.filter(d=>d.col===STAGE_WON);
+  const todaySales=won.filter(d=>DASH_TK(dashSoldDate(d))===todayKey);
+  const monthSales=won.filter(d=>DASH_TK(dashSoldDate(d)).slice(0,7)===monthKey);
+  const todayCash=todaySales.reduce((s,d)=>s+Number(d.price||0),0);
+  const monthCash=monthSales.reduce((s,d)=>s+Number(d.price||0),0);
+  const goal=Number(KPI_TARGETS.monthlyRevenue||0)*Math.max(1,managers.filter(m=>m.role==='manager').length||1);
+  const pct=goal?Math.min(100,Math.round(monthCash/goal*100)):0;
+  const avgCheck=monthSales.length?Math.round(monthCash/monthSales.length):0;
+  const primary=`
+    <div class="dash-card primary">
+      <div class="dash-label">Bugungi tushum</div>
+      <div class="dash-big">${formatMoney(todayCash)}</div>
+      <div class="dash-money">Oylik: ${formatMoney(monthCash)} <span class="role-badge role-manager">${pct}%</span></div>
+      <div class="dash-goal">Jamoa maqsadi: ${formatMoney(goal)}</div>
+      <div class="dash-goal-bar"><span style="width:${pct}%"></span></div>
+      <div class="dash-pills">
+        <span class="dash-pill">🏆 Bugun: ${todaySales.length} ta sotuv</span>
+        <span class="dash-pill">📅 Oyda: ${monthSales.length} ta</span>
+        <span class="dash-pill">💳 O'rtacha chek: ${formatMoney(avgCheck)}</span>
+      </div>
+    </div>`;
+  const stats=dashManagerStats('month').sort((a,b)=>b.revenue-a.revenue);
+  const colors=['blue','pink','yellow'];
+  const medals=['🥇','🥈','🥉'];
+  const performers=[0,1,2].map(i=>{
+    const s=stats[i];
+    if(!s)return `<div class="dash-card performer-card ${colors[i]}"><span class="performer-medal">${medals[i]}</span><div class="performer-avatar">—</div><div class="performer-name">Menejer yo'q</div><div class="performer-sub">&nbsp;</div><div class="performer-meta"><span>Natija: 0 UZS</span><span>Sotuv: 0 ta</span></div></div>`;
+    return `
+    <div class="dash-card performer-card ${colors[i]}">
+      <span class="performer-medal">${medals[i]}</span>
+      <div class="performer-avatar">${esc(managerInitials(s.m))}</div>
+      <div class="performer-name">${esc(s.m.name)}</div>
+      <div class="performer-sub">${esc(POSITION_LABELS[s.m.position]||'Menejer')}</div>
+      <div class="performer-meta"><span>Natija: ${formatMoney(s.revenue)}</span><span>Sotuv: ${s.salesCount} ta</span></div>
+    </div>`;
   }).join('');
+  el.innerHTML=primary+performers;
+}
+function renderDashLeaderboard(){
+  const head=document.getElementById('dashboardHead');
+  const body=document.getElementById('dashboardRows');
+  const note=document.getElementById('dashTableNote');
+  if(!head||!body)return;
+  const periodLabel=dashPeriod==='day'?'Bugun':'Joriy oy';
+  const daysInMonth=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate();
+  const planRevenue=dashPeriod==='day'?Math.round(KPI_TARGETS.monthlyRevenue/daysInMonth):KPI_TARGETS.monthlyRevenue;
+  const planSales=dashPeriod==='day'?KPI_TARGETS.dailySales:KPI_TARGETS.monthlySales;
+  let stats=dashManagerStats(dashPeriod);
+  if(!stats.length){
+    head.innerHTML='';
+    body.innerHTML=`<tr><td colspan="6"><div class="dash-empty">Hozircha sotuv menejerlari yo'q</div></td></tr>`;
+    if(note)note.textContent='';
+    return;
+  }
+  const trendCell=pct=>{
+    const cls=pct>=100?'':pct>=50?'yellow':'red';
+    const color=pct>=100?'var(--green)':pct>=50?'var(--yellow)':'var(--red)';
+    return `<div class="trend ${cls}"><span class="trend-pct" style="color:${color}">${pct}%</span><div class="trend-line"><span style="width:${Math.min(100,pct)}%"></span></div></div>`;
+  };
+  const nameCell=(s,i)=>{
+    const grad=['linear-gradient(135deg,#60A5FA,#2563EB)','linear-gradient(135deg,#F472D0,#C026D3)','linear-gradient(135deg,#FBBF24,#F59E0B)'][i]||'linear-gradient(135deg,#94A3B8,#64748B)';
+    return `<div class="ac"><div class="av" style="background:${grad}">${esc(managerInitials(s.m))}</div><div class="dn">${esc(s.m.name)}</div></div>`;
+  };
+  const medal=i=>i===0?'🥇':i===1?'🥈':i===2?'🥉':'';
+  if(dashMetric==='leader'){
+    stats.sort((a,b)=>b.revenue-a.revenue);
+    head.innerHTML=`<tr><th>№</th><th>Sotuv menejerlari</th><th>Reja (${periodLabel.toLowerCase()})</th><th>Bajargani</th><th>Hisoblangan maosh</th><th>Bajarilish</th></tr>`;
+    body.innerHTML=stats.map((s,i)=>`<tr>
+      <td class="rank-cell">${i+1} ${medal(i)}</td><td>${nameCell(s,i)}</td>
+      <td>${formatMoney(planRevenue)}</td><td style="font-weight:700;color:var(--td)">${formatMoney(s.revenue)}</td>
+      <td>${formatMoney(s.salary)}</td>
+      <td>${trendCell(planRevenue?Math.round(s.revenue/planRevenue*100):0)}</td></tr>`).join('');
+  }else if(dashMetric==='kassa'){
+    stats.sort((a,b)=>b.cash-a.cash);
+    head.innerHTML=`<tr><th>№</th><th>Sotuv menejerlari</th><th>Naqd tushum</th><th>Umumiy tushum</th><th>Naqd ulushi</th></tr>`;
+    body.innerHTML=stats.map((s,i)=>`<tr>
+      <td class="rank-cell">${i+1} ${medal(i)}</td><td>${nameCell(s,i)}</td>
+      <td style="font-weight:700;color:var(--td)">${formatMoney(s.cash)}</td><td>${formatMoney(s.revenue)}</td>
+      <td>${trendCell(s.revenue?Math.round(s.cash/s.revenue*100):0)}</td></tr>`).join('');
+  }else if(dashMetric==='reja'){
+    stats.sort((a,b)=>b.salesCount-a.salesCount);
+    head.innerHTML=`<tr><th>№</th><th>Sotuv menejerlari</th><th>Reja (sotuv soni)</th><th>Sotuvlar</th><th>Bajarilish</th></tr>`;
+    body.innerHTML=stats.map((s,i)=>`<tr>
+      <td class="rank-cell">${i+1} ${medal(i)}</td><td>${nameCell(s,i)}</td>
+      <td>${planSales} ta</td><td style="font-weight:700;color:var(--td)">${s.salesCount} ta</td>
+      <td>${trendCell(planSales?Math.round(s.salesCount/planSales*100):0)}</td></tr>`).join('');
+  }else{
+    stats.sort((a,b)=>b.conv-a.conv);
+    head.innerHTML=`<tr><th>№</th><th>Sotuv menejerlari</th><th>Kelgan lidlar</th><th>Sotuvlar</th><th>Konversiya</th></tr>`;
+    body.innerHTML=stats.map((s,i)=>`<tr>
+      <td class="rank-cell">${i+1} ${medal(i)}</td><td>${nameCell(s,i)}</td>
+      <td>${s.leadsInPeriod} ta</td><td style="font-weight:700;color:var(--td)">${s.salesCount} ta</td>
+      <td>${trendCell(s.conv)}</td></tr>`).join('');
+  }
+  if(note)note.textContent=`${stats.length} ta menejer · ${periodLabel} · maosh butun davr bo'yicha hisoblangan`;
+}
+function renderDashBarChart(){
+  const el=document.getElementById('barChart');
+  if(!el)return;
+  const now=new Date();
+  const todayKey=DASH_TK(now.toISOString());
+  const monthKey=todayKey.slice(0,7);
+  const daysInMonth=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
+  const won=deals.filter(d=>d.col===STAGE_WON && DASH_TK(dashSoldDate(d)).slice(0,7)===monthKey);
+  const byDay=Array.from({length:daysInMonth},()=>0);
+  won.forEach(d=>{ const day=Number(DASH_TK(dashSoldDate(d)).slice(8,10)); if(day>=1)byDay[day-1]+=Number(d.price||0); });
+  const dailyPlan=Math.max(1,Math.round(KPI_TARGETS.monthlyRevenue/daysInMonth));
+  const chartMax=Math.max(dailyPlan,...byDay)*1.15;
+  el.innerHTML=byDay.map((v,i)=>{
+    // Naycha bo'yi — kun natijasi va kunlik rejaning kattasi (grafik maksimumiga nisbatan),
+    // ichki to'ldirish esa naycha ichidagi haqiqiy natija ulushi
+    const planH=Math.max(10,Math.round(dailyPlan/chartMax*100));
+    const doneAbs=Math.round(v/chartMax*100);
+    const tubeH=Math.max(planH,doneAbs);
+    const fillH=tubeH?Math.min(100,Math.round(doneAbs/tubeH*100)):0;
+    return `<div class="plan-stick" title="${i+1}-kun: ${formatMoney(v)} (reja: ${formatMoney(dailyPlan)})"><div class="plan-tube" style="--plan:${tubeH}%;--done:${fillH}%"><span class="plan-fill"></span></div></div>`;
+  }).join('');
+  // O'tgan oyga nisbatan o'sish (shu kungacha bo'lgan davr taqqoslanadi)
+  const prev=new Date(now.getFullYear(),now.getMonth()-1,1);
+  const prevKey=DASH_TK(prev.toISOString()).slice(0,7);
+  const dayOfMonth=now.getDate();
+  const prevRevenue=deals.filter(d=>{
+    const k=DASH_TK(dashSoldDate(d));
+    return d.col===STAGE_WON && k.slice(0,7)===prevKey && Number(k.slice(8,10))<=dayOfMonth;
+  }).reduce((s,d)=>s+Number(d.price||0),0);
+  const curRevenue=byDay.reduce((s,v)=>s+v,0);
+  const trendEl=document.getElementById('dashTrendPct');
+  if(trendEl){
+    if(!prevRevenue){ trendEl.textContent=curRevenue?'Yangi davr':''; trendEl.classList.remove('down'); }
+    else{
+      const diff=Math.round((curRevenue-prevRevenue)/prevRevenue*100);
+      trendEl.textContent=`${diff>=0?'↗':'↘'} ${Math.abs(diff)}% o'tgan oyga nisbatan`;
+      trendEl.classList.toggle('down',diff<0);
+    }
+  }
+}
+function renderDashLineChart(){
+  const el=document.getElementById('lineChart');
+  const axis=document.getElementById('monthAxis');
+  if(!el)return;
+  const MONTH_UZ=['Yan','Fev','Mar','Apr','May','Iyn','Iyl','Avg','Sen','Okt','Noy','Dek'];
+  const now=new Date();
+  const months=[];
+  for(let i=11;i>=0;i--){
+    const dt=new Date(now.getFullYear(),now.getMonth()-i,1);
+    months.push({key:DASH_TK(dt.toISOString()).slice(0,7),label:MONTH_UZ[dt.getMonth()]});
+  }
+  const won=deals.filter(d=>d.col===STAGE_WON);
+  const totals=months.map(mo=>won.filter(d=>DASH_TK(dashSoldDate(d)).slice(0,7)===mo.key).reduce((s,d)=>s+Number(d.price||0),0));
+  const max=Math.max(1,...totals);
+  const W=520,H=210,PAD=8;
+  const pts=totals.map((v,i)=>[Math.round(i*(W/(totals.length-1))),Math.round(H-PAD-(v/max)*(H-PAD*3))]);
+  const line=pts.map((p,i)=>`${i?'L':'M'}${p[0]},${p[1]}`).join(' ');
+  el.innerHTML=`<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+    <path d="${line} L${W},${H} L0,${H} Z" fill="rgba(37,99,235,.07)"/>
+    <path d="${line}" fill="none" stroke="#3B82F6" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${pts.map((p,i)=>`<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="#fff" stroke="#3B82F6" stroke-width="2"><title>${months[i].label}: ${formatMoney(totals[i])}</title></circle>`).join('')}
+  </svg>`;
+  if(axis)axis.innerHTML=months.map(mo=>`<span>${mo.label}</span>`).join('');
+  const totalEl=document.getElementById('dashMonthTotal');
+  if(totalEl)totalEl.textContent=`Jami 12 oy: ${formatMoney(totals.reduce((s,v)=>s+v,0))}`;
 }
 
 // ════════════════════════════════════════
