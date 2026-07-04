@@ -1885,7 +1885,7 @@ const DEFAULT_COMP_SETTINGS={
     qual:{limit:5,rate:7000,rateAbove:10000},
     app:{limit:10,rate:500,rateAbove:500},
     saleBonus:20000,                                    // operator lidi sotilganda
-    fastSale:{days:3,amount:0}                          // qual N kun ichida sotilsa, shu qual uchun qo'shimcha
+    saleWindowDays:3                                    // qual dan keyin shu muddat ichida sotilsagina bonus (0 = muddatsiz)
   }
 };
 let compSettings=JSON.parse(JSON.stringify(DEFAULT_COMP_SETTINGS));
@@ -2723,7 +2723,7 @@ function renderDealStats(){
       {icon:'👥', label:'Ishga olingan', value:op.todayProcessed, unit:'ta lid', sub:`Bugun +${op.todayContacts} yangi`, color:'#2563EB', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', accent:'#BFDBFE', progress:Math.min(100,op.todayProcessed*5)},
       {icon:'🏅', label:'Bu oydagi bonuslarim', value:formatMoney(op.monthBonus), unit:'', sub:`Qual: ${op.monthQual} ta · Sotuv: ${op.monthSold} ta · Ilova: ${op.monthAppBonus?formatMoney(op.monthAppBonus):'0 UZS'}`, color:'#7C3AED', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', accent:'#C4B5FD', progress:Math.min(100,Math.round(op.monthBonus/500000*100))},
       {icon:'📱', label:'Ilova o\'rnatilgan', value:op.todayApp, unit:'ta', sub:`Bonus oladi: ${op.todayAppBonus} ta · +${formatMoney(op.appBonus)}`, color:'#0891B2', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', accent:'#A5F3FC', progress:Math.min(100,op.todayApp*10)},
-      {icon:'💰', label:'Bugungi bonus', value:formatMoney(op.todayBonus), unit:'', sub:`Q: ${formatMoney(op.qualBonus)} · S: ${formatMoney(op.saleBonus)} · I: ${formatMoney(op.appBonus)}${op.fastBonus?` · Tez: ${formatMoney(op.fastBonus)}`:''}`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC', progress:Math.min(100,Math.round(op.todayBonus/100000*100))},
+      {icon:'💰', label:'Bugungi bonus', value:formatMoney(op.todayBonus), unit:'', sub:`Q: ${formatMoney(op.qualBonus)} · S: ${formatMoney(op.saleBonus)} · I: ${formatMoney(op.appBonus)}`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC', progress:Math.min(100,Math.round(op.todayBonus/100000*100))},
     ];
     renderKpiCards(cards);
     return;
@@ -3125,7 +3125,12 @@ async function moveDealToStage(deal,target,options={}){
       if(deal.operatorId){
         deal.wonAt = new Date().toISOString();
         const opUser = managerById(deal.operatorId);
-        if(opUser) showToast(`🎯 Operator ${esc(opUser.name.split(' ')[0])} uchun +${formatMoney(compSettings.operator.saleBonus)} bonus yozildi`);
+        const winDays = Number(compSettings.operator.saleWindowDays || 0);
+        const startTs = new Date(deal.qualAt || deal.createdAt).getTime();
+        const inWindow = !winDays || (Date.now() - startTs <= winDays * 86400000);
+        if(opUser) showToast(inWindow
+          ? `🎯 Operator ${esc(opUser.name.split(' ')[0])} uchun +${formatMoney(compSettings.operator.saleBonus)} bonus yozildi`
+          : `⏳ Sotuv qual dan ${winDays} kundan kech bo'ldi — operator bonusi yozilmadi`);
       }
     }
     // Operator malakali qilganda → menejer voronkasiga yangi lid qo'shish
@@ -4025,25 +4030,26 @@ function calculateOperatorBonus(user){
   const todayApp = appDeals.filter(isAppToday).length;
   const todayAppBonus = appBonusDeals.filter(isAppToday).length;
 
-  // Tez sotuv bonusi: qual qilingan lid sozlamadagi N kun ichida sotilsa, shu qual uchun qo'shimcha
-  const fastCfg = compSettings.operator.fastSale;
-  const isFastSale = d => {
-    if (!d.qualAt || !Number(fastCfg.amount)) return false;
-    const soldTs = new Date(d.wonAt || d.updatedAt || d.createdAt).getTime();
-    const qualTs = new Date(d.qualAt).getTime();
-    return soldTs >= qualTs && soldTs - qualTs <= Number(fastCfg.days || 3) * 86400000;
-  };
-  const fastDeals = soldDeals.filter(isFastSale);
+  // Sotilgan lid bonusi faqat qual belgilangan muddat (saleWindowDays) ichida sotilsa yoziladi —
+  // kech sotilgan lid qayta obrabotka qilingan hisoblanadi va operatorga bonus bermaydi.
+  // saleWindowDays = 0 bo'lsa muddat cheklovi yo'q.
+  const oc = compSettings.operator;
   const soldDateKey = d => tashkentDateKey(d.wonAt || d.updatedAt || d.createdAt);
-  const todayFast = fastDeals.filter(d => soldDateKey(d) === todayKey).length;
+  const isBonusSale = d => {
+    const win = Number(oc.saleWindowDays || 0);
+    if (!win) return true;
+    const startTs = new Date(d.qualAt || d.createdAt).getTime();
+    const soldTs = new Date(d.wonAt || d.updatedAt || d.createdAt).getTime();
+    return soldTs >= startTs && soldTs - startTs <= win * 86400000;
+  };
+  const bonusSales = soldDeals.filter(isBonusSale);
+  const todaySoldBonusCount = bonusSales.filter(d => soldDateKey(d) === todayKey).length;
 
   // Bonus hisoblash (stavkalar Admin → KPI va Bonuslar sahifasidan)
-  const oc = compSettings.operator;
   const qualBonus = tierBonus(todayQual, oc.qual);
-  const saleBonus = todaySold * Number(oc.saleBonus || 0);
+  const saleBonus = todaySoldBonusCount * Number(oc.saleBonus || 0);
   const appBonus = tierBonus(todayAppBonus, oc.app);
-  const fastBonus = todayFast * Number(fastCfg.amount || 0);
-  const todayBonus = qualBonus + saleBonus + appBonus + fastBonus;
+  const todayBonus = qualBonus + saleBonus + appBonus;
 
   // Shu oydagi jami bonus
   const monthKey = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit'}).format(new Date()).slice(0,7);
@@ -4054,20 +4060,18 @@ function calculateOperatorBonus(user){
   const monthQual = dedupeQualLeads(qualDeals.filter(isQualThisMonth)).length;
   const monthSold = soldDeals.filter(isThisMonth).length;
   const monthAppCount = appBonusDeals.filter(isAppThisMonth).length;
-  const monthFast = fastDeals.filter(d => soldDateKey(d).slice(0,7) === monthKey).length;
+  const monthSoldBonusCount = bonusSales.filter(d => soldDateKey(d).slice(0,7) === monthKey).length;
 
   const monthQualBonus = tierBonus(monthQual, oc.qual);
-  const monthSaleBonus = monthSold * Number(oc.saleBonus || 0);
+  const monthSaleBonus = monthSoldBonusCount * Number(oc.saleBonus || 0);
   const monthAppBonus = monthAppCount * Number(oc.app.rate || 0);
-  const monthFastBonus = monthFast * Number(fastCfg.amount || 0);
-  const monthBonus = monthQualBonus + monthSaleBonus + monthAppBonus + monthFastBonus;
+  const monthBonus = monthQualBonus + monthSaleBonus + monthAppBonus;
 
   return {
     totalContacts, todayContacts, todayProcessed, todayQual, todaySold,
     soldDeals, qualDeals, todayApp, todayAppBonus,
     appDeals, appBonusDeals, todayBonus, qualBonus, saleBonus, appBonus,
-    todayFast, fastBonus,
-    monthBonus, monthQual, monthSold, monthQualBonus, monthSaleBonus, monthAppBonus, monthFastBonus
+    monthBonus, monthQual, monthSold, monthQualBonus, monthSaleBonus, monthAppBonus
   };
 }
 
@@ -4216,15 +4220,17 @@ function calcOperatorAnalytics(user, range){
     qualByDay[key] = (qualByDay[key] || 0) + 1;
   });
   const qualBonus = Object.values(qualByDay).reduce((sum, n) => sum + tierBonus(n, oc.qual), 0);
-  const saleBonus = soldDeals.length*Number(oc.saleBonus||0);
-  const appBonus = appInstalled*Number(oc.app.rate||0);
-  const fastBonus = soldDeals.filter(d => {
-    if (!d.qualAt || !Number(oc.fastSale.amount)) return false;
+  // Sotuv bonusi faqat qual dan keyin saleWindowDays ichida sotilgan lidlar uchun (0 = muddatsiz)
+  const bonusSold = soldDeals.filter(d => {
+    const win = Number(oc.saleWindowDays || 0);
+    if (!win) return true;
+    const startTs = new Date(d.qualAt || d.createdAt).getTime();
     const soldTs = new Date(d.wonAt || d.updatedAt || d.createdAt).getTime();
-    const qualTs = new Date(d.qualAt).getTime();
-    return soldTs >= qualTs && soldTs - qualTs <= Number(oc.fastSale.days || 3) * 86400000;
-  }).length * Number(oc.fastSale.amount || 0);
-  return {newContacts, qualDeals, appInstalled, soldDeals:soldDeals.length, lostDeals, convRate, qualBonus, saleBonus, appBonus, fastBonus, totalBonus:qualBonus+saleBonus+appBonus+fastBonus};
+    return soldTs >= startTs && soldTs - startTs <= win * 86400000;
+  }).length;
+  const saleBonus = bonusSold*Number(oc.saleBonus||0);
+  const appBonus = appInstalled*Number(oc.app.rate||0);
+  return {newContacts, qualDeals, appInstalled, soldDeals:soldDeals.length, bonusSold, lostDeals, convRate, qualBonus, saleBonus, appBonus, totalBonus:qualBonus+saleBonus+appBonus};
 }
 
 function recentDealActions(user, limit=8){
@@ -4610,9 +4616,8 @@ function renderOperatorAnalytics(wrap, user, range, periodLabel){
         <div class="an-panel-body">
           ${[
             [`Qual bonus (1-${compSettings.operator.qual.limit} ta = ${formatMoney(compSettings.operator.qual.rate)}, ${Number(compSettings.operator.qual.limit)+1}+ = ${formatMoney(compSettings.operator.qual.rateAbove)})`, op.qualDeals, op.qualBonus, '#10B981', `${op.qualDeals} ta qual`],
-            [`Sotuv bonusi (har biri ${formatMoney(compSettings.operator.saleBonus)})`, op.soldDeals, op.saleBonus, '#2563EB', `${op.soldDeals} ta sotuv`],
+            [`Sotuv bonusi (har biri ${formatMoney(compSettings.operator.saleBonus)}${Number(compSettings.operator.saleWindowDays)>0?`, qual dan ${compSettings.operator.saleWindowDays} kun ichida`:''})`, op.bonusSold, op.saleBonus, '#2563EB', `${op.bonusSold} / ${op.soldDeals} ta sotuv bonusga kirdi`],
             [`Ilova bonusi (har biri ${formatMoney(compSettings.operator.app.rate)})`, op.appInstalled, op.appBonus, '#A855F7', `${op.appInstalled} ta ilova`],
-            ...(Number(compSettings.operator.fastSale.amount)>0?[[`Tez sotuv bonusi (${compSettings.operator.fastSale.days} kun ichida, har biri ${formatMoney(compSettings.operator.fastSale.amount)})`, '', op.fastBonus, '#F59E0B', 'Qual tez sotilgani uchun']]:[]),
           ].map(([label,count,bonus,color,sub])=>`
             <div class="quality-row">
               <div>
@@ -5916,8 +5921,7 @@ function renderFinancePage(){
     ${card('Operator — bonuslari','Operatorning lidlar bilan ishlashdan oladigan pullari',`
       ${fieldRow('Qual lid bonusi',`${num('operator.qual.limit',70,'tagacha, har biri')}${num('operator.qual.rate',110,"so'm; oshsa hammasi")}${num('operator.qual.rateAbove',110,"so'mdan")}`,'Kuniga malakali qilingan lidlar uchun')}
       ${fieldRow('Ilova o\'rnatish bonusi',`${num('operator.app.limit',70,'tagacha, har biri')}${num('operator.app.rate',110,"so'm; oshsa hammasi")}${num('operator.app.rateAbove',110,"so'mdan")}`,'Mijoz ilovani o\'rnatganda')}
-      ${fieldRow('Sotilgan lid bonusi',num('operator.saleBonus',120,"so'm / har sotuv"),'Operator yuborgan lid menejer tomonidan sotilganda')}
-      ${fieldRow('Tez sotuv bonusi',`<span style="font-size:12px;color:var(--mu)">Qual</span>${num('operator.fastSale.days',60,'kun ichida sotilsa, +')}${num('operator.fastSale.amount',120,"so'm")}`,'Qual qilingan lid belgilangan muddat ichida sotilsa, shu qual uchun qo\'shimcha')}
+      ${fieldRow('Sotilgan lid bonusi',`${num('operator.saleBonus',120,"so'm; qual dan")}${num('operator.saleWindowDays',60,'kun ichida sotilsa (0 = muddatsiz)')}`,'Operator yuborgan lid menejer tomonidan belgilangan muddat ichida sotilsagina bonus yoziladi — kech sotilgan lid qayta ishlangan hisoblanadi')}
     `)}
 
     <div style="display:flex;gap:10px;align-items:center;margin-top:4px">
