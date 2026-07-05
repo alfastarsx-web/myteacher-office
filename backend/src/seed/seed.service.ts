@@ -68,23 +68,30 @@ export class SeedService implements OnApplicationBootstrap {
     ]);
   }
 
-  // "Qisman to'lov" bosqichi har doim "Sotib olishga rozi"dan keyin turishini kafolatlaydi.
-  // Har boot da idempotent ishlaydi: bosqich yo'q bo'lsa qo'shadi, noto'g'ri joyda bo'lsa
-  // (yoki sortOrder lar takrorlangan bo'lsa) butun tartibni qayta raqamlab tuzatadi.
+  // Majburiy bosqichlar tartibini kafolatlaydi: "Sotib olishga rozi" (ba'zi eski bazalarda
+  // umuman yo'q — faqat frontendda virtual ko'rsatilardi) va undan keyin "Qisman to'lov".
+  // Har boot da idempotent: yetishmaganini qo'shadi, tartib noto'g'ri/takror bo'lsa 1..n qilib
+  // qayta raqamlaydi. Mavjud bosqichlarning nomlari (masalan, o'zgartirilgan labellari) saqlanadi.
   private async ensurePartialStage() {
     const all = await this.stages.find({ order: { sortOrder: 'ASC', id: 'ASC' } });
     if (!all.length) return;
-    const rest = all.filter(s => s.id !== 'qisman');
+    const list = all.filter(s => s.id !== 'sotib_olishga_rozi' && s.id !== 'qisman');
+    const rozi =
+      all.find(s => s.id === 'sotib_olishga_rozi') ||
+      this.stages.create({ id: 'sotib_olishga_rozi', label: 'Sotib olishga rozi', color: '#0EA5E9', sortOrder: 0 });
     const qisman =
       all.find(s => s.id === 'qisman') ||
       this.stages.create({ id: 'qisman', label: "Qisman to'lov", color: '#F59E0B', sortOrder: 0 });
-    const roziIdx = rest.findIndex(s => s.id === 'sotib_olishga_rozi');
-    const insertAt = roziIdx >= 0 ? roziIdx + 1 : Math.max(rest.length - 1, 0);
-    rest.splice(insertAt, 0, qisman);
-    const needsFix = rest.some((s, i) => Number(s.sortOrder) !== i + 1);
+    // Rozi o'rni: "Yutqazilgan"dan oldin, u bo'lmasa "Yutgan"dan oldin, u ham bo'lmasa oxirida
+    let anchor = list.findIndex(s => s.id === 'yutqazilgan');
+    if (anchor < 0) anchor = list.findIndex(s => s.id === 'yutgan');
+    const roziAt = anchor >= 0 ? anchor : list.length;
+    list.splice(roziAt, 0, rozi);
+    list.splice(roziAt + 1, 0, qisman); // qisman har doim rozidan keyin
+    const needsFix = list.some((s, i) => Number(s.sortOrder) !== i + 1);
     if (!needsFix) return;
-    rest.forEach((s, i) => { s.sortOrder = i + 1; });
-    await this.stages.save(rest);
+    list.forEach((s, i) => { s.sortOrder = i + 1; });
+    await this.stages.save(list);
   }
 
   private async seedDeals() {

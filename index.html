@@ -2112,11 +2112,23 @@ function ensureRequiredStages(){
       // Qisman to'lov — har doim "Sotib olishga rozi"dan keyin turadi
       const agreedIdx=COLS.findIndex(c=>c.id===STAGE_AGREED);
       COLS.splice(agreedIdx>=0?agreedIdx+1:Math.max(COLS.length-1,0),0,stage);
+    }else if(stage.id===STAGE_AGREED){
+      // Rozi — "Yutqazilgan"dan oldin, u bo'lmasa "Yutgan"dan oldin
+      let idx=COLS.findIndex(c=>c.id==='yutqazilgan');
+      if(idx<0)idx=COLS.findIndex(c=>c.id===STAGE_WON);
+      COLS.splice(idx>=0?idx:Math.max(COLS.length-1,0),0,stage);
     }else{
       COLS.splice(Math.max(COLS.length-1,0),0,stage);
     }
     SC[stage.id]=stage.color;
   });
+  // Qisman to'lov API dan boshqa joyda kelgan bo'lsa ham, rozidan keyingi o'ringa ko'chiramiz
+  const qIdx=COLS.findIndex(c=>c.id===STAGE_PARTIAL);
+  const aIdx=COLS.findIndex(c=>c.id===STAGE_AGREED);
+  if(qIdx>=0 && aIdx>=0 && qIdx!==aIdx+1){
+    const [q]=COLS.splice(qIdx,1);
+    COLS.splice(COLS.findIndex(c=>c.id===STAGE_AGREED)+1,0,q);
+  }
 }
 function apiBase(){
   if(location.protocol.startsWith('http'))return location.origin;
