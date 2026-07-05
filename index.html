@@ -2109,7 +2109,10 @@ function currentUserDeals(){
   const u=currentUser();
   if(u.role==='admin') return deals;
   if(u.role==='operator') return deals.filter(d=>String(d.operatorId)===String(u.id));
-  return hasPerm('all',u)?deals:deals.filter(d=>d.ownerId===u.id);
+  // Menejer: o'ziga biriktirilganlar + hali biriktirilmagan (operator malakali qilgan) lidlar —
+  // backend list() bilan bir xil qoida, aks holda ular hech qaysi ko'rinishda chiqmay qolardi
+  const OP_STAGE_IDS=['op_yangi','op_qayta','op_malakali','op_yutqazilgan'];
+  return hasPerm('all',u)?deals:deals.filter(d=>d.ownerId===u.id || (d.ownerId==null && !OP_STAGE_IDS.includes(d.col)));
 }
 function managerById(id){ return managers.find(m=>String(m.id)===String(id)); }
 function managerInitials(m){ return (m?.avatar || m?.name?.split(' ').map(x=>x[0]).join('') || '—').slice(0,2).toUpperCase(); }
@@ -3066,9 +3069,13 @@ function dealPayProgressHtml(d){
 function renderKanban(){
   renderDealStats();
   const rows=visibleDeals();
-  document.getElementById('sBoard').innerHTML=visibleStages().map(col=>{
-    // Admin uchun: operator tomonidan malakali qilingan lidlar ('op_malakali') ham 'malakali' kolonnasida ko'rinadi
-    const cd=rows.filter(d=>d.col===col.id || (isAdmin() && col.id==='malakali' && d.col==='op_malakali')).map(d=>({...d,_kanbanTask:kanbanTaskInfo(d)})).sort((a,b)=>(a._kanbanTask.sort-b._kanbanTask.sort) || (Number(b.id||0)-Number(a.id||0)));
+  const stages=visibleStages();
+  // 'op_malakali' ustuni ko'rinmayotgan bo'lsa (admin va menejer kanbanida), operator tomonidan
+  // malakali qilingan lidlar 'malakali' ustuniga qo'shib ko'rsatiladi — aks holda ular kanbanda
+  // umuman ko'rinmay qolardi (List esa har qanday bosqichni ko'rsataveradi)
+  const hasOpQualCol=stages.some(c=>c.id===STAGE_OP_QUAL);
+  document.getElementById('sBoard').innerHTML=stages.map(col=>{
+    const cd=rows.filter(d=>d.col===col.id || (!hasOpQualCol && col.id==='malakali' && d.col===STAGE_OP_QUAL)).map(d=>({...d,_kanbanTask:kanbanTaskInfo(d)})).sort((a,b)=>(a._kanbanTask.sort-b._kanbanTask.sort) || (Number(b.id||0)-Number(a.id||0)));
     const tot=cd.reduce((s,d)=>s+d.price,0);
     return `<div class="col">
       <div class="col-hdr">
