@@ -1506,14 +1506,14 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
     <div class="pay-wrap">
       <div class="pay-head">
         <div><div class="pay-title">Payments and Earnings</div><div class="pay-sub">Xodimning sotuvdan ishlagan puli, bonuslari, jarimalari, oylik chiqarilishi va joriy balansi</div></div>
-        <div class="pay-period">May 2026 <span class="pay-badge" id="payRoleBadge">Menejer</span></div>
+        <div class="pay-period"><span id="payPeriodLabel">—</span> <span class="pay-badge" id="payRoleBadge">Menejer</span></div>
       </div>
       <div class="pay-grid" id="payStats"></div>
       <div class="pay-layout">
         <section class="pay-panel">
-          <div class="pay-panel-head"><div class="pay-panel-title">Sotuvlar bo'yicha daromad</div><span class="pay-badge">Kurs bonusi</span></div>
+          <div class="pay-panel-head"><div class="pay-panel-title" id="payPanelTitle">Sotuvlar bo'yicha daromad</div><span class="pay-badge" id="payPanelBadge">Kurs bonusi</span></div>
           <table class="pay-table">
-            <thead><tr><th>Sana</th><th>Mijoz</th><th>Shartnoma</th><th>Sotuv</th><th>Ishlagani</th></tr></thead>
+            <thead id="payTableHead"><tr><th>Sana</th><th>Mijoz</th><th>Shartnoma</th><th>Sotuv</th><th>Ishlagani</th></tr></thead>
             <tbody id="payRows"></tbody>
           </table>
         </section>
@@ -3074,8 +3074,16 @@ function renderKanban(){
   // malakali qilingan lidlar 'malakali' ustuniga qo'shib ko'rsatiladi — aks holda ular kanbanda
   // umuman ko'rinmay qolardi (List esa har qanday bosqichni ko'rsataveradi)
   const hasOpQualCol=stages.some(c=>c.id===STAGE_OP_QUAL);
+  // Operator kanbanida "Malakali" ustuni faqat sotuv oynasi (saleWindowDays) ichidagi lidlarni
+  // ko'rsatadi — eski, taqdiri hal bo'lganlari ustunni to'ldirib tashlamasin (bonus hisoblari
+  // va List ko'rinishiga ta'sir qilmaydi). 0 = cheklovsiz.
+  const opQualWindowMs=Number(compSettings.operator.saleWindowDays||0)*86400000;
   document.getElementById('sBoard').innerHTML=stages.map(col=>{
-    const cd=rows.filter(d=>d.col===col.id || (!hasOpQualCol && col.id==='malakali' && d.col===STAGE_OP_QUAL)).map(d=>({...d,_kanbanTask:kanbanTaskInfo(d)})).sort((a,b)=>(a._kanbanTask.sort-b._kanbanTask.sort) || (Number(b.id||0)-Number(a.id||0)));
+    let colRows=rows.filter(d=>d.col===col.id || (!hasOpQualCol && col.id==='malakali' && d.col===STAGE_OP_QUAL));
+    if(isOperator() && col.id===STAGE_OP_QUAL && opQualWindowMs>0){
+      colRows=colRows.filter(d=>Date.now()-new Date(d.qualAt||d.updatedAt||d.createdAt).getTime()<=opQualWindowMs);
+    }
+    const cd=colRows.map(d=>({...d,_kanbanTask:kanbanTaskInfo(d)})).sort((a,b)=>(a._kanbanTask.sort-b._kanbanTask.sort) || (Number(b.id||0)-Number(a.id||0)));
     const tot=cd.reduce((s,d)=>s+d.price,0);
     return `<div class="col">
       <div class="col-hdr">
@@ -5050,7 +5058,26 @@ function renderOperatorAnalytics(wrap, user, range, periodLabel){
   `;
 }
 
+function renderPayAdjustments(){
+  const myPayAdjustments=paymentAdjustments.filter(x=>!x.managerId || String(x.managerId)===String(currentUser().id));
+  document.getElementById('payAdjustments').innerHTML=myPayAdjustments.length?myPayAdjustments.map(item=>`
+    <div class="pay-row"><span>${esc(item.reason)}</span><strong style="color:${item.amount<0?'var(--red)':'var(--green)'}">${item.amount<0?'-':'+'}${formatMoney(Math.abs(item.amount))}</strong></div>
+  `).join(''):`<div class="pay-row"><span style="color:var(--mu)">Hali bonus/jarima yo'q</span></div>`;
+  return myPayAdjustments;
+}
+function renderPayTotals(gross,tax,penalties,net){
+  document.getElementById('payGross').textContent=formatMoney(gross);
+  document.getElementById('payTax').textContent=`-${formatMoney(tax)}`;
+  document.getElementById('payPenalty').textContent=`-${formatMoney(penalties)}`;
+  document.getElementById('payNet').textContent=formatMoney(net);
+  document.getElementById('payProgress').style.width=gross?`${Math.min(100,Math.round(net/gross*100))}%`:'0%';
+}
 function renderPaymentsPage(){
+  const MONTHS_UZ=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentyabr','Oktyabr','Noyabr','Dekabr'];
+  const now=new Date();
+  const periodEl=document.getElementById('payPeriodLabel');
+  if(periodEl)periodEl.textContent=`${MONTHS_UZ[now.getMonth()]} ${now.getFullYear()}`;
+  if(isOperator())return renderOperatorPayments();
   const rows=paymentDeals();
   const calc=calculateManagerCompensation(currentUser());
   const gross=calc.earnings.totalGross;
@@ -5063,6 +5090,9 @@ function renderPaymentsPage(){
     ['Sof foyda',formatMoney(netAfterTax),'good']
   ];
   document.getElementById('payRoleBadge').textContent=POSITION_LABELS[calc.position] || roleLabel(currentUser().role);
+  document.getElementById('payPanelTitle').textContent="Sotuvlar bo'yicha daromad";
+  document.getElementById('payPanelBadge').textContent=compSettings.manager.saleReward.mode==='percent'?'Foizli mukofot':'Kurs bonusi';
+  document.getElementById('payTableHead').innerHTML='<tr><th>Sana</th><th>Mijoz</th><th>Shartnoma</th><th>Sotuv</th><th>Ishlagani</th></tr>';
   document.getElementById('payStats').innerHTML=statData.map(s=>`<div class="pay-stat ${s[2]}"><div class="pay-stat-label">${s[0]}</div><div class="pay-stat-value">${s[1]}</div></div>`).join('');
   const payTotalRevenue=rows.reduce((s,d)=>s+Number(d.price||0),0);
   document.getElementById('payRows').innerHTML=rows.length?rows.map(d=>{
@@ -5071,15 +5101,58 @@ function renderPaymentsPage(){
       : (Number(compSettings.manager.courseBonuses[saleDurationMonths(d)])||0);
     return `<tr><td>${esc(d.date||'Bugun')}</td><td>${esc(customerTitle(d))}</td><td>${esc(dealTitle(d))}</td><td class="pay-money">${formatMoney(d.price)}</td><td class="pay-income">${formatMoney(income)}</td></tr>`;
   }).join(''):`<tr><td colspan="5" style="text-align:center;color:var(--mu);padding:28px">Hali sotuv yo'q</td></tr>`;
-  const myPayAdjustments=paymentAdjustments.filter(x=>!x.managerId || String(x.managerId)===String(currentUser().id));
-  document.getElementById('payAdjustments').innerHTML=myPayAdjustments.length?myPayAdjustments.map(item=>`
-    <div class="pay-row"><span>${esc(item.reason)}</span><strong style="color:${item.amount<0?'var(--red)':'var(--green)'}">${item.amount<0?'-':'+'}${formatMoney(Math.abs(item.amount))}</strong></div>
-  `).join(''):`<div class="pay-row"><span style="color:var(--mu)">Hali bonus/jarima yo'q</span></div>`;
-  document.getElementById('payGross').textContent=formatMoney(gross);
-  document.getElementById('payTax').textContent=`-${formatMoney(calc.earnings.taxAmount)}`;
-  document.getElementById('payPenalty').textContent=`-${formatMoney(calc.earnings.penalties)}`;
-  document.getElementById('payNet').textContent=formatMoney(netAfterTax);
-  document.getElementById('payProgress').style.width=gross?`${Math.min(100,Math.round(netAfterTax/gross*100))}%`:'0%';
+  renderPayAdjustments();
+  renderPayTotals(gross,calc.earnings.taxAmount,calc.earnings.penalties,netAfterTax);
+}
+// Operator uchun Payments and Earnings: har bir malakali lid va unga yozilgan summa,
+// sotuv/ilova bonuslari, bonus-jarimalar va oylik yakuni — hammasi joriy oy bo'yicha
+function renderOperatorPayments(){
+  const u=currentUser();
+  const op=calculateOperatorBonus(u);
+  const oc=compSettings.operator;
+  const tk=iso=>iso?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)):'';
+  const monthKey=tk(new Date().toISOString()).slice(0,7);
+  // Joriy oyda malakali qilingan lidlar (telefon bo'yicha dedupe — echo yozuvlar ikki marta sanalmasin)
+  const seen=new Set();
+  const monthQuals=op.qualDeals.filter(d=>{
+    if(tk(d.qualAt||d.createdAt).slice(0,7)!==monthKey)return false;
+    const key=d.phone||d.customerName||('id:'+d.id);
+    if(seen.has(key))return false;
+    seen.add(key);
+    return true;
+  });
+  // Har lidga yozilgan summa — KUNLIK bosqichli stavka: o'sha kuni limitdan oshgan bo'lsa hammasi yuqori stavkada
+  const byDay={};
+  monthQuals.forEach(d=>{const k=tk(d.qualAt||d.createdAt);(byDay[k] ||= []).push(d);});
+  const tableRows=[];
+  Object.keys(byDay).sort().reverse().forEach(day=>{
+    const list=byDay[day];
+    const rate=list.length<=Number(oc.qual.limit||0)?Number(oc.qual.rate||0):Number(oc.qual.rateAbove||0);
+    list.forEach(d=>tableRows.push({d,day,rate}));
+  });
+  const STATUS={yutgan:['Sotildi ✓','#16A34A'],qisman:["Qisman to'lov",'#F59E0B'],yutqazilgan:['Yutqazilgan','#EF4444'],op_yutqazilgan:['Yutqazilgan','#EF4444']};
+  document.getElementById('payRoleBadge').textContent='Operator';
+  document.getElementById('payPanelTitle').textContent="Malakali lidlar bo'yicha daromad";
+  document.getElementById('payPanelBadge').textContent='Qual bonusi';
+  document.getElementById('payTableHead').innerHTML='<tr><th>Sana</th><th>Mijoz</th><th>Holati</th><th>Yozilgan summa</th></tr>';
+  document.getElementById('payRows').innerHTML=tableRows.length?tableRows.map(({d,day,rate})=>{
+    const st=STATUS[d.col]||['Jarayonda','#2563EB'];
+    return `<tr><td>${esc(formatDealDate(d.qualAt||d.createdAt))}</td><td>${esc(customerTitle(d))}</td><td><span class="badge" style="background:${st[1]}">${st[0]}</span></td><td class="pay-income">${formatMoney(rate)}</td></tr>`;
+  }).join(''):`<tr><td colspan="4" style="text-align:center;color:var(--mu);padding:28px">Bu oyda hali malakali lid yo'q</td></tr>`;
+  const statData=[
+    [`Qual bonusi (${op.monthQual} ta)`,formatMoney(op.monthQualBonus),'good'],
+    [`Sotuv bonusi (${op.monthSold} ta)`,formatMoney(op.monthSaleBonus),'good'],
+    [`Ilova bonusi`,formatMoney(op.monthAppBonus),'good'],
+    ['Oylik jami bonus',formatMoney(op.monthBonus),'good']
+  ];
+  document.getElementById('payStats').innerHTML=statData.map(s=>`<div class="pay-stat ${s[2]}"><div class="pay-stat-label">${s[0]}</div><div class="pay-stat-value">${s[1]}</div></div>`).join('');
+  const myAdj=renderPayAdjustments();
+  const bonusAdj=myAdj.filter(x=>x.amount>0).reduce((s,x)=>s+x.amount,0);
+  const penalties=Math.abs(myAdj.filter(x=>x.amount<0).reduce((s,x)=>s+x.amount,0));
+  const gross=op.monthBonus+bonusAdj;
+  const net=Math.max(0,gross-penalties);
+  const tax=Math.round(net*.01);
+  renderPayTotals(gross,tax,penalties,Math.max(0,net-tax));
 }
 
 
