@@ -195,6 +195,17 @@ table.crm-t{width:100%;border-collapse:collapse}
 .kpi-card-sub{font-size:11px;color:var(--kpi-color);opacity:.6;line-height:1.4;margin-bottom:10px;position:relative;z-index:1}
 .kpi-card-progress{height:3px;background:rgba(255,255,255,.7);border-radius:999px;overflow:hidden;position:relative;z-index:1}
 .kpi-card-progress-bar{height:100%;background:var(--kpi-color);border-radius:999px;opacity:.65}
+/* 5 ta kartochka bitta qatorda — o'lchamlar biroz ixchamlashadi */
+.deal-stats.kpi-5{grid-template-columns:repeat(5,minmax(0,1fr));gap:10px}
+.kpi-5 .kpi-card{padding:11px 12px}
+.kpi-5 .kpi-card-icon{width:30px;height:30px;font-size:15px;border-radius:8px}
+.kpi-5 .kpi-card-top{margin-bottom:7px}
+.kpi-5 .kpi-card-value{font-size:20px}
+.kpi-5 .kpi-card-value.kpi-card-value-sm{font-size:13.5px}
+.kpi-5 .kpi-card-sub{font-size:10px;margin-bottom:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.kpi-5 .kpi-card-label{font-size:9.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:1280px){.deal-stats.kpi-5{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:760px){.deal-stats.kpi-5{grid-template-columns:repeat(2,minmax(0,1fr))}}
 .stat-sub{font-size:11px;color:var(--mu);margin-top:3px}
 .board-wrap{flex:1;overflow:auto;background:var(--bg)}
 .board{display:flex;height:100%;min-width:max-content}
@@ -2761,6 +2772,7 @@ function togglePoolFilter(){
   renderCurrentDeals();
 }
 function renderKpiCards(cards){
+  document.getElementById('dealStats').classList.toggle('kpi-5',cards.length>=5);
   document.getElementById('dealStats').innerHTML = cards.map(card=>`
     <div class="kpi-card" style="--kpi-bg:${card.bg};--kpi-accent:${card.accent};--kpi-color:${card.color}">
       <div class="kpi-card-decor"></div>
@@ -2779,12 +2791,37 @@ function renderKpiCards(cards){
   `).join('');
 }
 function renderKpiChips(cards){
+  document.getElementById('dealStats').classList.remove('kpi-5');
   document.getElementById('dealStats').innerHTML = `<div class="kpi-chips">${cards.map(card=>`
     <div class="kpi-chip" style="--kpi-bg:${card.bg};--kpi-accent:${card.accent};--kpi-color:${card.color}" title="${esc(card.sub)}">
       <span class="kpi-chip-icon">${card.icon}</span>
       <span class="kpi-chip-val">${card.value}${card.unit?' '+card.unit:''}</span>
       <span class="kpi-chip-label">${esc(card.label)}</span>
     </div>`).join('')}</div>`;
+}
+// ── AMALLAR HISOBI ──
+// Menejerning bugungi harakatlari: izoh yozish + vazifa qo'yish + bosqich ko'chirish.
+// Izoh/vazifa serverdagi ma'lumotdan (sana bo'yicha), ko'chirishlar esa shu brauzerdagi
+// kunlik hisoblagichdan olinadi (tizimda bosqich o'zgarishlari tarixi saqlanmaydi).
+function stageMoveCounterKey(){
+  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date());
+  return `mtcrm_stage_moves_${currentManagerId}_${day}`;
+}
+function bumpStageMoveCounter(){
+  try{localStorage.setItem(stageMoveCounterKey(),String(Number(localStorage.getItem(stageMoveCounterKey())||0)+1));}catch{}
+}
+function managerActionsToday(user){
+  const todayKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date());
+  const tk=iso=>iso?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)):'';
+  const myDeals=deals.filter(d=>String(d.ownerId)===String(user.id));
+  let comments=0,tasks=0;
+  myDeals.forEach(d=>{
+    (d.comments||[]).forEach(c=>{ if(c.from===user.name && tk(c.time)===todayKey)comments++; });
+    (d.tasks||[]).forEach(t=>{ if(String(t.ownerId)===String(user.id) && tk(t.createdAt)===todayKey)tasks++; });
+  });
+  let moves=0;
+  try{moves=Number(localStorage.getItem(stageMoveCounterKey())||0);}catch{}
+  return {comments,tasks,moves,total:comments+tasks+moves};
 }
 function renderDealStats(){
   renderPoolAlert();
@@ -2820,11 +2857,13 @@ function renderDealStats(){
   // (avval bu yerda butun davr bo'yicha netPayment ishlatilgan edi — bu xato edi)
   const salesBonus = m.todaySalesBonus;
   const todayBonus = salesBonus + m.fullCallBonus;
+  const act = managerActionsToday(currentUser());
   const managerCards = [
     {icon:'🎯', label:'Olingan Qual lid', value:`${m.todayQualReceived} ta`, sub:'Bugun operatordan kelgan', color:'#7C3AED', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', accent:'#C4B5FD'},
     {icon:'📞', label:'Full call', value:`${m.todayFullCall} ta`, sub:'15+ daqiqa yoki sotuv', color:'#DB2777', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', accent:'#FBCFE8'},
     {icon:'💵', label:'Bugungi sotuv summasi', value:formatMoney(m.todaySoldAmount), sub:`${m.todaySoldCount} ta muvaffaqiyatli`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC'},
     {icon:'🏆', label:'Bugungi bonus', value:formatMoney(todayBonus), sub:`Sotuv: ${formatMoney(salesBonus)} · Full call: ${formatMoney(m.fullCallBonus)}`, color:'#2563EB', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', accent:'#BFDBFE'},
+    {icon:'⚡', label:'Amallar', value:`${act.total} ta`, sub:`Izoh: ${act.comments} · Vazifa: ${act.tasks} · Ko'chirish: ${act.moves}`, color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', accent:'#FDE68A'},
   ];
   renderKpiCards(managerCards);
   refreshDashboardSummary();
@@ -3238,6 +3277,8 @@ async function moveDealToStage(deal,target,options={}){
       const data=await api(`/api/deals/${deal.id}`,{method:'PATCH',body});
       Object.assign(deal,dealFromApi(data.deal));
     }
+    // Amallar hisobi: menejerning bosqich ko'chirishlari kunlik hisoblagichga yoziladi
+    if(prev.col!==target && currentUser().role==='manager')bumpStageMoveCounter();
     renderFooterTicker();
     if(target===STAGE_WON){
       showSalePopup(customerTitle(deal),formatMoney(deal.price),managerInitials(managerById(deal.ownerId)) || 'MT');
