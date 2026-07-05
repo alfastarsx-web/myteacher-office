@@ -1848,8 +1848,8 @@ const COLS = [
   {id:'taklif',      label:'Taklif berilgan',  color:'#F59E0B'},
   {id:'muzokaralar', label:'Muzokaralar',      color:'#22C55E'},
   {id:'sotib_olishga_rozi', label:'Sotib olishga rozi', color:'#0EA5E9'},
-  {id:'yutqazilgan', label:'Yutqazilgan',      color:'#EF4444'},
   {id:'qisman',      label:"Qisman to'lov",    color:'#F59E0B'},
+  {id:'yutqazilgan', label:'Yutqazilgan',      color:'#EF4444'},
   {id:'yutgan',      label:'Muvaffaqiyatli',   color:'#10B981'},
 ];
 // Operator pipeline
@@ -2109,9 +2109,9 @@ function ensureRequiredStages(){
       existing.label=stage.label;
       existing.color=stage.color;
     }else if(stage.id===STAGE_PARTIAL){
-      // Qisman to'lov — har doim Muvaffaqiyatlidan oldin turadi
-      const wonIdx=COLS.findIndex(c=>c.id===STAGE_WON);
-      COLS.splice(wonIdx>=0?wonIdx:Math.max(COLS.length-1,0),0,stage);
+      // Qisman to'lov — har doim "Sotib olishga rozi"dan keyin turadi
+      const agreedIdx=COLS.findIndex(c=>c.id===STAGE_AGREED);
+      COLS.splice(agreedIdx>=0?agreedIdx+1:Math.max(COLS.length-1,0),0,stage);
     }else{
       COLS.splice(Math.max(COLS.length-1,0),0,stage);
     }

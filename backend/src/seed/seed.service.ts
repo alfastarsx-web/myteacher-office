@@ -62,25 +62,29 @@ export class SeedService implements OnApplicationBootstrap {
       { id: 'taklif', label: 'Taklif berilgan', color: '#F59E0B', sortOrder: 3 },
       { id: 'muzokaralar', label: 'Muzokaralar', color: '#22C55E', sortOrder: 4 },
       { id: 'sotib_olishga_rozi', label: 'Sotib olishga rozi', color: '#0EA5E9', sortOrder: 5 },
-      { id: 'yutqazilgan', label: 'Yutqazilgan', color: '#EF4444', sortOrder: 6 },
-      { id: 'qisman', label: "Qisman to'lov", color: '#F59E0B', sortOrder: 7 },
+      { id: 'qisman', label: "Qisman to'lov", color: '#F59E0B', sortOrder: 6 },
+      { id: 'yutqazilgan', label: 'Yutqazilgan', color: '#EF4444', sortOrder: 7 },
       { id: 'yutgan', label: 'Muvaffaqiyatli', color: '#10B981', sortOrder: 8 }
     ]);
   }
 
-  // Mavjud o'rnatmalarda (stages allaqachon seed qilingan) "Qisman to'lov" bosqichini
-  // Muvaffaqiyatlidan oldingi o'ringa qo'shib qo'yamiz.
+  // "Qisman to'lov" bosqichi har doim "Sotib olishga rozi"dan keyin turishini kafolatlaydi.
+  // Har boot da idempotent ishlaydi: bosqich yo'q bo'lsa qo'shadi, noto'g'ri joyda bo'lsa
+  // (yoki sortOrder lar takrorlangan bo'lsa) butun tartibni qayta raqamlab tuzatadi.
   private async ensurePartialStage() {
-    if (await this.stages.findOneBy({ id: 'qisman' })) return;
-    const won = await this.stages.findOneBy({ id: 'yutgan' });
-    const wonOrder = won ? Number(won.sortOrder) : (await this.stages.count()) + 1;
-    await this.stages
-      .createQueryBuilder()
-      .update()
-      .set({ sortOrder: () => '"sortOrder" + 1' })
-      .where('"sortOrder" >= :o', { o: wonOrder })
-      .execute();
-    await this.stages.save({ id: 'qisman', label: "Qisman to'lov", color: '#F59E0B', sortOrder: wonOrder });
+    const all = await this.stages.find({ order: { sortOrder: 'ASC', id: 'ASC' } });
+    if (!all.length) return;
+    const rest = all.filter(s => s.id !== 'qisman');
+    const qisman =
+      all.find(s => s.id === 'qisman') ||
+      this.stages.create({ id: 'qisman', label: "Qisman to'lov", color: '#F59E0B', sortOrder: 0 });
+    const roziIdx = rest.findIndex(s => s.id === 'sotib_olishga_rozi');
+    const insertAt = roziIdx >= 0 ? roziIdx + 1 : Math.max(rest.length - 1, 0);
+    rest.splice(insertAt, 0, qisman);
+    const needsFix = rest.some((s, i) => Number(s.sortOrder) !== i + 1);
+    if (!needsFix) return;
+    rest.forEach((s, i) => { s.sortOrder = i + 1; });
+    await this.stages.save(rest);
   }
 
   private async seedDeals() {
