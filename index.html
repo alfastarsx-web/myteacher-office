@@ -3078,8 +3078,15 @@ function renderKanban(){
   // ko'rsatadi — eski, taqdiri hal bo'lganlari ustunni to'ldirib tashlamasin (bonus hisoblari
   // va List ko'rinishiga ta'sir qilmaydi). 0 = cheklovsiz.
   const opQualWindowMs=Number(compSettings.operator.saleWindowDays||0)*86400000;
+  // Handoff echo dublikati: asl op_malakali yozuvning menejer voronkasida (echo) nusxasi
+  // bo'lsa, "Malakali" ustuniga faqat echo chiqadi — bitta mijoz ikki kartochka bo'lmasin
+  const OP_STAGE_SET=new Set(['op_yangi','op_qayta','op_malakali','op_yutqazilgan']);
+  const managerFunnelPhones=new Set(rows.filter(d=>!OP_STAGE_SET.has(d.col) && d.phone).map(d=>d.phone));
   document.getElementById('sBoard').innerHTML=stages.map(col=>{
     let colRows=rows.filter(d=>d.col===col.id || (!hasOpQualCol && col.id==='malakali' && d.col===STAGE_OP_QUAL));
+    if(!hasOpQualCol && col.id==='malakali'){
+      colRows=colRows.filter(d=>d.col!==STAGE_OP_QUAL || !managerFunnelPhones.has(d.phone));
+    }
     if(isOperator() && col.id===STAGE_OP_QUAL && opQualWindowMs>0){
       colRows=colRows.filter(d=>Date.now()-new Date(d.qualAt||d.updatedAt||d.createdAt).getTime()<=opQualWindowMs);
     }
@@ -4293,8 +4300,16 @@ function calculateAdminOverview(){
   const todayProcessed = all.filter(isProcessedToday).length;
 
   // Install — operatorlar tomonidan bugun "ilova o'rnatildi" deb belgilangan lidlar
+  // (handoff echo nusxasi ham appInstalled bilan ko'chiriladi — telefon bo'yicha dedupe)
   const isAppToday = d => tashkentDateKey(d.appInstalledAt || d.createdAt) === todayKey;
-  const todayApp = all.filter(d => d.appInstalled && isAppToday(d)).length;
+  const appSeen = new Set();
+  const todayApp = all.filter(d => {
+    if (!d.appInstalled || !isAppToday(d)) return false;
+    const key = d.phone || d.customerName || `id:${d.id}`;
+    if (appSeen.has(key)) return false;
+    appSeen.add(key);
+    return true;
+  }).length;
 
   // Qual — operatorlar tomonidan bugun malakali qilingan lidlar (echo yozuvlar dedupe qilinadi)
   const qualStages = new Set(['op_malakali','yangi','malakali','taklif','muzokaralar','sotib_olishga_rozi','qisman','yutgan']);
@@ -4376,15 +4391,18 @@ function calculateOperatorBonus(user){
   };
   const todayQual = dedupeQualLeads(qualDeals.filter(isQualToday)).length;
 
-  // Sotilgan lidlar (menejer yutgan)
-  const soldDeals = myDeals.filter(d => d.col === STAGE_WON);
+  // Sotilgan lidlar (menejer yutgan) — handoff echo va asl nusxa ikkalasi ham sotilgan
+  // bo'lib qolsa, telefon bo'yicha dedupe bitta marta sanaydi
+  const soldDeals = dedupeQualLeads(myDeals.filter(d => d.col === STAGE_WON));
   const todaySold = soldDeals.filter(isToday).length;
 
   // Ilova bonusi: HAR QANDAY lidga (qual bo'lgan/bo'lmagan) ilova o'rnatilsa yoziladi.
+  // DIQQAT: handoff echo yozuviga appInstalled ham ko'chiriladi — bitta o'rnatish ikki
+  // yozuvda ko'rinadi, shu sababli telefon bo'yicha dedupe shart (aks holda bonus 2x yozilardi).
   // Ilova qachon o'rnatilgani (appInstalledAt) — lid qachon yaratilganidan mustaqil,
   // chunki ilova ko'pincha lid yaratilgandan keyingi kunlarda o'rnatiladi
   const isAppToday = d => tashkentDateKey(d.appInstalledAt || d.createdAt) === todayKey;
-  const appDeals = myDeals.filter(d => d.appInstalled);
+  const appDeals = dedupeQualLeads(myDeals.filter(d => d.appInstalled));
   const appBonusDeals = appDeals;
   const todayApp = appDeals.filter(isAppToday).length;
   const todayAppBonus = appBonusDeals.filter(isAppToday).length;
@@ -4565,8 +4583,18 @@ function calcOperatorAnalytics(user, range){
     return true;
   });
   const qualDeals = qualMatchesDeduped.length;
-  const appInstalled = myDeals.filter(d => d.appInstalled && inRange(d.appInstalledAt||d.createdAt, range)).length;
-  const soldDeals = myDeals.filter(d => d.col===STAGE_WON && inRange(d.wonAt||d.updatedAt, range));
+  // Handoff echo nusxalari ilova/sotuvda ham ikki marta sanalmasligi uchun telefon bo'yicha dedupe
+  const dedupeByPhone = list => {
+    const seen = new Set();
+    return list.filter(d => {
+      const key = d.phone || d.customerName || `id:${d.id}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  };
+  const appInstalled = dedupeByPhone(myDeals.filter(d => d.appInstalled && inRange(d.appInstalledAt||d.createdAt, range))).length;
+  const soldDeals = dedupeByPhone(myDeals.filter(d => d.col===STAGE_WON && inRange(d.wonAt||d.updatedAt, range)));
   const lostDeals = myDeals.filter(d => d.col==='op_yutqazilgan' && inRange(d.updatedAt, range)).length;
   const convRate = newContacts ? Math.round(qualDeals/newContacts*100) : 0;
   // Qual bonusining bosqichli stavkasi KUNLIK rag'bat — shu sababli hafta/oy uchun
