@@ -2792,7 +2792,7 @@ function renderDealStats(){
     const cards = [
       {icon:'👥', label:'Ishga olingan', value:op.todayProcessed, unit:'ta lid', sub:`Bugun +${op.todayContacts} yangi`, color:'#2563EB', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', accent:'#BFDBFE', progress:Math.min(100,op.todayProcessed*5)},
       {icon:'🏅', label:'Bu oydagi bonuslarim', value:formatMoney(op.monthBonus), unit:'', sub:`Qual: ${op.monthQual} ta · Sotuv: ${op.monthSold} ta · Ilova: ${op.monthAppBonus?formatMoney(op.monthAppBonus):'0 UZS'}`, color:'#7C3AED', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', accent:'#C4B5FD', progress:Math.min(100,Math.round(op.monthBonus/500000*100))},
-      {icon:'📱', label:'Ilova o\'rnatilgan', value:op.todayApp, unit:'ta', sub:`Bonus oladi: ${op.todayAppBonus} ta · +${formatMoney(op.appBonus)}`, color:'#0891B2', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', accent:'#A5F3FC', progress:Math.min(100,op.todayApp*10)},
+      {icon:'📱', label:'Ilova o\'rnatilgan', value:op.todayApp, unit:'ta', sub:`Har biri bonusli · +${formatMoney(op.appBonus)}`, color:'#0891B2', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', accent:'#A5F3FC', progress:Math.min(100,op.todayApp*10)},
       {icon:'💰', label:'Bugungi bonus', value:formatMoney(op.todayBonus), unit:'', sub:`Q: ${formatMoney(op.qualBonus)} · S: ${formatMoney(op.saleBonus)} · I: ${formatMoney(op.appBonus)}`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC', progress:Math.min(100,Math.round(op.todayBonus/100000*100))},
     ];
     renderKpiCards(cards);
@@ -4365,14 +4365,12 @@ function calculateOperatorBonus(user){
   const soldDeals = myDeals.filter(d => d.col === STAGE_WON);
   const todaySold = soldDeals.filter(isToday).length;
 
-  // Ilova bonusi:
-  // Qual BO'LMAGAN + ilova o'rnatilgan → 500 so'm
-  // Qual BO'LGAN + ilova o'rnatilgan → bonus yo'q
+  // Ilova bonusi: HAR QANDAY lidga (qual bo'lgan/bo'lmagan) ilova o'rnatilsa yoziladi.
   // Ilova qachon o'rnatilgani (appInstalledAt) — lid qachon yaratilganidan mustaqil,
   // chunki ilova ko'pincha lid yaratilgandan keyingi kunlarda o'rnatiladi
   const isAppToday = d => tashkentDateKey(d.appInstalledAt || d.createdAt) === todayKey;
   const appDeals = myDeals.filter(d => d.appInstalled);
-  const appBonusDeals = appDeals.filter(d => !qualStages.has(d.col));
+  const appBonusDeals = appDeals;
   const todayApp = appDeals.filter(isAppToday).length;
   const todayAppBonus = appBonusDeals.filter(isAppToday).length;
 
