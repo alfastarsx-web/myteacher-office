@@ -2859,11 +2859,11 @@ function renderDealStats(){
   const todayBonus = salesBonus + m.fullCallBonus;
   const act = managerActionsToday(currentUser());
   const managerCards = [
-    {icon:'🎯', label:'Olingan Qual lid', value:`${m.todayQualReceived} ta`, sub:'Bugun operatordan kelgan', color:'#7C3AED', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', accent:'#C4B5FD'},
-    {icon:'📞', label:'Full call', value:`${m.todayFullCall} ta`, sub:'15+ daqiqa yoki sotuv', color:'#DB2777', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', accent:'#FBCFE8'},
-    {icon:'💵', label:'Bugungi sotuv summasi', value:formatMoney(m.todaySoldAmount), sub:`${m.todaySoldCount} ta muvaffaqiyatli`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC'},
-    {icon:'🏆', label:'Bugungi bonus', value:formatMoney(todayBonus), sub:`Sotuv: ${formatMoney(salesBonus)} · Full call: ${formatMoney(m.fullCallBonus)}`, color:'#2563EB', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', accent:'#BFDBFE'},
     {icon:'⚡', label:'Amallar', value:`${act.total} ta`, sub:`Izoh: ${act.comments} · Vazifa: ${act.tasks} · Ko'chirish: ${act.moves}`, color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', accent:'#FDE68A'},
+    {icon:'📞', label:'Full call', value:`${m.todayFullCall} ta`, sub:'15+ daqiqa yoki sotuv', color:'#DB2777', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', accent:'#FBCFE8'},
+    {icon:'🏆', label:'Bugungi bonus', value:formatMoney(todayBonus), sub:`Sotuv: ${formatMoney(salesBonus)} · Full call: ${formatMoney(m.fullCallBonus)}`, color:'#2563EB', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', accent:'#BFDBFE'},
+    {icon:'💵', label:'Bugungi sotuv summasi', value:formatMoney(m.todaySoldAmount), sub:`${m.todaySoldCount} ta muvaffaqiyatli`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC'},
+    {icon:'🎯', label:'Olingan Qual lid', value:`${m.todayQualReceived} ta`, sub:'Bugun operatordan kelgan', color:'#7C3AED', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', accent:'#C4B5FD'},
   ];
   renderKpiCards(managerCards);
   refreshDashboardSummary();
