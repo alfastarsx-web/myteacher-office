@@ -211,6 +211,10 @@ table.crm-t{width:100%;border-collapse:collapse}
 .kcard-ghost{position:fixed;top:0;left:0;z-index:999;pointer-events:none;opacity:.95;box-shadow:0 12px 30px rgba(15,23,42,.25);transform:rotate(-2deg) scale(1.03)}
 .kcard-top{display:flex;justify-content:space-between;align-items:flex-start;gap:6px;margin-bottom:6px}
 .kcard-date{font-size:11px;color:var(--mu);white-space:nowrap;flex-shrink:0}
+.kcard-pay{display:flex;align-items:center;gap:7px;margin:2px 0 8px}
+.kcard-pay-bar{flex:1;height:5px;background:#EDF2F9;border-radius:4px;overflow:hidden}
+.kcard-pay-bar span{display:block;height:100%;border-radius:4px;transition:width .3s}
+.kcard-pay-pct{font-size:10.5px;font-weight:800;white-space:nowrap}
 .kcard-foot{display:flex;align-items:center;justify-content:space-between;gap:8px;min-width:0}
 .kcard-foot .vlink{max-width:170px;flex-shrink:1}
 .kcard-price{font-size:12px;font-weight:600;color:var(--td)}
@@ -1661,6 +1665,16 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
             <div class="shart-title-row"><span class="shart-name" id="dwSideDeal">Shartnoma</span><span class="shart-date" id="dwSideDate">Bugun</span><button class="mini-edit" onclick="openModalFromWorkspace()">✎</button></div>
             <select class="deal-select" id="dwStage" onchange="saveWorkspaceStage(this.value)"></select>
             <div class="deal-info-row" style="margin-top:8px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg><input class="deal-field" id="dwPrice" onchange="saveWorkspacePrice()" placeholder="Valyuta yo'q"></div>
+            <div id="dwPayBlock" style="display:none;margin:8px 0;padding:10px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                <span style="font-size:12px;font-weight:700">💰 To'lovlar</span>
+                <span id="dwPayPct" style="font-size:12px;font-weight:800"></span>
+              </div>
+              <div class="kcard-pay-bar" style="height:7px"><span id="dwPayBar" style="display:block;height:100%;border-radius:4px;width:0;transition:width .3s"></span></div>
+              <div id="dwPayInfo" style="font-size:11.5px;color:var(--mu);margin-top:6px"></div>
+              <div id="dwPayList" style="margin-top:4px"></div>
+              <button class="link-btn" style="margin-top:6px" onclick="addWorkspacePayment()">+ To'lov qo'shish</button>
+            </div>
             <div class="deal-info-row" style="justify-content:space-between">
               <span style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><rect x="5" y="2" width="14" height="20" rx="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>Ilova o'rnatilgan</span>
               <button id="dwAppInstalled" onclick="toggleAppInstalled()" style="width:38px;height:22px;border-radius:999px;border:0;background:var(--br);position:relative;cursor:pointer;transition:.2s;flex-shrink:0">
@@ -1835,6 +1849,7 @@ const COLS = [
   {id:'muzokaralar', label:'Muzokaralar',      color:'#22C55E'},
   {id:'sotib_olishga_rozi', label:'Sotib olishga rozi', color:'#0EA5E9'},
   {id:'yutqazilgan', label:'Yutqazilgan',      color:'#EF4444'},
+  {id:'qisman',      label:"Qisman to'lov",    color:'#F59E0B'},
   {id:'yutgan',      label:'Muvaffaqiyatli',   color:'#10B981'},
 ];
 // Operator pipeline
@@ -1846,9 +1861,10 @@ const OPERATOR_COLS = [
 ];
 const STAGE_AGREED='sotib_olishga_rozi';
 const STAGE_WON='yutgan';
+const STAGE_PARTIAL='qisman';
 const STAGE_OP_QUAL='op_malakali';
-const REQUIRED_STAGE_IDS=[STAGE_AGREED,STAGE_WON];
-const SC = {yangi:'#2563EB',malakali:'#A855F7',muzokaralar:'#22C55E',taklif:'#F59E0B',sotib_olishga_rozi:'#0EA5E9',yutgan:'#22C55E',yutqazilgan:'#EF4444',op_yangi:'#2563EB',op_qayta:'#F59E0B',op_malakali:'#10B981',op_yutqazilgan:'#EF4444'};
+const REQUIRED_STAGE_IDS=[STAGE_AGREED,STAGE_PARTIAL,STAGE_WON];
+const SC = {yangi:'#2563EB',malakali:'#A855F7',muzokaralar:'#22C55E',taklif:'#F59E0B',sotib_olishga_rozi:'#0EA5E9',qisman:'#F59E0B',yutgan:'#22C55E',yutqazilgan:'#EF4444',op_yangi:'#2563EB',op_qayta:'#F59E0B',op_malakali:'#10B981',op_yutqazilgan:'#EF4444'};
 
 let deals = [];
 let managers = [];
@@ -2084,6 +2100,7 @@ function dealOwnerLabel(d){
 function ensureRequiredStages(){
   const required=[
     {id:STAGE_AGREED,label:'Sotib olishga rozi',color:'#0EA5E9'},
+    {id:STAGE_PARTIAL,label:"Qisman to'lov",color:'#F59E0B'},
     {id:STAGE_WON,label:'Muvaffaqiyatli',color:'#10B981'}
   ];
   required.forEach(stage=>{
@@ -2091,6 +2108,10 @@ function ensureRequiredStages(){
     if(existing){
       existing.label=stage.label;
       existing.color=stage.color;
+    }else if(stage.id===STAGE_PARTIAL){
+      // Qisman to'lov — har doim Muvaffaqiyatlidan oldin turadi
+      const wonIdx=COLS.findIndex(c=>c.id===STAGE_WON);
+      COLS.splice(wonIdx>=0?wonIdx:Math.max(COLS.length-1,0),0,stage);
     }else{
       COLS.splice(Math.max(COLS.length-1,0),0,stage);
     }
@@ -2120,7 +2141,7 @@ async function api(path,options={}){
 function dealFromApi(d){
   const date=d.createdAt?formatDealDate(d.createdAt):'Bugun';
   const phones=dealPhones(d);
-  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,courseDuration:d.courseDuration||null,paymentType:d.paymentType||null,lostFromStage:d.lostFromStage||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
+  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,courseDuration:d.courseDuration||null,paymentType:d.paymentType||null,lostFromStage:d.lostFromStage||null,paidAmount:Number(d.paidAmount||0),payments:Array.isArray(d.payments)?d.payments:[],firstPaymentAt:d.firstPaymentAt||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
 }
 // localStorage ga deal extra fieldlarini saqlaymiz
 function saveDealExtra(id, fields){
@@ -2990,6 +3011,23 @@ async function bulkApplyDeals(){
 // ════════════════════════════════════════
 //  RENDER KANBAN
 // ════════════════════════════════════════
+// Qisman to'lov progress chizig'i — to'langan foizga qarab rang: qizil → sariq → ko'k → yashil
+function dealPayPercent(d){
+  if(!d || !Number(d.price) || !Number(d.paidAmount))return 0;
+  return Math.min(100,Math.round(Number(d.paidAmount)/Number(d.price)*100));
+}
+function dealPayColor(pct){
+  return pct>=100?'#16A34A':pct>=67?'#2563EB':pct>=34?'#F59E0B':'#EF4444';
+}
+function dealPayProgressHtml(d){
+  const pct=dealPayPercent(d);
+  if(!pct || d.col===STAGE_WON)return '';
+  const color=dealPayColor(pct);
+  return `<div class="kcard-pay" title="To'landi: ${formatMoney(d.paidAmount)} / ${formatMoney(d.price)}">
+    <div class="kcard-pay-bar"><span style="width:${pct}%;background:${color}"></span></div>
+    <span class="kcard-pay-pct" style="color:${color}">${pct}%</span>
+  </div>`;
+}
 function renderKanban(){
   renderDealStats();
   const rows=visibleDeals();
@@ -3014,8 +3052,9 @@ function renderKanban(){
           <div class="kcard" draggable="true" data-id="${d.id}">
             <div class="kcard-top">
               <div><div class="dn">${esc(customerTitle(d))}</div><div class="ds">${isAdmin()?esc(dealOwnerLabel(d)):esc(dealTitle(d))}</div></div>
-              <span class="kcard-date">${d.date}</span>
+              <span class="kcard-date">${d.date||''}</span>
             </div>
+            ${dealPayProgressHtml(d)}
             <div class="kcard-foot">
               ${d._kanbanTask.html}
               <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
@@ -3038,6 +3077,16 @@ async function prepareStageTransition(deal,target,priceInput){
   const targetLabel = allCols.find(c=>c.id===target)?.label || 'Bosqich';
   let price = Number(deal.price||0);
   const modalOpen = document.getElementById('dealOvl')?.classList.contains('show');
+
+  // Qisman to'lovli bitim to'liq yopilmaguncha Muvaffaqiyatliga o'tmaydi —
+  // izoh/parol so'rashdan OLDIN tekshiramiz
+  if(target===STAGE_WON && deal.col!==STAGE_WON){
+    const paidSoFar=Number(deal.paidAmount||0);
+    if(paidSoFar>0 && price>0 && paidSoFar<price){
+      showToast(`Bitim to'liq to'lanmagan — qoldiq: ${formatMoney(price-paidSoFar)}. Avval "To'lov qo'shish" orqali kiriting`);
+      return null;
+    }
+  }
 
   // Bosqich haqiqatan o'zgarayotgan bo'lsa (mavjud lid uchun, yangi yaratilayotganda emas), kamida
   // 4 so'zli yangi izoh yoki ochiq vazifa talab qilamiz (admin bundan mustasno) —
@@ -3141,7 +3190,9 @@ async function moveDealToStage(deal,target,options={}){
         const opUser = managerById(deal.operatorId);
         const winDays = Number(compSettings.operator.saleWindowDays || 0);
         const startTs = new Date(deal.qualAt || deal.createdAt).getTime();
-        const inWindow = !winDays || (Date.now() - startTs <= winDays * 86400000);
+        // Oyna birinchi to'lov sanasigacha o'lchanadi — mijoz joy band qilgan payt
+        const endTs = deal.firstPaymentAt ? new Date(deal.firstPaymentAt).getTime() : Date.now();
+        const inWindow = !winDays || (endTs - startTs <= winDays * 86400000);
         if(opUser) showToast(inWindow
           ? `🎯 Operator ${esc(opUser.name.split(' ')[0])} uchun +${formatMoney(compSettings.operator.saleBonus)} bonus yozildi`
           : `⏳ Sotuv qual dan ${winDays} kundan kech bo'ldi — operator bonusi yozilmadi`);
@@ -3495,8 +3546,62 @@ function renderDealWorkspace(){
     fullCallBtn.style.background=d.fullCall?'#22C55E':'var(--br)';
     fullCallBtn.querySelector('span').style.left=d.fullCall?'18px':'2px';
   }
+  renderWorkspacePayments(d);
   renderWorkspaceTimeline(d);
   renderWorkspaceTasks(d);
+}
+function renderWorkspacePayments(d){
+  const block=document.getElementById('dwPayBlock');
+  if(!block)return;
+  // Operator voronkasida yoki narx kiritilmagan bitimda to'lov bloki ko'rsatilmaydi
+  const isOperatorStage=OPERATOR_COLS.some(c=>c.id===d.col);
+  if(isOperatorStage || !Number(d.price)){block.style.display='none';return;}
+  block.style.display='block';
+  const pct=dealPayPercent(d);
+  const color=dealPayColor(pct);
+  document.getElementById('dwPayPct').textContent=`${pct}%`;
+  document.getElementById('dwPayPct').style.color=color;
+  const bar=document.getElementById('dwPayBar');
+  bar.style.width=pct+'%';
+  bar.style.background=color;
+  const remaining=Math.max(0,Number(d.price)-Number(d.paidAmount||0));
+  document.getElementById('dwPayInfo').textContent=`To'landi: ${formatMoney(d.paidAmount||0)} / ${formatMoney(d.price)}${remaining?` · Qoldiq: ${formatMoney(remaining)}`:' · To\'liq to\'langan ✓'}`;
+  const METHOD_LABELS={naqd:'Naqd',karta:'Karta',otkazma:"O'tkazma"};
+  document.getElementById('dwPayList').innerHTML=(d.payments||[]).map(p=>
+    `<div style="display:flex;justify-content:space-between;font-size:11.5px;padding:3px 0;border-bottom:1px dashed #FDE68A"><span>${esc(formatDealDate(p.at))} · ${METHOD_LABELS[p.method]||esc(p.method||'')}</span><strong>${formatMoney(p.amount)}</strong></div>`
+  ).join('');
+}
+async function addWorkspacePayment(){
+  const d=currentWorkspaceDeal();
+  if(!d)return;
+  if(!Number(d.price)){showToast('Avval shartnoma summasini kiriting');return;}
+  const remaining=Number(d.price)-Number(d.paidAmount||0);
+  if(remaining<=0){showToast("Bitim allaqachon to'liq to'langan");return;}
+  const raw=prompt(`To'lov summasini kiriting (qoldiq: ${formatMoney(remaining)}):`);
+  if(raw===null)return;
+  const amount=parseMoneyInput(raw);
+  if(!amount || amount<=0){showToast("Summa noto'g'ri kiritildi");return;}
+  if(amount>remaining){showToast(`Summa qoldiqdan oshib ketdi (${formatMoney(remaining)})`);return;}
+  const methodRaw=(prompt("To'lov turi: naqd / karta / otkazma",'naqd')||'naqd').trim().toLowerCase();
+  const method=['naqd','karta','otkazma'].includes(methodRaw)?methodRaw:'naqd';
+  if(apiToken){
+    try{
+      const data=await api(`/api/deals/${d.id}`,{method:'PATCH',body:{addPayment:{amount,method}}});
+      Object.assign(d,dealFromApi(data.deal));
+    }catch(err){showToast(err.message||'Saqlanmadi');return;}
+  }else{
+    const nowIso=new Date().toISOString();
+    d.payments=[...(d.payments||[]),{amount,method,at:nowIso,by:currentManagerId}];
+    d.paidAmount=Number(d.paidAmount||0)+amount;
+    if(!d.firstPaymentAt)d.firstPaymentAt=nowIso;
+    if(Number(d.paidAmount)<Number(d.price) && d.col!==STAGE_WON)d.col=STAGE_PARTIAL;
+  }
+  renderDealWorkspace();
+  renderCurrentDeals();
+  const newRemaining=Number(d.price)-Number(d.paidAmount||0);
+  showToast(newRemaining>0
+    ? `💰 To'lov qabul qilindi — qoldiq: ${formatMoney(newRemaining)}. Bitim "Qisman to'lov" bosqichida`
+    : `✅ To'liq to'landi — endi Muvaffaqiyatliga o'tkazish mumkin`);
 }
 async function addWorkspacePhone(){
   const d=currentWorkspaceDeal();
@@ -4245,7 +4350,8 @@ function calculateOperatorBonus(user){
     const win = Number(oc.saleWindowDays || 0);
     if (!win) return true;
     const startTs = new Date(d.qualAt || d.createdAt).getTime();
-    const soldTs = new Date(d.wonAt || d.updatedAt || d.createdAt).getTime();
+    // Oyna oxiri — birinchi to'lov (qisman bo'lsa ham joy band qilingan payt), bo'lmasa sotuv sanasi
+    const soldTs = new Date(d.firstPaymentAt || d.wonAt || d.updatedAt || d.createdAt).getTime();
     return soldTs >= startTs && soldTs - startTs <= win * 86400000;
   };
   const bonusSales = soldDeals.filter(isBonusSale);
@@ -4431,7 +4537,7 @@ function calcOperatorAnalytics(user, range){
     const win = Number(oc.saleWindowDays || 0);
     if (!win) return true;
     const startTs = new Date(d.qualAt || d.createdAt).getTime();
-    const soldTs = new Date(d.wonAt || d.updatedAt || d.createdAt).getTime();
+    const soldTs = new Date(d.firstPaymentAt || d.wonAt || d.updatedAt || d.createdAt).getTime();
     return soldTs >= startTs && soldTs - startTs <= win * 86400000;
   }).length;
   const saleBonus = bonusSold*Number(oc.saleBonus||0);

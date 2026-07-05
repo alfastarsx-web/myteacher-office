@@ -22,6 +22,7 @@ export class SeedService implements OnApplicationBootstrap {
 
   async onApplicationBootstrap() {
     await this.seedStages();
+    await this.ensurePartialStage();
     if (process.env.SEED_DEMO !== 'true') return;
     await this.seedUsers();
     await this.seedDeals();
@@ -62,8 +63,24 @@ export class SeedService implements OnApplicationBootstrap {
       { id: 'muzokaralar', label: 'Muzokaralar', color: '#22C55E', sortOrder: 4 },
       { id: 'sotib_olishga_rozi', label: 'Sotib olishga rozi', color: '#0EA5E9', sortOrder: 5 },
       { id: 'yutqazilgan', label: 'Yutqazilgan', color: '#EF4444', sortOrder: 6 },
-      { id: 'yutgan', label: 'Muvaffaqiyatli', color: '#10B981', sortOrder: 7 }
+      { id: 'qisman', label: "Qisman to'lov", color: '#F59E0B', sortOrder: 7 },
+      { id: 'yutgan', label: 'Muvaffaqiyatli', color: '#10B981', sortOrder: 8 }
     ]);
+  }
+
+  // Mavjud o'rnatmalarda (stages allaqachon seed qilingan) "Qisman to'lov" bosqichini
+  // Muvaffaqiyatlidan oldingi o'ringa qo'shib qo'yamiz.
+  private async ensurePartialStage() {
+    if (await this.stages.findOneBy({ id: 'qisman' })) return;
+    const won = await this.stages.findOneBy({ id: 'yutgan' });
+    const wonOrder = won ? Number(won.sortOrder) : (await this.stages.count()) + 1;
+    await this.stages
+      .createQueryBuilder()
+      .update()
+      .set({ sortOrder: () => '"sortOrder" + 1' })
+      .where('"sortOrder" >= :o', { o: wonOrder })
+      .execute();
+    await this.stages.save({ id: 'qisman', label: "Qisman to'lov", color: '#F59E0B', sortOrder: wonOrder });
   }
 
   private async seedDeals() {
