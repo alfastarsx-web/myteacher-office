@@ -4282,7 +4282,7 @@ function calculateAdminOverview(){
   const todayApp = all.filter(d => d.appInstalled && isAppToday(d)).length;
 
   // Qual — operatorlar tomonidan bugun malakali qilingan lidlar (echo yozuvlar dedupe qilinadi)
-  const qualStages = new Set(['op_malakali','yangi','malakali','taklif','muzokaralar','sotib_olishga_rozi','yutgan']);
+  const qualStages = new Set(['op_malakali','yangi','malakali','taklif','muzokaralar','sotib_olishga_rozi','qisman','yutgan']);
   const isQualToday = d => tashkentDateKey(d.qualAt || d.createdAt) === todayKey;
   const qualMatchesToday = all.filter(d => qualStages.has(d.col) && isQualToday(d));
   const qualSeen = new Set();
@@ -4348,7 +4348,7 @@ function calculateOperatorBonus(user){
   // DIQQAT: operator lidni malakali qilganda, backend menejer voronkasiga bitta "echo" yozuv
   // ham yaratadi (bir xil telefon/operatorId bilan) — shu sababli bir xil lid ikki marta
   // (asl op_malakali yozuv + echo) hisoblanib ketmasligi uchun telefon bo'yicha dedupe qilamiz.
-  const qualStages = new Set(['op_malakali','yangi','malakali','taklif','muzokaralar','sotib_olishga_rozi','yutgan']);
+  const qualStages = new Set(['op_malakali','yangi','malakali','taklif','muzokaralar','sotib_olishga_rozi','qisman','yutgan']);
   const qualDeals = myDeals.filter(d => qualStages.has(d.col));
   const dedupeQualLeads = list => {
     const seen = new Set();
@@ -4540,7 +4540,7 @@ function calcDealActivity(user, range){
 function calcOperatorAnalytics(user, range){
   const myDeals = deals.filter(d => d.operatorId===user.id);
   const newContacts = myDeals.filter(d => inRange(d.createdAt||d.date, range)).length;
-  const qualStages = ['op_malakali','yangi','malakali','taklif','muzokaralar','sotib_olishga_rozi','yutgan'];
+  const qualStages = ['op_malakali','yangi','malakali','taklif','muzokaralar','sotib_olishga_rozi','qisman','yutgan'];
   // Echo yozuvlar (operator malakali qilganda menejer voronkasiga yaratiladigan nusxa) bir xil
   // telefon raqamiga ega bo'ladi — shu sababli dedupe qilmasak, bitta qualifikatsiya 2 marta hisoblanadi.
   const qualMatches = myDeals.filter(d => qualStages.includes(d.col) && inRange(d.qualAt||d.createdAt, range));
