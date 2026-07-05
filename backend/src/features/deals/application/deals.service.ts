@@ -196,9 +196,14 @@ export class DealsService {
     if (body.ownerId !== undefined && user.role === UserRole.Admin) {
       const prevOwnerId = deal.ownerId;
       deal.ownerId = this.parseOwnerId(body.ownerId);
-      // Operator voronkasidagi lid menejerga biriktirilsa, bosqichi ham menejer voronkasiga o'tadi
-      if (deal.ownerId && body.stageId === undefined && OPERATOR_STAGE_IDS.includes(deal.stageId)) {
+      // Operator voronkasidagi lid menejerga biriktirilsa, bosqichi ham menejer voronkasiga o'tadi.
+      // (Modal saqlashda body.stageId ham keladi — o'sha holatda ham xaritalash shart, aks holda
+      // lid op_* bosqichida "yopishib" qolib, menejer kanbanida ko'rinmay qolardi.)
+      if (deal.ownerId && OPERATOR_STAGE_IDS.includes(deal.stageId)) {
         deal.stageId = this.mapOperatorStageToManager(deal.stageId);
+        // Xuddi shu mijozning egasiz echo nusxasini yutib yuboramiz — ikkita menejer
+        // bitta mijoz ustida ishlab qolmasin
+        await this.absorbUnassignedEcho(deal);
       }
       // Deal yangi menejerga biriktirildi — unga xabar yuboramiz
       if (deal.ownerId && deal.ownerId !== prevOwnerId) {
@@ -339,6 +344,33 @@ export class DealsService {
     await this.deals.save(handoff);
   }
 
+  // Menejerga biriktirilayotgan asl (op_*) lidning EGASIZ echo nusxalarini yutib yuboradi:
+  // handoff paytida yaratilgan echo (bir xil telefon, menejer voronkasi bosqichi, ownerId NULL)
+  // biriktirishdan keyin ham hamma menejerga ko'rinib turaverar edi — ikki menejer bitta mijoz
+  // ustida ishlashi mumkin edi. Echo'dagi qo'shimcha izohlar asl yozuvga ko'chiriladi,
+  // so'ng echo o'chiriladi. O'chirilgan idlar ro'yxati qaytadi.
+  private async absorbUnassignedEcho(original: DealEntity): Promise<number[]> {
+    if (!original.phone) return [];
+    const echoes = await this.deals.createQueryBuilder('deal')
+      .where('deal.id != :id', { id: original.id })
+      .andWhere('deal.phone = :phone', { phone: original.phone })
+      .andWhere('deal.ownerId IS NULL')
+      .andWhere('deal.stageId NOT IN (:...opStages)', { opStages: OPERATOR_STAGE_IDS })
+      .getMany();
+    if (!echoes.length) return [];
+    const have = new Set((original.comments || []).map(c => `${c.time}|${c.text}`));
+    echoes.forEach(echo => (echo.comments || []).forEach(c => {
+      const key = `${c.time}|${c.text}`;
+      if (!have.has(key)) {
+        original.comments = [...(original.comments || []), c];
+        have.add(key);
+      }
+    }));
+    const ids = echoes.map(e => e.id);
+    await this.deals.delete(ids);
+    return ids;
+  }
+
   async bulkAssignOwner(body: any, user: UserEntity) {
     this.assertCrmAccess(user);
     if (user.role !== UserRole.Admin) throw new ForbiddenException('Faqat Admin shartnomalarni taqsimlay oladi');
@@ -358,14 +390,22 @@ export class DealsService {
     } else {
       // Menejerga biriktirish
       const ownerId = this.parseOwnerId(body.ownerId);
-      rows.forEach(deal => {
+      const absorbed = new Set<number>();
+      for (const deal of rows) {
         deal.ownerId = ownerId;
         // Operator voronkasidagi lid menejerga o'tsa, bosqichini ham menejer voronkasiga
         // o'tkazamiz — aks holda menejer kanbanida op_* ustuni yo'qligi uchun lid ko'rinmaydi.
         if (ownerId && OPERATOR_STAGE_IDS.includes(deal.stageId)) {
           deal.stageId = this.mapOperatorStageToManager(deal.stageId);
+          (await this.absorbUnassignedEcho(deal)).forEach(id => absorbed.add(id));
         }
-      });
+      }
+      // Admin asl nusxa bilan birga echo'ni ham tanlagan bo'lsa, o'chirilgan echo
+      // save() orqali qayta tirilib qolmasligi kerak
+      if (absorbed.size) {
+        const saved = await this.deals.save(rows.filter(r => !absorbed.has(Number(r.id))));
+        return { deals: saved };
+      }
     }
 
     const saved = await this.deals.save(rows);
