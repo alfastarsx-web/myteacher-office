@@ -49,7 +49,15 @@ export class DealsService {
   }
 
   canSee(user: UserEntity, deal: DealEntity) {
-    return user.role === UserRole.Admin || user.permissions?.all === true || deal.ownerId === user.id || (user.role === UserRole.Operator && deal.operatorId === user.id);
+    return (
+      user.role === UserRole.Admin ||
+      user.permissions?.all === true ||
+      deal.ownerId === user.id ||
+      (user.role === UserRole.Operator && deal.operatorId === user.id) ||
+      // Menejer hali biriktirilmagan (operator malakali qilgan) lidni ham ochib ishlay oladi —
+      // list() ham xuddi shu qoida bilan qaytaradi, aks holda "Shartnoma topilmadi" bo'lardi
+      (user.role === UserRole.Manager && deal.ownerId == null && !OPERATOR_STAGE_IDS.includes(deal.stageId))
+    );
   }
 
   async list(user: UserEntity) {
@@ -148,6 +156,12 @@ export class DealsService {
     await this.users.markActiveOnAction(user.id);
     const deal = await this.deals.findOne({ where: { id } });
     if (!deal || !this.canSee(user, deal)) throw new NotFoundException('Shartnoma topilmadi');
+    // Menejer egasiz (operator malakali qilgan) lidga izoh/o'zgarish kiritsa, lid o'ziga
+    // biriktiriladi — kim birinchi ishlashni boshlasa, o'shaniki. Boshqa menejerlar
+    // ro'yxatida u endi ko'rinmaydi, konflikt yo'qoladi.
+    if (user.role === UserRole.Manager && deal.ownerId == null) {
+      deal.ownerId = user.id;
+    }
     const prevStageId = deal.stageId;
     const prevCommentsLength = deal.comments?.length || 0;
     const nextStageId = body.stageId !== undefined ? String(body.stageId) : deal.stageId;
@@ -342,6 +356,20 @@ export class DealsService {
       createdBy: user.id
     });
     await this.deals.save(handoff);
+    // Barcha menejerlarga xabar: operatordan yangi malakali lid keldi — badge + ovozli signal
+    try {
+      const managers = await this.users.findManagers();
+      managers.forEach(m => {
+        this.notifications.sendToUser(m.id, {
+          type: 'qual_lead',
+          title: 'Yangi malakali lid keldi',
+          body: `"${handoff.customerName}" — operator malakali qildi, birinchi ishlagan menejerga biriktiriladi`,
+          dealId: handoff.id,
+          fromUserId: user.id,
+          userId: m.id
+        }).catch(() => {});
+      });
+    } catch {}
   }
 
   // Menejerga biriktirilayotgan asl (op_*) lidning EGASIZ echo nusxalarini yutib yuboradi:
