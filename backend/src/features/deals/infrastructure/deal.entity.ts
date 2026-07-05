@@ -71,6 +71,14 @@ export class DealEntity {
   paymentType: string | null;
   @Column({ nullable: true, type: 'varchar' })
   lostFromStage: string | null;
+  // Qisman to'lov: to'langan jami summa va to'lovlar tarixi
+  @Column({ type: 'bigint', default: 0 })
+  paidAmount: number;
+  @Column({ type: 'jsonb', default: () => "'[]'" })
+  payments: Array<{ amount: number; method: string; at: string; by: number }>;
+  // Operator "sotuv oynasi" shu sanaga qarab o'lchanadi (birinchi to'lov = mijoz joy band qildi)
+  @Column({ nullable: true, type: 'varchar' })
+  firstPaymentAt: string | null;
   @Column()
   createdBy: number;
 

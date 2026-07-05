@@ -13,8 +13,9 @@ import { AUTO_ASSIGN_CURSOR_KEY, AUTO_ASSIGN_LEADS_KEY, SettingsService } from '
 
 const AGREED_STAGE_ID = 'sotib_olishga_rozi';
 const WON_STAGE_ID = 'yutgan';
+const PARTIAL_STAGE_ID = 'qisman';
 const LOST_STAGE_ID = 'yutqazilgan';
-const BULK_BLOCKED_STAGE_IDS = [AGREED_STAGE_ID, WON_STAGE_ID];
+const BULK_BLOCKED_STAGE_IDS = [AGREED_STAGE_ID, PARTIAL_STAGE_ID, WON_STAGE_ID];
 const OPERATOR_QUAL_STAGE_ID = 'op_malakali';
 const VALID_PAYMENT_TYPES = ['naqd', 'karta', 'otkazma'];
 const OPERATOR_STAGE_IDS = ['op_yangi', 'op_qayta', 'op_malakali', 'op_yutqazilgan'];
@@ -232,10 +233,61 @@ export class DealsService {
     if (body.paymentType !== undefined) {
       deal.paymentType = VALID_PAYMENT_TYPES.includes(body.paymentType) ? body.paymentType : null;
     }
+    // Qisman to'lov qo'shish: joyni band qilish yoki aktsiyaga ulgurish uchun mijoz
+    // summaning bir qismini to'laydi. Bitim avtomatik "Qisman to'lov" bosqichiga tushadi
+    // va menejerga qolgan pulni undirish bo'yicha muddatli vazifa yaratiladi.
+    if (body.addPayment !== undefined) {
+      const amount = Math.round(Number(body.addPayment?.amount));
+      if (!Number.isFinite(amount) || amount <= 0) throw new BadRequestException("To'lov summasini kiriting");
+      const price = Number(deal.price || 0);
+      if (price <= 0) throw new BadRequestException("Avval shartnoma summasini kiriting");
+      const paid = Number(deal.paidAmount || 0);
+      if (paid + amount > price) {
+        throw new BadRequestException(`To'lov qoldiqdan oshib ketdi — qoldiq: ${(price - paid).toLocaleString('uz-UZ')} so'm`);
+      }
+      const method = VALID_PAYMENT_TYPES.includes(body.addPayment?.method) ? body.addPayment.method : 'naqd';
+      const nowIso = new Date().toISOString();
+      deal.payments = [...(deal.payments || []), { amount, method, at: nowIso, by: user.id }];
+      deal.paidAmount = paid + amount;
+      if (!deal.firstPaymentAt) deal.firstPaymentAt = nowIso;
+      const remaining = price - Number(deal.paidAmount);
+      if (remaining > 0) {
+        // To'liq to'lanmagan bitim Yutganda turolmaydi — Qisman to'lov bosqichiga o'tkazamiz
+        if (body.stageId === undefined && deal.stageId !== WON_STAGE_ID && !OPERATOR_STAGE_IDS.includes(deal.stageId)) {
+          deal.stageId = PARTIAL_STAGE_ID;
+        }
+        // Eslatma vazifasi — bitim bo'yicha ochiq vazifa bo'lmasa yaratamiz
+        if (!(await this.tasks.hasOpenTaskForDeal(deal.id))) {
+          await this.tasks.create({
+            dealId: deal.id,
+            ownerId: deal.ownerId || user.id,
+            title: `Qolgan to'lovni undirish: ${remaining.toLocaleString('uz-UZ')} so'm — ${deal.customerName}`,
+            due: 'ertaga'
+          }, user).catch(() => {});
+        }
+      }
+      this.telegram.sendMessage(
+        `💰 <b>Qisman to‘lov</b>\n\n` +
+        `👤 Mijoz: <b>${deal.customerName}</b>\n` +
+        `💵 To‘landi: <b>${amount.toLocaleString('uz-UZ')} so’m</b> (jami ${Number(deal.paidAmount).toLocaleString('uz-UZ')} / ${price.toLocaleString('uz-UZ')})\n` +
+        `${remaining > 0 ? `⏳ Qoldiq: <b>${remaining.toLocaleString('uz-UZ')} so’m</b>` : `✅ To‘liq to‘landi`}`
+      ).catch(() => {});
+    }
     if (nextStageId === OPERATOR_QUAL_STAGE_ID && prevStageId !== OPERATOR_QUAL_STAGE_ID && !deal.sentToManager) {
       await this.handoffQualifiedLead(deal, user);
     }
     if (nextStageId === WON_STAGE_ID && prevStageId !== WON_STAGE_ID) {
+      // Yutganga o'tishda to'lovlar tarixini yakunlaymiz: qolgan summa bitta to'lov sifatida yoziladi
+      // (qisman to'lovsiz klassik oqimda bu butun summa bo'ladi). Invariant: Yutgan = to'liq to'langan.
+      const paidSoFar = Number(deal.paidAmount || 0);
+      const fullPrice = Number(deal.price || 0);
+      if (paidSoFar < fullPrice) {
+        const rest = fullPrice - paidSoFar;
+        const nowIso = new Date().toISOString();
+        deal.payments = [...(deal.payments || []), { amount: rest, method: deal.paymentType || 'naqd', at: nowIso, by: user.id }];
+        deal.paidAmount = fullPrice;
+        if (!deal.firstPaymentAt) deal.firstPaymentAt = nowIso;
+      }
       const managerName = user.name || user.email || 'Menejer';
       const price = deal.price ? `${Number(deal.price).toLocaleString('uz-UZ')} so’m` : 'narx ko’rsatilmagan';
       const phone = deal.phone || (deal.phones?.[0]) || '—';
@@ -429,6 +481,16 @@ export class DealsService {
       throw new BadRequestException('Bu bosqichga o‘tish uchun shartnoma summasini kiriting');
     }
     const isNewWon = stageId === WON_STAGE_ID && deal?.stageId !== WON_STAGE_ID;
+    if (isNewWon && deal) {
+      // Invariant: Muvaffaqiyatli = to'liq to'langan. Qisman to'lovli bitim avval to'liq yopilishi shart —
+      // aks holda pro-akkaunt/bonus avtomatikasi noto'g'ri ishlaydi.
+      const paid = Number(deal.paidAmount || 0);
+      if (paid > 0 && paid < price) {
+        throw new BadRequestException(
+          `Bitim to'liq to'lanmagan (qoldiq: ${(price - paid).toLocaleString('uz-UZ')} so'm). Avval "To'lov qo'shish" orqali qolgan summani kiriting`
+        );
+      }
+    }
     if (isNewWon) {
       const password = String(body.closePassword || '');
       if (!password || !this.passwords.verify(password, user.passwordHash)) {
