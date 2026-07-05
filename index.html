@@ -214,6 +214,16 @@ table.crm-t{width:100%;border-collapse:collapse}
 .col-bar{position:absolute;bottom:-3px;left:0;right:0;height:3px}
 .col-title{font-size:14px;font-weight:700}
 .col-amt{font-size:12px;color:var(--mu);margin-top:2px}
+/* Ustunni yashirish/ko'rsatish (ko'zcha) */
+.col-eye{position:absolute;top:10px;right:8px;border:0;background:transparent;color:var(--mu);cursor:pointer;padding:4px;border-radius:6px;opacity:0;transition:.15s;line-height:0}
+.col-hdr:hover .col-eye{opacity:.85}
+.col-eye:hover{background:#EEF2F7;color:var(--td)}
+.col-collapsed{width:44px;min-width:44px;flex-shrink:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;padding:14px 0;gap:12px;background:#F4F7FB;border-right:1px solid var(--br);position:relative;transition:background .12s}
+.col-collapsed:hover{background:#E8EFF8}
+.col-collapsed-bar{position:absolute;top:0;left:0;right:0;height:3px}
+.col-collapsed-eye{color:var(--mu);margin-top:6px;line-height:0}
+.col-collapsed:hover .col-collapsed-eye{color:var(--blue)}
+.col-collapsed-label{writing-mode:vertical-rl;transform:rotate(180deg);font-size:12px;font-weight:700;color:var(--tm);letter-spacing:.3px;white-space:nowrap}
 .col-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;min-height:60px;transition:background .15s,outline .15s}
 .col-body.over{background:rgba(37,99,235,.05);outline:2px dashed var(--blue);outline-offset:-5px;border-radius:8px}
 .kcard{background:var(--wh);border:1px solid var(--br);border-radius:8px;padding:13px;cursor:grab;transition:box-shadow .15s,border-color .15s,opacity .2s,transform .15s;user-select:none;box-shadow:var(--shadow-sm)}
@@ -3088,6 +3098,20 @@ async function bulkApplyDeals(){
 // ════════════════════════════════════════
 //  RENDER KANBAN
 // ════════════════════════════════════════
+// ── USTUNLARNI YASHIRISH/KO'RSATISH ──
+// Har bir foydalanuvchi o'ziga kerak bo'lmagan ustunlarni ko'zcha bilan yig'ib qo'yishi mumkin;
+// tanlov shu brauzerda foydalanuvchi bo'yicha saqlanadi. Yashirilgan ustun joyida ingichka
+// chiziq bo'lib turadi — bosilsa yana ochiladi. Bonus/hisob-kitoblarga ta'sir qilmaydi.
+function hiddenStagesKey(){ return `mtcrm_hidden_stages_${currentManagerId}`; }
+function getHiddenStages(){
+  try{ return new Set(JSON.parse(localStorage.getItem(hiddenStagesKey())||'[]')); }catch{ return new Set(); }
+}
+function toggleStageHidden(id){
+  const set=getHiddenStages();
+  set.has(id)?set.delete(id):set.add(id);
+  try{ localStorage.setItem(hiddenStagesKey(),JSON.stringify([...set])); }catch{}
+  renderKanban();
+}
 // Qisman to'lov progress chizig'i — to'langan foizga qarab rang: qizil → sariq → ko'k → yashil
 function dealPayPercent(d){
   if(!d || !Number(d.price) || !Number(d.paidAmount))return 0;
@@ -3121,6 +3145,8 @@ function renderKanban(){
   // bo'lsa, "Malakali" ustuniga faqat echo chiqadi — bitta mijoz ikki kartochka bo'lmasin
   const OP_STAGE_SET=new Set(['op_yangi','op_qayta','op_malakali','op_yutqazilgan']);
   const managerFunnelPhones=new Set(rows.filter(d=>!OP_STAGE_SET.has(d.col) && d.phone).map(d=>d.phone));
+  // Bosqich filtri tanlanganda yashirish e'tiborga olinmaydi — foydalanuvchi aynan shu ustunni so'ragan
+  const hiddenStages=dealFilters.stageId?new Set():getHiddenStages();
   document.getElementById('sBoard').innerHTML=stages.map(col=>{
     let colRows=rows.filter(d=>d.col===col.id || (!hasOpQualCol && col.id==='malakali' && d.col===STAGE_OP_QUAL));
     if(!hasOpQualCol && col.id==='malakali'){
@@ -3131,9 +3157,17 @@ function renderKanban(){
     }
     const cd=colRows.map(d=>({...d,_kanbanTask:kanbanTaskInfo(d)})).sort((a,b)=>(a._kanbanTask.sort-b._kanbanTask.sort) || (Number(b.id||0)-Number(a.id||0)));
     const tot=cd.reduce((s,d)=>s+d.price,0);
+    if(hiddenStages.has(col.id)){
+      return `<div class="col-collapsed" onclick="toggleStageHidden('${col.id}')" title="${esc(col.label)} — ochish">
+        <div class="col-collapsed-bar" style="background:${col.color}"></div>
+        <span class="col-collapsed-eye"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
+        <div class="col-collapsed-label">${esc(col.label)}${cd.length?` · ${cd.length}`:''}</div>
+      </div>`;
+    }
     return `<div class="col">
       <div class="col-hdr">
         <div class="col-bar" style="background:${col.color}"></div>
+        <button class="col-eye" title="Ustunni yashirish" onclick="toggleStageHidden('${col.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M17.94 17.94A10.94 10.94 0 0112 20C5 20 1 12 1 12a18.45 18.45 0 015.06-5.94M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>
         <div class="col-title">${col.label}</div>
         <div class="col-amt">${cd.length} · ${formatMoney(tot)}</div>
       </div>
