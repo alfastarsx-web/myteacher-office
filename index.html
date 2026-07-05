@@ -1215,7 +1215,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <div class="sp"></div>
   <div class="si" id="sbNotif" title="Bildirishnomalar" onclick="toggleNotifPanel()" style="position:relative">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 01-3.46 0"/></svg>
-    <span id="notifBadge" style="display:none;position:absolute;top:4px;right:4px;width:16px;height:16px;background:#EF4444;border-radius:50%;font-size:9px;font-weight:900;color:#fff;display:flex;align-items:center;justify-content:center;line-height:1"></span>
+    <span id="notifBadge" style="display:none;position:absolute;top:4px;right:4px;min-width:16px;height:16px;padding:0 3px;background:#EF4444;border-radius:999px;font-size:9px;font-weight:900;color:#fff;align-items:center;justify-content:center;line-height:1;box-shadow:0 0 0 2px #fff"></span>
   </div>
   <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="5.5" cy="11.5" r="4.5"/><circle cx="18.5" cy="11.5" r="4.5"/><line x1="5.5" y1="16" x2="18.5" y2="16"/></svg></div>
   <div class="si"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
@@ -1676,7 +1676,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
             <button class="composer-tab" onclick="switchComposer(this,'sms')">SMS</button>
           </div>
           <div class="composer-body">
-            <div class="composer-hint show" id="dwComposerHint">Comment faqat jamoa ichida ko‘rinadi va shartnomaga saqlanadi.</div>
+            <div class="composer-hint" id="dwComposerHint"></div>
             <div class="workspace-task-form" id="dwTaskForm">
               <input id="dwTaskDate" type="date">
               <input id="dwTaskTime" type="time">
@@ -3814,10 +3814,10 @@ function switchComposer(el,mode){
   const hint=document.getElementById('dwComposerHint');
   form.classList.toggle('show',mode==='task');
   const placeholders={chat:'Mijozga xabar yozing...',sms:'SMS matnini kiriting...',comment:'Ichki comment yozing...',task:'Vazifa nomini kiriting...'};
-  const hints={chat:'Chat xabari hozircha faqat tarixda ko‘rinadi.',sms:'SMS integratsiya keyin ulanadi, hozir matn tarixga yoziladi.',comment:'Comment faqat jamoa ichida ko‘rinadi va shartnomaga saqlanadi.',task:'Kalendar orqali muddatni tanlang, mas’ulni belgilang va vazifa yarating.'};
+  const hints={chat:'Chat xabari hozircha faqat tarixda ko‘rinadi.',sms:'SMS integratsiya keyin ulanadi, hozir matn tarixga yoziladi.'};
   input.placeholder=placeholders[mode];
   hint.textContent=hints[mode] || '';
-  hint.classList.toggle('show',mode==='task' || mode==='comment');
+  hint.classList.toggle('show',Boolean(hints[mode]));
   if(mode==='task')prepareWorkspaceTaskForm();
   input.focus();
 }
@@ -3890,6 +3890,8 @@ async function sendWorkspaceItem(){
   }
   document.getElementById('dwComposerText').value='';
   renderDealWorkspace();
+  // Kanban kartochkasidagi vazifa belgisi refresh siz ham yangilanishi kerak
+  renderCurrentDeals();
 }
 async function toggleWorkspaceTask(id){
   const d=currentWorkspaceDeal();
@@ -3902,6 +3904,7 @@ async function toggleWorkspaceTask(id){
     catch(err){task.done=!task.done;showToast(err.message);return;}
   }
   renderDealWorkspace();
+  renderCurrentDeals();
 }
 async function saveWorkspaceStage(col){
   const d=currentWorkspaceDeal();
@@ -4043,6 +4046,21 @@ function setDashPeriod(p,el){
 }
 const DASH_TK=iso=>iso?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)):'';
 const dashSoldDate=d=>d.wonAt||d.updatedAt||d.createdAt;
+// Davr ichida REAL tushgan pul (kassa): to'lovlar tarixi bor bitimlarda har bir to'lov
+// (qisman to'lovlar ham!) o'z sanasida, tarixsiz eski yutgan bitimlarda esa butun summa
+// sotilgan sanasida hisoblanadi.
+function cashReceivedInPeriod(list,inPeriod){
+  let total=0;
+  list.forEach(d=>{
+    const pays=Array.isArray(d.payments)?d.payments:[];
+    if(pays.length){
+      pays.forEach(p=>{ if(inPeriod(p.at))total+=Number(p.amount||0); });
+    }else if(d.col===STAGE_WON && inPeriod(dashSoldDate(d))){
+      total+=Number(d.price||0);
+    }
+  });
+  return total;
+}
 // Har bir menejer bo'yicha davr ko'rsatkichlari (davr: 'day' — bugun, 'month' — joriy oy)
 function dashManagerStats(period){
   const todayKey=DASH_TK(new Date().toISOString());
@@ -4075,8 +4093,9 @@ function renderDashTopCards(){
   const won=deals.filter(d=>d.col===STAGE_WON);
   const todaySales=won.filter(d=>DASH_TK(dashSoldDate(d))===todayKey);
   const monthSales=won.filter(d=>DASH_TK(dashSoldDate(d)).slice(0,7)===monthKey);
-  const todayCash=todaySales.reduce((s,d)=>s+Number(d.price||0),0);
-  const monthCash=monthSales.reduce((s,d)=>s+Number(d.price||0),0);
+  // Kassa — real tushgan pul: qisman to'lovlar ham tushgan kunida hisobga kiradi
+  const todayCash=cashReceivedInPeriod(deals,iso=>DASH_TK(iso)===todayKey);
+  const monthCash=cashReceivedInPeriod(deals,iso=>DASH_TK(iso).slice(0,7)===monthKey);
   const goal=Number(KPI_TARGETS.monthlyRevenue||0)*Math.max(1,managers.filter(m=>m.role==='manager').length||1);
   const pct=goal?Math.min(100,Math.round(monthCash/goal*100)):0;
   const avgCheck=monthSales.length?Math.round(monthCash/monthSales.length):0;
@@ -4175,9 +4194,14 @@ function renderDashBarChart(){
   const todayKey=DASH_TK(now.toISOString());
   const monthKey=todayKey.slice(0,7);
   const daysInMonth=new Date(now.getFullYear(),now.getMonth()+1,0).getDate();
-  const won=deals.filter(d=>d.col===STAGE_WON && DASH_TK(dashSoldDate(d)).slice(0,7)===monthKey);
+  // Kunlik kassa: qisman to'lovlar tushgan kunida, tarixsiz eski sotuvlar sotilgan kunida
   const byDay=Array.from({length:daysInMonth},()=>0);
-  won.forEach(d=>{ const day=Number(DASH_TK(dashSoldDate(d)).slice(8,10)); if(day>=1)byDay[day-1]+=Number(d.price||0); });
+  const addToDay=(iso,amt)=>{ const k=DASH_TK(iso); if(k.slice(0,7)===monthKey){ const day=Number(k.slice(8,10)); if(day>=1)byDay[day-1]+=amt; } };
+  deals.forEach(d=>{
+    const pays=Array.isArray(d.payments)?d.payments:[];
+    if(pays.length)pays.forEach(p=>addToDay(p.at,Number(p.amount||0)));
+    else if(d.col===STAGE_WON)addToDay(dashSoldDate(d),Number(d.price||0));
+  });
   const dailyPlan=Math.max(1,Math.round(KPI_TARGETS.monthlyRevenue/daysInMonth));
   const chartMax=Math.max(dailyPlan,...byDay)*1.15;
   el.innerHTML=byDay.map((v,i)=>{
@@ -4193,10 +4217,10 @@ function renderDashBarChart(){
   const prev=new Date(now.getFullYear(),now.getMonth()-1,1);
   const prevKey=DASH_TK(prev.toISOString()).slice(0,7);
   const dayOfMonth=now.getDate();
-  const prevRevenue=deals.filter(d=>{
-    const k=DASH_TK(dashSoldDate(d));
-    return d.col===STAGE_WON && k.slice(0,7)===prevKey && Number(k.slice(8,10))<=dayOfMonth;
-  }).reduce((s,d)=>s+Number(d.price||0),0);
+  const prevRevenue=cashReceivedInPeriod(deals,iso=>{
+    const k=DASH_TK(iso);
+    return k.slice(0,7)===prevKey && Number(k.slice(8,10))<=dayOfMonth;
+  });
   const curRevenue=byDay.reduce((s,v)=>s+v,0);
   const trendEl=document.getElementById('dashTrendPct');
   if(trendEl){
@@ -4219,8 +4243,7 @@ function renderDashLineChart(){
     const dt=new Date(now.getFullYear(),now.getMonth()-i,1);
     months.push({key:DASH_TK(dt.toISOString()).slice(0,7),label:MONTH_UZ[dt.getMonth()]});
   }
-  const won=deals.filter(d=>d.col===STAGE_WON);
-  const totals=months.map(mo=>won.filter(d=>DASH_TK(dashSoldDate(d)).slice(0,7)===mo.key).reduce((s,d)=>s+Number(d.price||0),0));
+  const totals=months.map(mo=>cashReceivedInPeriod(deals,iso=>DASH_TK(iso).slice(0,7)===mo.key));
   const max=Math.max(1,...totals);
   const W=520,H=210,PAD=8;
   const pts=totals.map((v,i)=>[Math.round(i*(W/(totals.length-1))),Math.round(H-PAD-(v/max)*(H-PAD*3))]);
@@ -4408,10 +4431,10 @@ function calculateAdminOverview(){
 
   // Sotuv — bugungi va shu oydagi
   const wonToday = all.filter(d => d.col === STAGE_WON && tashkentDateKey(d.updatedAt || d.createdAt) === todayKey);
-  const wonMonth = all.filter(d => d.col === STAGE_WON && tashkentDateKey(d.updatedAt || d.createdAt).slice(0,7) === monthKey);
   const todaySoldCount = wonToday.length;
-  const todayCash = wonToday.reduce((sum,d) => sum + Number(d.price || 0), 0);
-  const monthCash = wonMonth.reduce((sum,d) => sum + Number(d.price || 0), 0);
+  // Kassa — real tushgan pul: qisman to'lovlar ham tushgan kunida hisobga kiradi
+  const todayCash = cashReceivedInPeriod(all, iso => tashkentDateKey(iso) === todayKey);
+  const monthCash = cashReceivedInPeriod(all, iso => tashkentDateKey(iso).slice(0,7) === monthKey);
 
   return {todayProcessed, todayApp, todayQual, todayFullCall, todaySoldCount, todayCash, monthCash};
 }
@@ -6676,8 +6699,32 @@ const NOTIF_ICONS = {
   deal_assigned: '📋',
   task_created: '✅',
   comment_added: '💬',
-  stage_changed: '🔄'
+  stage_changed: '🔄',
+  qual_lead: '🎯'
 };
+// Yoqimli ikki tonli "ding-dong" signal — tashqi audio fayl talab qilmaydi (WebAudio).
+// Brauzer siyosati: foydalanuvchi sahifa bilan kamida bir marta muloqot qilgan bo'lishi kerak.
+let notifAudioCtx = null;
+function playNotifSound() {
+  try {
+    notifAudioCtx = notifAudioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    const ctx = notifAudioCtx;
+    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+    const now = ctx.currentTime;
+    [[880, 0], [1174.66, 0.14]].forEach(([freq, delay]) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, now + delay);
+      gain.gain.linearRampToValueAtTime(0.18, now + delay + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 0.5);
+      osc.connect(gain).connect(ctx.destination);
+      osc.start(now + delay);
+      osc.stop(now + delay + 0.55);
+    });
+  } catch {}
+}
 
 function connectNotifSocket() {
   if (!apiToken) return;
@@ -6706,6 +6753,7 @@ function connectNotifSocket() {
     renderNotifBadge();
     if (notifPanelOpen) renderNotifList();
     showNotifToast(notif);
+    playNotifSound();
   });
 
   notifSocket.on('notifications:read_ok', () => {

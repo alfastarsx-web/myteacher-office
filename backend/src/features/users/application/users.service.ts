@@ -45,6 +45,10 @@ export class UsersService {
     return this.users.find({ where: { role: UserRole.Operator, status: 'Online' }, order: { id: 'ASC' } });
   }
 
+  async findManagers() {
+    return this.users.find({ where: { role: UserRole.Manager }, order: { id: 'ASC' } });
+  }
+
   publicUser(user: UserEntity) {
     this.reconcileStaleSession(user);
     const { passwordHash: _passwordHash, ...safe } = user;
