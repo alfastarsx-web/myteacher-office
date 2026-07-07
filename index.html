@@ -843,7 +843,9 @@ table.crm-t{width:100%;border-collapse:collapse}
 .deal-modal{width:min(1120px,calc(100vw - 34px));height:min(760px,calc(100vh - 34px));max-height:none;display:flex;flex-direction:column;overflow:hidden}
 .deal-workspace{display:grid;grid-template-columns:minmax(0,1fr) 330px;grid-template-rows:minmax(0,1fr);min-height:0;flex:1;background:var(--bg)}
 .deal-chat{display:flex;flex-direction:column;min-width:0;min-height:0;background:var(--wh);border-right:1px solid var(--br)}
-.deal-chat-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 20px 14px;border-bottom:1px solid var(--br);flex-shrink:0}
+.deal-chat-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;padding:18px 20px 14px;border-bottom:1px solid var(--br);flex-shrink:0;cursor:grab;touch-action:none}
+.deal-chat-head.dragging{cursor:grabbing;user-select:none}
+.deal-modal.dw-dragged{transition:none}
 .deal-title{font-size:18px;font-weight:700;color:var(--td)}
 .deal-subtitle{font-size:12px;color:var(--mu);margin-top:5px}
 .deal-head-actions{display:flex;align-items:center;gap:8px}
@@ -3636,8 +3638,46 @@ function openDealWorkspace(id){
   if(!d)return;
   workspaceDealId=id;
   ensureDealActivity(d);
+  dwResetDragPosition(); // har ochilganda markazda paydo bo'lsin
   document.getElementById('dealWorkspaceOvl').classList.add('show');
   renderDealWorkspace();
+}
+// Lead oynasini peshanasidan (header) ushlab sudrash — faqat desktop, mobil'da to'liq ekran
+let dwDragX=0, dwDragY=0;
+function dwResetDragPosition(){
+  dwDragX=0; dwDragY=0;
+  const modal=document.querySelector('#dealWorkspaceOvl .deal-modal');
+  if(modal){ modal.classList.remove('dw-dragged'); modal.style.transform=''; }
+}
+function initDealWorkspaceDrag(){
+  const ovl=document.getElementById('dealWorkspaceOvl');
+  const modal=ovl.querySelector('.deal-modal');
+  const handle=ovl.querySelector('.deal-chat-head');
+  if(!modal||!handle)return;
+  let dragging=false, sx=0, sy=0;
+  const apply=()=>{ modal.style.transform=`translate(${dwDragX}px,${dwDragY}px)`; };
+  handle.addEventListener('pointerdown',e=>{
+    if(e.button!==0)return;
+    if(e.target.closest('button,a,input,textarea,select'))return; // tugma/kiritishga tegmaymiz
+    if(window.matchMedia('(max-width:900px)').matches)return;      // mobil to'liq ekran
+    dragging=true; sx=e.clientX; sy=e.clientY;
+    modal.classList.add('dw-dragged');
+    handle.classList.add('dragging');
+    try{handle.setPointerCapture(e.pointerId);}catch{}
+  });
+  handle.addEventListener('pointermove',e=>{
+    if(!dragging)return;
+    dwDragX+=e.clientX-sx; dwDragY+=e.clientY-sy; sx=e.clientX; sy=e.clientY;
+    // Oyna ekrandan butunlay chiqib ketmasin — kamida M px ko'rinib tursin, header yuqorida qolsin
+    const w=modal.offsetWidth, h=modal.offsetHeight, vw=window.innerWidth, vh=window.innerHeight;
+    const left0=(vw-w)/2, top0=(vh-h)/2, M=90;
+    dwDragX=Math.max(M-w-left0, Math.min(vw-M-left0, dwDragX));
+    dwDragY=Math.max(-top0, Math.min(vh-M-top0, dwDragY));
+    apply();
+  });
+  const end=e=>{ if(!dragging)return; dragging=false; handle.classList.remove('dragging'); try{handle.releasePointerCapture(e.pointerId);}catch{} };
+  handle.addEventListener('pointerup',end);
+  handle.addEventListener('pointercancel',end);
 }
 function closeDealWorkspace(){
   document.getElementById('dealWorkspaceOvl').classList.remove('show');
@@ -6675,6 +6715,7 @@ function closeSalePopup(){
 // Close modal on overlay click
 document.getElementById('dealOvl').addEventListener('click',e=>{if(e.target===document.getElementById('dealOvl'))closeModal();});
 document.getElementById('dealWorkspaceOvl').addEventListener('click',e=>{if(e.target===document.getElementById('dealWorkspaceOvl'))closeDealWorkspace();});
+initDealWorkspaceDrag();
 // Close dropdowns outside
 document.addEventListener('click',e=>{
   if(!e.target.closest('.ddw')&&!e.target.closest('.btn-pl'))
