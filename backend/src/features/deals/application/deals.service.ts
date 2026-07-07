@@ -300,23 +300,28 @@ export class DealsService {
       // (qisman to'lovsiz klassik oqimda bu butun summa bo'ladi). Invariant: Yutgan = to'liq to'langan.
       const paidSoFar = Number(deal.paidAmount || 0);
       const fullPrice = Number(deal.price || 0);
-      if (paidSoFar < fullPrice) {
-        const rest = fullPrice - paidSoFar;
+      const rest = Math.max(0, fullPrice - paidSoFar);
+      if (rest > 0) {
         const nowIso = new Date().toISOString();
         deal.payments = [...(deal.payments || []), { amount: rest, method: deal.paymentType || 'naqd', at: nowIso, by: user.id }];
         deal.paidAmount = fullPrice;
         if (!deal.firstPaymentAt) deal.firstPaymentAt = nowIso;
       }
-      const managerName = user.name || user.email || 'Menejer';
-      const price = deal.price ? `${Number(deal.price).toLocaleString('uz-UZ')} so’m` : 'narx ko’rsatilmagan';
-      const phone = deal.phone || (deal.phones?.[0]) || '—';
-      this.telegram.sendMessage(
-        `🎉 <b>Yangi to‘lov!</b>\n\n` +
-        `👤 Mijoz: <b>${deal.customerName}</b>\n` +
-        `📞 Tel: ${phone}\n` +
-        `💰 Summa: <b>${price}</b>\n` +
-        `👨‍💼 Menejer: ${managerName}`
-      ).catch(() => {});
+      // Telegram xabari faqat shu payt HAQIQATAN yangi pul kelganda yuboriladi.
+      // Qisman to'lovlar orqali allaqachon to'liq to'langan bitim uchun (rest === 0) pul
+      // "Qisman to'lov ... To'liq to'landi" xabari bilan e'lon qilingan — takror yubormaymiz.
+      if (rest > 0) {
+        const managerName = user.name || user.email || 'Menejer';
+        const price = deal.price ? `${Number(deal.price).toLocaleString('uz-UZ')} so’m` : 'narx ko’rsatilmagan';
+        const phone = deal.phone || (deal.phones?.[0]) || '—';
+        this.telegram.sendMessage(
+          `🎉 <b>Yangi to‘lov!</b>\n\n` +
+          `👤 Mijoz: <b>${deal.customerName}</b>\n` +
+          `📞 Tel: ${phone}\n` +
+          `💰 Summa: <b>${price}</b>\n` +
+          `👨‍💼 Menejer: ${managerName}`
+        ).catch(() => {});
+      }
     }
     return this.deals.save(deal);
   }
