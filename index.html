@@ -1905,6 +1905,7 @@ const OPERATOR_COLS = [
   {id:'op_malakali',   label:'Malakali',    color:'#10B981'},
   {id:'op_yutqazilgan',label:'Yutqazilgan', color:'#EF4444'},
 ];
+const STAGE_JUSTIFY_WINDOW_MS=30*60*1000; // bosqich o'zgarishida "yaqinda yozilgan izoh" oynasi
 const STAGE_AGREED='sotib_olishga_rozi';
 const STAGE_WON='yutgan';
 const STAGE_PARTIAL='qisman';
@@ -3221,11 +3222,18 @@ async function prepareStageTransition(deal,target,priceInput){
   }
 
   // Bosqich haqiqatan o'zgarayotgan bo'lsa (mavjud lid uchun, yangi yaratilayotganda emas), kamida
-  // 4 so'zli yangi izoh yoki ochiq vazifa talab qilamiz (admin bundan mustasno) —
-  // "k", "ochiq" kabi mazmunsiz belgilar bilan lid siljitilmasin
+  // 4 so'zli izoh yoki ochiq vazifa talab qilamiz (admin bundan mustasno) —
+  // "k", "ochiq" kabi mazmunsiz belgilar bilan lid siljitilmasin.
+  // Yaqinda (30 daqiqa ichida) yozilgan mazmunli izoh ham asos bo'ladi — mijoz bilan gaplashib
+  // turib izoh yozgan menejerdan bosqich o'zgarishida qayta izoh so'ralmaydi.
   if(deal.id!=null && deal.col!==target && !isAdmin()){
     const hasOpenTask=(deal.tasks||[]).some(t=>!t.done);
-    if(!hasOpenTask){
+    const hasRecentComment=(deal.comments||[]).some(c=>{
+      const words=String(c.text||'').trim().split(/\s+/).filter(Boolean).length;
+      const t=c.time?new Date(c.time).getTime():0;
+      return words>=4 && t && (Date.now()-t)<=STAGE_JUSTIFY_WINDOW_MS;
+    });
+    if(!hasOpenTask && !hasRecentComment){
       const text=(window.prompt(`"${customerTitle(deal)}" — "${targetLabel}"ga o'tkazish uchun kamida 4 so'zdan iborat izoh yozing (yoki Bekor qiling va avval Vazifa qo'ying):`)||'').trim();
       const wordCount=text.split(/\s+/).filter(Boolean).length;
       if(!text){

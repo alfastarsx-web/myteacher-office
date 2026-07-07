@@ -537,14 +537,22 @@ export class DealsService {
     }
   }
 
-  // Bosqich o'zgarganda, kamida 4 so'zli yangi izoh yoki ochiq vazifa talab qilamiz —
+  // Bosqich o'zgarganda, kamida 4 so'zli izoh yoki ochiq vazifa talab qilamiz —
   // aks holda lidlar "k", "ochiq" kabi mazmunsiz belgilar bilan siljib, yo'qotish sababi hech qachon yozilmay qoladi.
+  // Yangi qo'shilgan izoh ham, yaqinda (30 daqiqa ichida) yozilgan izoh ham asos bo'ladi — menejer
+  // mijoz bilan gaplashib turib izoh yozgan bo'lsa, bosqich o'zgarishida qayta izoh yozishi shart emas.
   private async assertStageChangeJustified(deal: DealEntity, body: any, prevCommentsLength: number) {
     if (await this.tasks.hasOpenTaskForDeal(deal.id)) return;
-    const comments = Array.isArray(body.comments) ? body.comments : null;
-    if (comments && comments.length > prevCommentsLength) {
-      const text = String(comments[comments.length - 1]?.text || '').trim();
-      if (text.split(/\s+/).filter(Boolean).length >= 4) return;
+    const comments = Array.isArray(body.comments) ? body.comments : deal.comments;
+    if (Array.isArray(comments) && comments.length) {
+      const recentCutoff = Date.now() - 30 * 60 * 1000;
+      const justified = comments.some((c: any, i: number) => {
+        if (String(c?.text || '').trim().split(/\s+/).filter(Boolean).length < 4) return false;
+        const isNew = Array.isArray(body.comments) && i >= prevCommentsLength; // shu so'rovda qo'shilgan
+        const t = c?.time ? new Date(c.time).getTime() : 0;
+        return isNew || (t && t >= recentCutoff);
+      });
+      if (justified) return;
     }
     throw new BadRequestException('Bosqichni o‘zgartirish uchun kamida 4 so‘zdan iborat izoh yozing yoki ochiq vazifa qo‘ying');
   }
