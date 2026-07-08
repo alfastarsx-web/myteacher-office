@@ -1006,6 +1006,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   .kpi-card-unit{font-size:9px}
   .kpi-card-sub{font-size:9px;margin-bottom:4px;line-height:1.25;display:-webkit-box;-webkit-line-clamp:1;-webkit-box-orient:vertical;overflow:hidden}
   .kpi-card-progress{height:2px}
+  /* Menejer/operator KPI mobilda pill (chip) — bitta ixcham gorizontal siljituvchi qator */
+  #dealStats:has(.kpi-chips){padding:7px 10px}
+  .kpi-chips{flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;gap:7px}
+  .kpi-chips::-webkit-scrollbar{display:none}
+  .kpi-chip{flex-shrink:0}
 
   /* Kanban */
   .board-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
@@ -2017,6 +2022,7 @@ function managerSalesReward(salesList,rateRevenue){
 function currentUser(){ return managers.find(m=>m.id===currentManagerId) || {id:null,name:'',role:'manager',status:'Offline',permissions:{crm:false},todayOnlineSeconds:0}; }
 function isAdmin(){ return currentUser().role==='admin'; }
 function isOperator(user=currentUser()){ return user.role==='operator'; }
+function isMobileView(){ return window.matchMedia('(max-width:760px)').matches; }
 function hasPerm(key,user=currentUser()){ return user.role==='admin' || user.permissions?.[key]===true; }
 function activeCols(){ return isOperator()?OPERATOR_COLS:COLS; }
 function firstNameOf(name){
@@ -2852,7 +2858,7 @@ function renderDealStats(){
       {icon:'📱', label:'Ilova o\'rnatilgan', value:op.todayApp, unit:'ta', sub:`Har biri bonusli · +${formatMoney(op.appBonus)}`, color:'#0891B2', bg:'linear-gradient(135deg,#ECFEFF,#CFFAFE)', accent:'#A5F3FC', progress:Math.min(100,op.todayApp*10)},
       {icon:'💰', label:'Bugungi bonus', value:formatMoney(op.todayBonus), unit:'', sub:`Q: ${formatMoney(op.qualBonus)} · S: ${formatMoney(op.saleBonus)} · I: ${formatMoney(op.appBonus)}`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC', progress:Math.min(100,Math.round(op.todayBonus/100000*100))},
     ];
-    renderKpiCards(cards);
+    (isMobileView()?renderKpiChips:renderKpiCards)(cards);
     return;
   }
   if(isAdmin()){
@@ -2882,7 +2888,7 @@ function renderDealStats(){
     {icon:'💵', label:'Bugungi sotuv summasi', value:formatMoney(m.todaySoldAmount), sub:`${m.todaySoldCount} ta muvaffaqiyatli`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC'},
     {icon:'🎯', label:'Olingan Qual lid', value:`${m.todayQualReceived} ta`, sub:'Bugun operatordan kelgan', color:'#7C3AED', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', accent:'#C4B5FD'},
   ];
-  renderKpiCards(managerCards);
+  (isMobileView()?renderKpiChips:renderKpiCards)(managerCards);
   refreshDashboardSummary();
 }
 async function refreshDashboardSummary(){
@@ -6807,6 +6813,15 @@ function closeSalePopup(){
 document.getElementById('dealOvl').addEventListener('click',e=>{if(e.target===document.getElementById('dealOvl'))closeModal();});
 document.getElementById('dealWorkspaceOvl').addEventListener('click',e=>{if(e.target===document.getElementById('dealWorkspaceOvl'))closeDealWorkspace();});
 initDealWorkspaceDrag();
+// Ekran o'lchami mobil/desktop chegarasidan o'tganda KPI ko'rinishini (karta ↔ pill) yangilaymiz
+let _kpiWasMobile=isMobileView();
+window.addEventListener('resize',()=>{
+  const nowMobile=isMobileView();
+  if(nowMobile!==_kpiWasMobile){
+    _kpiWasMobile=nowMobile;
+    if(document.getElementById('dealStats'))renderDealStats();
+  }
+});
 // Close dropdowns outside
 document.addEventListener('click',e=>{
   if(!e.target.closest('.ddw')&&!e.target.closest('.btn-pl'))

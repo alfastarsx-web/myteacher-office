@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { PasswordService } from '../../../common/crypto/password.service';
@@ -21,7 +21,13 @@ const VALID_PAYMENT_TYPES = ['naqd', 'karta', 'otkazma'];
 const OPERATOR_STAGE_IDS = ['op_yangi', 'op_qayta', 'op_malakali', 'op_yutqazilgan'];
 
 @Injectable()
-export class DealsService {
+export class DealsService implements OnApplicationBootstrap {
+  // Boot paytida mavjud dublikatlarni bir marta tozalaymiz — eski ma'lumotdagi
+  // "bitta lid ikki menejerda" holatlarini birlashtiradi (idempotent).
+  async onApplicationBootstrap() {
+    try { await this.dedupeAllManagerLeads(); } catch (e) { console.warn('dedupeAllManagerLeads:', (e as Error).message); }
+  }
+
   constructor(
     @InjectRepository(DealEntity) private readonly deals: Repository<DealEntity>,
     private readonly passwords: PasswordService,
@@ -323,7 +329,16 @@ export class DealsService {
         ).catch(() => {});
       }
     }
-    return this.deals.save(deal);
+    const saved = await this.deals.save(deal);
+    // Menejerga tegishli bo'lib qolgan lid uchun bir xil telefonli dublikatni birlashtiramiz.
+    // Agar shu yozuvning o'zi birlashuvda o'chib ketsa, saqlangan yozuvni qaytaramiz.
+    if (saved.ownerId != null && !OPERATOR_STAGE_IDS.includes(saved.stageId)) {
+      const keeperId = await this.mergeDuplicateManagerLeads(this.phoneKey(saved));
+      if (keeperId && keeperId !== saved.id) {
+        return (await this.deals.findOne({ where: { id: keeperId } })) || saved;
+      }
+    }
+    return saved;
   }
 
   private mapOperatorStageToManager(stageId: string) {
@@ -435,10 +450,13 @@ export class DealsService {
       }
       // Admin asl nusxa bilan birga echo'ni ham tanlagan bo'lsa, o'chirilgan echo
       // save() orqali qayta tirilib qolmasligi kerak
-      if (absorbed.size) {
-        const saved = await this.deals.save(rows.filter(r => !absorbed.has(Number(r.id))));
-        return { deals: saved };
-      }
+      const toSave = absorbed.size ? rows.filter(r => !absorbed.has(Number(r.id))) : rows;
+      const saved = await this.deals.save(toSave);
+      // Har bir menejerga tegishli lid uchun bir xil telefonli dublikatni birlashtiramiz
+      const keys = new Set<string>();
+      saved.forEach(d => { if (d.ownerId != null && !OPERATOR_STAGE_IDS.includes(d.stageId)) { const k = this.phoneKey(d); if (k) keys.add(k); } });
+      for (const k of keys) await this.mergeDuplicateManagerLeads(k);
+      return { deals: saved };
     }
 
     const saved = await this.deals.save(rows);
@@ -513,6 +531,57 @@ export class DealsService {
       .map(item => String(item || '').trim())
       .filter(Boolean))]
       .slice(0, 3);
+  }
+
+  // Taqqoslash uchun telefonni faqat raqamlarga keltiradi (formatdan qat'i nazar bir xil bo'lsin)
+  private phoneKey(deal: { phone?: string; phones?: string[] }): string {
+    const raw = deal.phone || (Array.isArray(deal.phones) ? deal.phones[0] : '') || '';
+    return String(raw).replace(/\D/g, '');
+  }
+
+  // Bir xil telefonli lid ikki menejerda bo'lib qolmasligini ta'minlaydi.
+  // Menejer voronkasidagi (op_* emas) egali bir xil telefonli lidlardan eng faolini
+  // (ko'p izohli, teng bo'lsa eng eski) saqlaydi, qolganlarining izoh/vazifalarini unga
+  // ko'chiradi va o'zlarini o'chiradi. Saqlangan lid id sini qaytaradi.
+  private async mergeDuplicateManagerLeads(phoneKey: string): Promise<number | null> {
+    if (!phoneKey) return null;
+    const owned = await this.deals.createQueryBuilder('deal')
+      .where('deal.ownerId IS NOT NULL')
+      .andWhere('deal.stageId NOT IN (:...op)', { op: OPERATOR_STAGE_IDS })
+      .getMany();
+    const group = owned.filter(d => this.phoneKey(d) === phoneKey);
+    if (group.length < 2) return group[0]?.id ?? null;
+    const score = (d: DealEntity) => (d.comments?.length || 0);
+    group.sort((a, b) => score(b) - score(a) || a.id - b.id);
+    const keeper = group[0];
+    const dropped = group.slice(1);
+    const seen = new Set((keeper.comments || []).map(c => `${c.time}|${c.text}`));
+    for (const d of dropped) {
+      (d.comments || []).forEach(c => {
+        const k = `${c.time}|${c.text}`;
+        if (!seen.has(k)) { keeper.comments = [...(keeper.comments || []), c]; seen.add(k); }
+      });
+      await this.tasks.reassignDealTasks(d.id, keeper.id, keeper.ownerId);
+    }
+    await this.deals.save(keeper);
+    await this.deals.delete(dropped.map(d => d.id));
+    return keeper.id;
+  }
+
+  // Barcha menejer lidlarini telefon bo'yicha guruhlab, dublikatlarni birlashtiradi (boot cleanup)
+  private async dedupeAllManagerLeads(): Promise<void> {
+    const owned = await this.deals.createQueryBuilder('deal')
+      .where('deal.ownerId IS NOT NULL')
+      .andWhere('deal.stageId NOT IN (:...op)', { op: OPERATOR_STAGE_IDS })
+      .getMany();
+    const keys = new Set<string>();
+    owned.forEach(d => { const k = this.phoneKey(d); if (k) keys.add(k); });
+    let merged = 0;
+    for (const key of keys) {
+      const before = owned.filter(d => this.phoneKey(d) === key).length;
+      if (before > 1) { await this.mergeDuplicateManagerLeads(key); merged += before - 1; }
+    }
+    if (merged) console.log(`dedupeAllManagerLeads: ${merged} ta dublikat lid birlashtirildi`);
   }
 
   private parseOwnerId(value: any) {
