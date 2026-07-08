@@ -65,6 +65,14 @@ export class TasksService {
     return (await this.tasks.count({ where: { dealId, done: false } })) > 0;
   }
 
+  // Dublikat lidlar birlashtirilganda vazifalarni saqlanib qolgan lidga ko'chiradi
+  async reassignDealTasks(fromDealId: number, toDealId: number, ownerId: number | null) {
+    const rows = await this.tasks.find({ where: { dealId: fromDealId } });
+    if (!rows.length) return;
+    rows.forEach(t => { t.dealId = toDealId; if (ownerId != null) t.ownerId = ownerId; });
+    await this.tasks.save(rows);
+  }
+
   private canManageAll(user: UserEntity) {
     return user.role === UserRole.Admin || user.permissions?.all === true;
   }
