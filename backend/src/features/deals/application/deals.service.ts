@@ -568,20 +568,63 @@ export class DealsService implements OnApplicationBootstrap {
     return keeper.id;
   }
 
-  // Barcha menejer lidlarini telefon bo'yicha guruhlab, dublikatlarni birlashtiradi (boot cleanup)
+  // Lidni aniqlash kaliti: telefon raqami (faqat raqamlar), bo'lmasa mijoz ismi.
+  // Telefon bo'sh bo'lgan dublikatlar ham ism bo'yicha ushlanadi.
+  private leadIdentityKey(deal: { phone?: string; phones?: string[]; customerName?: string }): string {
+    const pk = this.phoneKey(deal);
+    if (pk) return 'p:' + pk;
+    const name = String(deal.customerName || '').trim().toLowerCase();
+    return name ? 'n:' + name : '';
+  }
+
+  // Boot cleanup: menejerlarga tegishli dublikat lidlarni tozalaydi.
+  // - Bir xil lid bir nechta menejerda bo'lsa (masalan Ziyoda va Robiyabonu) — dublikatlar
+  //   o'chiriladi, saqlanadigan nusxaning egasi menejerlar orasida NAVBAT bilan tanlanadi,
+  //   ya'ni lidlar taxminan teng (yarmi bittasida, yarmi ikkinchisida) bo'linadi.
+  // - Bir menejerdagi takror nusxalar oddiy birlashtiriladi (eng faoli saqlanadi).
+  // Idempotent: tozalangandan keyin har bir lid bitta yozuv bo'lib qoladi.
   private async dedupeAllManagerLeads(): Promise<void> {
     const owned = await this.deals.createQueryBuilder('deal')
       .where('deal.ownerId IS NOT NULL')
       .andWhere('deal.stageId NOT IN (:...op)', { op: OPERATOR_STAGE_IDS })
+      .orderBy('deal.id', 'ASC')
       .getMany();
-    const keys = new Set<string>();
-    owned.forEach(d => { const k = this.phoneKey(d); if (k) keys.add(k); });
-    let merged = 0;
-    for (const key of keys) {
-      const before = owned.filter(d => this.phoneKey(d) === key).length;
-      if (before > 1) { await this.mergeDuplicateManagerLeads(key); merged += before - 1; }
+    const groups = new Map<string, DealEntity[]>();
+    for (const d of owned) {
+      const key = this.leadIdentityKey(d);
+      if (!key) continue;
+      const arr = groups.get(key) || [];
+      arr.push(d);
+      groups.set(key, arr);
     }
-    if (merged) console.log(`dedupeAllManagerLeads: ${merged} ta dublikat lid birlashtirildi`);
+    const score = (d: DealEntity) => (d.comments?.length || 0);
+    let balanceIdx = 0, removed = 0;
+    for (const group of groups.values()) {
+      if (group.length < 2) continue;
+      const owners = [...new Set(group.map(d => Number(d.ownerId)))].sort((a, b) => a - b);
+      let survivor: DealEntity;
+      if (owners.length >= 2) {
+        // Navbat bilan — survivorlar menejerlar orasida almashib turadi (teng taqsimot)
+        const targetOwner = owners[balanceIdx % owners.length];
+        balanceIdx++;
+        survivor = group.filter(d => Number(d.ownerId) === targetOwner).sort((a, b) => score(b) - score(a) || a.id - b.id)[0];
+      } else {
+        survivor = [...group].sort((a, b) => score(b) - score(a) || a.id - b.id)[0];
+      }
+      const dropped = group.filter(d => d.id !== survivor.id);
+      const seen = new Set((survivor.comments || []).map(c => `${c.time}|${c.text}`));
+      for (const d of dropped) {
+        (d.comments || []).forEach(c => {
+          const k = `${c.time}|${c.text}`;
+          if (!seen.has(k)) { survivor.comments = [...(survivor.comments || []), c]; seen.add(k); }
+        });
+        await this.tasks.reassignDealTasks(d.id, survivor.id, Number(survivor.ownerId));
+      }
+      await this.deals.save(survivor);
+      await this.deals.delete(dropped.map(d => d.id));
+      removed += dropped.length;
+    }
+    if (removed) console.log(`dedupeAllManagerLeads: ${removed} ta dublikat lid tozalandi`);
   }
 
   private parseOwnerId(value: any) {
