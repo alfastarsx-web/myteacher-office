@@ -2801,7 +2801,7 @@ function renderKpiCards(cards){
       <div class="kpi-card-decor"></div>
       <div class="kpi-card-top">
         <div class="kpi-card-icon">${card.icon}</div>
-        <span class="kpi-card-tag">bugun</span>
+        <span class="kpi-card-tag">${esc(card.tag||'bugun')}</span>
       </div>
       <div class="kpi-card-label">${esc(card.label)}</div>
       <div class="kpi-card-value-row">
@@ -2885,8 +2885,8 @@ function renderDealStats(){
     {icon:'⚡', label:'Amallar', value:`${act.total} ta`, sub:`Izoh: ${act.comments} · Vazifa: ${act.tasks} · Ko'chirish: ${act.moves}`, color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', accent:'#FDE68A'},
     {icon:'📞', label:'Full call', value:`${m.todayFullCall} ta`, sub:'15+ daqiqa yoki sotuv', color:'#DB2777', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', accent:'#FBCFE8'},
     {icon:'🏆', label:'Bugungi bonus', value:formatMoney(todayBonus), sub:`Sotuv: ${formatMoney(salesBonus)} · Full call: ${formatMoney(m.fullCallBonus)}`, color:'#2563EB', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', accent:'#BFDBFE'},
-    {icon:'💵', label:'Bugungi sotuv summasi', value:formatMoney(m.todaySoldAmount), sub:`${m.todaySoldCount} ta muvaffaqiyatli`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC'},
-    {icon:'🎯', label:'Olingan Qual lid', value:`${m.todayQualReceived} ta`, sub:'Bugun operatordan kelgan', color:'#7C3AED', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', accent:'#C4B5FD'},
+    {icon:'💵', label:'Bugungi sotuv summasi', value:formatMoney(m.todaySoldAmount), sub:`${m.todaySoldCount} ta · Bu oy: ${formatMoney(m.monthSoldAmount)}`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC'},
+    {icon:'🏅', label:'Oylik bonus summasi', value:formatMoney(m.monthBonus), sub:`Sotuv: ${formatMoney(m.monthSalesBonus)} · Full call: ${formatMoney(m.monthFullCallBonus)}`, tag:'bu oy', color:'#7C3AED', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', accent:'#C4B5FD'},
   ];
   (isMobileView()?renderKpiChips:renderKpiCards)(managerCards);
   refreshDashboardSummary();
@@ -4430,12 +4430,25 @@ function calculateManagerOverview(user){
   // Bugungi sotuv mukofoti — faqat bugun yutilgan bitimlar bo'yicha; percent rejimida
   // foiz stavkasi oy boshidan jami sotuv summasi bo'yicha aniqlanadi
   const monthKey = todayKey.slice(0,7);
-  const monthRevenue = myDeals
-    .filter(d => d.col === STAGE_WON && tashkentDateKey(d.updatedAt || d.createdAt).slice(0,7) === monthKey)
-    .reduce((sum,d) => sum + Number(d.price || 0), 0);
+  const monthWon = myDeals.filter(d => d.col === STAGE_WON && tashkentDateKey(d.updatedAt || d.createdAt).slice(0,7) === monthKey);
+  const monthRevenue = monthWon.reduce((sum,d) => sum + Number(d.price || 0), 0);
   const todaySalesBonus = managerSalesReward(wonToday, monthRevenue);
 
-  return {todayQualReceived, todayFullCall, fullCallBonus, todaySoldCount, todaySoldAmount, todaySalesBonus};
+  // Bu oydagi ishlagan (sotgan) summasi va oylik bonus — bonus kunlik tier bo'yicha yig'iladi
+  const monthSoldAmount = monthRevenue;
+  const monthSalesBonus = managerSalesReward(monthWon, monthRevenue);
+  const fcByDay = {};
+  myDeals.forEach(d => {
+    let key = null;
+    if (d.fullCall) key = tashkentDateKey(d.fullCallAt || d.createdAt);
+    else if (d.col === STAGE_WON) key = tashkentDateKey(d.updatedAt || d.createdAt);
+    if (key && key.slice(0,7) === monthKey) fcByDay[key] = (fcByDay[key] || 0) + 1;
+  });
+  const monthFullCallBonus = Object.values(fcByDay).reduce((s,n) => s + tierBonus(n, compSettings.manager.fullCall), 0);
+  const monthBonus = monthSalesBonus + monthFullCallBonus;
+
+  return {todayQualReceived, todayFullCall, fullCallBonus, todaySoldCount, todaySoldAmount, todaySalesBonus,
+    monthSoldAmount, monthBonus, monthSalesBonus, monthFullCallBonus};
 }
 // ════════════════════════════════════════
 //  ADMIN UMUMIY KO'RSATKICHLARI (barcha xodimlar bo'yicha, bugun)
