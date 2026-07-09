@@ -4413,36 +4413,50 @@ function calculateManagerOverview(user){
   // Olingan Qual lid — operator tomonidan ushbu menejerga bugun yuborilgan (qualAt handoff paytida belgilanadi)
   const todayQualReceived = myDeals.filter(d => d.qualAt && tashkentDateKey(d.qualAt) === todayKey).length;
 
+  // Dublikat lid yozuvlari bonusni oshirib yubormasligi uchun — telefon (raqamlar) yoki mijoz
+  // ismi bo'yicha bir xil lidni bir marta sanaymiz
+  const identityKey = d => String(d.phone || '').replace(/\D/g,'') || ('n:' + String(d.customerName || '').trim().toLowerCase()) || ('id:' + d.id);
+  const dedupeByIdentity = list => {
+    const seen = new Set();
+    return list.filter(d => { const k = identityKey(d); if (seen.has(k)) return false; seen.add(k); return true; });
+  };
+
   // Full call — menejer qo'lda belgilagan, yoki sotuv (Yutgan) bo'lib qolgan bo'lsa avtomatik hisoblanadi
   const isFullCallToday = d => {
     if (d.fullCall) return tashkentDateKey(d.fullCallAt || d.createdAt) === todayKey;
     if (d.col === STAGE_WON) return tashkentDateKey(d.updatedAt || d.createdAt) === todayKey;
     return false;
   };
-  const todayFullCall = myDeals.filter(isFullCallToday).length;
+  const todayFullCall = dedupeByIdentity(myDeals.filter(isFullCallToday)).length;
   // Full call bonusi: sozlamadagi limit tagacha rate, oshsa hammasi rateAbove
   const fullCallBonus = tierBonus(todayFullCall, compSettings.manager.fullCall);
 
   // Bugungi sotuv
-  const wonToday = myDeals.filter(d => d.col === STAGE_WON && tashkentDateKey(d.updatedAt || d.createdAt) === todayKey);
+  const wonToday = dedupeByIdentity(myDeals.filter(d => d.col === STAGE_WON && tashkentDateKey(d.updatedAt || d.createdAt) === todayKey));
   const todaySoldCount = wonToday.length;
   const todaySoldAmount = wonToday.reduce((sum,d) => sum + Number(d.price || 0), 0);
   // Bugungi sotuv mukofoti — faqat bugun yutilgan bitimlar bo'yicha; percent rejimida
   // foiz stavkasi oy boshidan jami sotuv summasi bo'yicha aniqlanadi
   const monthKey = todayKey.slice(0,7);
-  const monthWon = myDeals.filter(d => d.col === STAGE_WON && tashkentDateKey(d.updatedAt || d.createdAt).slice(0,7) === monthKey);
+  const monthWon = dedupeByIdentity(myDeals.filter(d => d.col === STAGE_WON && tashkentDateKey(d.updatedAt || d.createdAt).slice(0,7) === monthKey));
   const monthRevenue = monthWon.reduce((sum,d) => sum + Number(d.price || 0), 0);
   const todaySalesBonus = managerSalesReward(wonToday, monthRevenue);
 
   // Bu oydagi ishlagan (sotgan) summasi va oylik bonus — bonus kunlik tier bo'yicha yig'iladi
   const monthSoldAmount = monthRevenue;
   const monthSalesBonus = managerSalesReward(monthWon, monthRevenue);
+  // Full call kunlik — har kuni lid bo'yicha dedupe qilib sanaymiz
+  const fcSeenByDay = {};
   const fcByDay = {};
   myDeals.forEach(d => {
     let key = null;
     if (d.fullCall) key = tashkentDateKey(d.fullCallAt || d.createdAt);
     else if (d.col === STAGE_WON) key = tashkentDateKey(d.updatedAt || d.createdAt);
-    if (key && key.slice(0,7) === monthKey) fcByDay[key] = (fcByDay[key] || 0) + 1;
+    if (!key || key.slice(0,7) !== monthKey) return;
+    const idk = key + '|' + identityKey(d);
+    if (fcSeenByDay[idk]) return;
+    fcSeenByDay[idk] = true;
+    fcByDay[key] = (fcByDay[key] || 0) + 1;
   });
   const monthFullCallBonus = Object.values(fcByDay).reduce((s,n) => s + tierBonus(n, compSettings.manager.fullCall), 0);
   const monthBonus = monthSalesBonus + monthFullCallBonus;
