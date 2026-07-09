@@ -25,7 +25,7 @@ export class DealsService implements OnApplicationBootstrap {
   // Boot paytida mavjud dublikatlarni bir marta tozalaymiz — eski ma'lumotdagi
   // "bitta lid ikki menejerda" holatlarini birlashtiradi (idempotent).
   async onApplicationBootstrap() {
-    try { await this.dedupeAllManagerLeads(); } catch (e) { console.warn('dedupeAllManagerLeads:', (e as Error).message); }
+    try { await this.consolidateDuplicateLeads(); } catch (e) { console.warn('consolidateDuplicateLeads:', (e as Error).message); }
   }
 
   constructor(
@@ -60,9 +60,11 @@ export class DealsService implements OnApplicationBootstrap {
       user.permissions?.all === true ||
       deal.ownerId === user.id ||
       (user.role === UserRole.Operator && deal.operatorId === user.id) ||
-      // Menejer hali biriktirilmagan (operator malakali qilgan) lidni ham ochib ishlay oladi —
-      // list() ham xuddi shu qoida bilan qaytaradi, aks holda "Shartnoma topilmadi" bo'lardi
-      (user.role === UserRole.Manager && deal.ownerId == null && !OPERATOR_STAGE_IDS.includes(deal.stageId))
+      // Menejer hali biriktirilmagan lidni ochib ishlay oladi: menejer voronkasidagi egasiz lid,
+      // YOKI operator malakali qilib menejerga yuborilgan (op_malakali + sentToManager) egasiz lid.
+      // list() ham xuddi shu qoida bilan qaytaradi, aks holda "Shartnoma topilmadi" bo'lardi.
+      (user.role === UserRole.Manager && deal.ownerId == null &&
+        (!OPERATOR_STAGE_IDS.includes(deal.stageId) || (deal.stageId === OPERATOR_QUAL_STAGE_ID && deal.sentToManager === true)))
     );
   }
 
@@ -75,11 +77,13 @@ export class DealsService implements OnApplicationBootstrap {
         .orderBy('deal.id', 'ASC')
         .getMany();
     }
-    // Menejer: o'ziga biriktirilgan YOKI hali biriktirilmagan (operator tomonidan malakali qilingan) lidlarni ko'radi
+    // Menejer: o'ziga biriktirilgan YOKI hali biriktirilmagan lidlar — menejer voronkasidagilar,
+    // hamda operator malakali qilib yuborgan (op_malakali + sentToManager) egasiz lidlar.
     return this.deals.createQueryBuilder('deal')
-      .where('(deal.ownerId = :id OR (deal.ownerId IS NULL AND deal.stageId NOT IN (:...opStages)))', {
+      .where('(deal.ownerId = :id OR (deal.ownerId IS NULL AND (deal.stageId NOT IN (:...opStages) OR (deal.stageId = :qual AND deal.sentToManager = true))))', {
         id: user.id,
         opStages: OPERATOR_STAGE_IDS,
+        qual: OPERATOR_QUAL_STAGE_ID,
       })
       .orderBy('deal.id', 'ASC')
       .getMany();
@@ -113,8 +117,9 @@ export class DealsService implements OnApplicationBootstrap {
       operatorId: user.role === UserRole.Operator ? user.id : (body.operatorId ? Number(body.operatorId) : null),
       appInstalled: Boolean(body.appInstalled || false),
       appInstalledAt: body.appInstalled ? new Date().toISOString() : null,
-      qualAt: body.qualAt || null,
-      sentToManager: Boolean(body.sentToManager || false),
+      // op_malakali'da yaratilgan lid to'g'ridan-to'g'ri menejerlarga ochilsin
+      qualAt: body.qualAt || ((body.stageId || defaultStageId) === OPERATOR_QUAL_STAGE_ID ? new Date().toISOString() : null),
+      sentToManager: Boolean(body.sentToManager) || (body.stageId || defaultStageId) === OPERATOR_QUAL_STAGE_ID,
       courseDuration: Number.isInteger(Number(body.courseDuration)) && Number(body.courseDuration) >= 1 && Number(body.courseDuration) <= 6 ? Number(body.courseDuration) : null,
       paymentType: VALID_PAYMENT_TYPES.includes(body.paymentType) ? body.paymentType : null,
       createdBy: user.id
@@ -340,6 +345,11 @@ export class DealsService implements OnApplicationBootstrap {
         ).catch(() => {});
       }
     }
+    // Menejer egasi bo'lgan lid operator voronkasi bosqichida qolib ketmasin — menejer o'ziga
+    // olgan (claim) yoki admin biriktirgan op_malakali lid endi oddiy menejer lidi (malakali).
+    if (deal.ownerId != null && OPERATOR_STAGE_IDS.includes(deal.stageId)) {
+      deal.stageId = this.mapOperatorStageToManager(deal.stageId);
+    }
     const saved = await this.deals.save(deal);
     // Menejerga tegishli bo'lib qolgan lid uchun bir xil telefonli dublikatni birlashtiramiz.
     // Agar shu yozuvning o'zi birlashuvda o'chib ketsa, saqlangan yozuvni qaytaramiz.
@@ -358,45 +368,28 @@ export class DealsService implements OnApplicationBootstrap {
     return 'yangi'; // op_yangi, op_qayta
   }
 
-  // Operator lidni "Malakali" qilganda, menejer voronkasiga ownerId=null bilan ko'chiramiz.
-  // Barcha menejerlar ko'radi, admin keyin biriktirib qo'yadi.
+  // Operator lidni "Malakali" qilganda: ALOHIDA echo yozuv YARATILMAYDI (single-row model).
+  // O'sha lidning o'zi menejer havzasiga ochiladi — lid op_malakali'da qoladi (operator o'z
+  // "Malakali" ustunida ko'radi), sentToManager=true bo'lgani uchun menejerlar ham uni ko'radi
+  // (list()/canSee shu bayroqni tan oladi). Menejer tegsa — o'ziga biriktiriladi va bosqichi
+  // malakali'ga o'tadi. Shu tariqa bitta lid = bitta yozuv, dublikat jismonan mumkin emas.
   private async handoffQualifiedLead(deal: DealEntity, user: UserEntity) {
     deal.sentToManager = true;
-    deal.qualAt = new Date().toISOString();
-    const handoff = this.deals.create({
-      customerName: deal.customerName,
-      dealName: deal.dealName || deal.customerName,
-      phone: deal.phone,
-      phones: deal.phones,
-      stageId: 'malakali',
-      price: 0,
-      note: deal.note ? `${deal.note} · Operator tomonidan malakali qilindi` : 'Operator tomonidan malakali qilindi',
-      adSource: deal.adSource,
-      registeredAt: deal.registeredAt,
-      age: deal.age,
-      learningGoal: deal.learningGoal,
-      leadChannel: deal.leadChannel,
-      // Operator yozgan commentlar menejerga ham ko'rinishi kerak — aks holda
-      // mijoz bilan bo'lgan butun muloqot tarixi yo'qolib qoladi.
-      comments: Array.isArray(deal.comments) ? [...deal.comments] : [],
-      appInstalled: deal.appInstalled,
-      appInstalledAt: deal.appInstalledAt,
-      qualAt: deal.qualAt,
-      ownerId: null,
-      operatorId: deal.operatorId || user.id,
-      createdBy: user.id
-    });
-    await this.deals.save(handoff);
-    // Barcha menejerlarga xabar: operatordan yangi malakali lid keldi — badge + ovozli signal
+    if (!deal.qualAt) deal.qualAt = new Date().toISOString();
+    if (!deal.operatorId) deal.operatorId = user.id;
+    await this.notifyManagersNewQualLead(deal, user.id);
+  }
+
+  private async notifyManagersNewQualLead(deal: DealEntity, fromUserId: number) {
     try {
       const managers = await this.users.findManagers();
       managers.forEach(m => {
         this.notifications.sendToUser(m.id, {
           type: 'qual_lead',
           title: 'Yangi malakali lid keldi',
-          body: `"${handoff.customerName}" — operator malakali qildi, birinchi ishlagan menejerga biriktiriladi`,
-          dealId: handoff.id,
-          fromUserId: user.id,
+          body: `"${deal.customerName}" — operator malakali qildi, birinchi ishlagan menejerga biriktiriladi`,
+          dealId: deal.id,
+          fromUserId,
           userId: m.id
         }).catch(() => {});
       });
@@ -486,8 +479,20 @@ export class DealsService implements OnApplicationBootstrap {
     }
     const rows = await this.deals.find({ where: { id: In(ids) }, order: { id: 'ASC' } });
     if (!rows.length) throw new NotFoundException('Shartnomalar topilmadi');
-    rows.forEach(deal => { deal.stageId = stageId; });
-    return this.deals.save(rows);
+    const nowIso = new Date().toISOString();
+    rows.forEach(deal => {
+      deal.stageId = stageId;
+      // op_malakali'ga ommaviy ko'chirilgan operator lidi ham menejerlarga ochilsin (handoff bayrog'i)
+      if (stageId === OPERATOR_QUAL_STAGE_ID && !deal.sentToManager) {
+        deal.sentToManager = true;
+        if (!deal.qualAt) deal.qualAt = nowIso;
+      }
+    });
+    const saved = await this.deals.save(rows);
+    if (stageId === OPERATOR_QUAL_STAGE_ID) {
+      for (const deal of saved) await this.notifyManagersNewQualLead(deal, user.id);
+    }
+    return saved;
   }
 
   async bulkDelete(body: any, user: UserEntity) {
@@ -562,6 +567,8 @@ export class DealsService implements OnApplicationBootstrap {
       .getMany();
     const group = owned.filter(d => this.phoneKey(d) === phoneKey);
     if (group.length < 2) return group[0]?.id ?? null;
+    // Ikki yoki undan ortiq yakunlangan (sotilgan/to'langan) yozuvni birlashtirmaymiz — pulni yo'qotmaslik uchun
+    if (group.filter(d => this.isAdvancedDeal(d)).length >= 2) return group[0].id;
     const score = (d: DealEntity) => (d.comments?.length || 0);
     group.sort((a, b) => score(b) - score(a) || a.id - b.id);
     const keeper = group[0];
@@ -588,40 +595,43 @@ export class DealsService implements OnApplicationBootstrap {
     return name ? 'n:' + name : '';
   }
 
-  // Boot cleanup: menejerlarga tegishli dublikat lidlarni tozalaydi.
-  // - Bir xil lid bir nechta menejerda bo'lsa (masalan Ziyoda va Robiyabonu) — dublikatlar
-  //   o'chiriladi, saqlanadigan nusxaning egasi menejerlar orasida NAVBAT bilan tanlanadi,
-  //   ya'ni lidlar taxminan teng (yarmi bittasida, yarmi ikkinchisida) bo'linadi.
-  // - Bir menejerdagi takror nusxalar oddiy birlashtiriladi (eng faoli saqlanadi).
+  // Yozuv "yakunlangan" (sotilgan yoki puli tushgan) — ehtiyot bo'lish kerak bo'lgan holat
+  private isAdvancedDeal(d: DealEntity): boolean {
+    return d.stageId === WON_STAGE_ID || Number(d.paidAmount || 0) > 0;
+  }
+  // Guruhdan saqlanadigan yozuvni tanlaydi: egasi bori (menejer ishlayotgani), bo'lmasa operator
+  // originali (operator ko'rishda davom etsin), bo'lmasa eng faoli/eng eski.
+  private pickSurvivor(pool: DealEntity[]): DealEntity {
+    const score = (d: DealEntity) => (d.comments?.length || 0);
+    const owned = pool.filter(d => d.ownerId != null);
+    if (owned.length) return owned.sort((a, b) => score(b) - score(a) || a.id - b.id)[0];
+    const orig = pool.filter(d => OPERATOR_STAGE_IDS.includes(d.stageId));
+    if (orig.length) return orig.sort((a, b) => score(b) - score(a) || a.id - b.id)[0];
+    return [...pool].sort((a, b) => score(b) - score(a) || a.id - b.id)[0];
+  }
+
+  // Boot migratsiyasi: bitta lidning bir nechta yozuvini (echo/original va dublikatlar) BITTA
+  // yozuvga birlashtiradi — single-row modelga o'tkazadi.
+  // XAVFSIZLIK: bir xil telefonli IKKI YOKI UNDAN ORTIQ yakunlangan (sotilgan/to'langan) yozuvni
+  // avtomatik birlashtirmaydi (ular haqiqiy alohida sotuvlar bo'lishi mumkin) — faqat ogohlantiradi.
   // Idempotent: tozalangandan keyin har bir lid bitta yozuv bo'lib qoladi.
-  private async dedupeAllManagerLeads(): Promise<void> {
-    const owned = await this.deals.createQueryBuilder('deal')
-      .where('deal.ownerId IS NOT NULL')
-      .andWhere('deal.stageId NOT IN (:...op)', { op: OPERATOR_STAGE_IDS })
-      .orderBy('deal.id', 'ASC')
-      .getMany();
+  private async consolidateDuplicateLeads(): Promise<void> {
+    const all = await this.deals.find({ order: { id: 'ASC' } });
     const groups = new Map<string, DealEntity[]>();
-    for (const d of owned) {
+    for (const d of all) {
       const key = this.leadIdentityKey(d);
       if (!key) continue;
       const arr = groups.get(key) || [];
       arr.push(d);
       groups.set(key, arr);
     }
-    const score = (d: DealEntity) => (d.comments?.length || 0);
-    let balanceIdx = 0, removed = 0;
+    let removed = 0, flagged = 0;
     for (const group of groups.values()) {
       if (group.length < 2) continue;
-      const owners = [...new Set(group.map(d => Number(d.ownerId)))].sort((a, b) => a - b);
-      let survivor: DealEntity;
-      if (owners.length >= 2) {
-        // Navbat bilan — survivorlar menejerlar orasida almashib turadi (teng taqsimot)
-        const targetOwner = owners[balanceIdx % owners.length];
-        balanceIdx++;
-        survivor = group.filter(d => Number(d.ownerId) === targetOwner).sort((a, b) => score(b) - score(a) || a.id - b.id)[0];
-      } else {
-        survivor = [...group].sort((a, b) => score(b) - score(a) || a.id - b.id)[0];
-      }
+      const advanced = group.filter(d => this.isAdvancedDeal(d));
+      if (advanced.length >= 2) { flagged++; continue; } // 2+ sotuv — qo'lda ko'rib chiqilsin
+      const keepPool = advanced.length === 1 ? advanced : group.filter(d => !this.isAdvancedDeal(d));
+      const survivor = this.pickSurvivor(keepPool);
       const dropped = group.filter(d => d.id !== survivor.id);
       const seen = new Set((survivor.comments || []).map(c => `${c.time}|${c.text}`));
       for (const d of dropped) {
@@ -629,13 +639,19 @@ export class DealsService implements OnApplicationBootstrap {
           const k = `${c.time}|${c.text}`;
           if (!seen.has(k)) { survivor.comments = [...(survivor.comments || []), c]; seen.add(k); }
         });
-        await this.tasks.reassignDealTasks(d.id, survivor.id, Number(survivor.ownerId));
+        await this.tasks.reassignDealTasks(d.id, survivor.id, survivor.ownerId ?? null);
+      }
+      // Single-row holat: egali lid op bosqichda qolmasin; egasiz operator originali menejerlarga ochiq bo'lsin
+      if (survivor.ownerId != null && OPERATOR_STAGE_IDS.includes(survivor.stageId)) {
+        survivor.stageId = this.mapOperatorStageToManager(survivor.stageId);
+      } else if (survivor.ownerId == null && survivor.stageId === OPERATOR_QUAL_STAGE_ID) {
+        survivor.sentToManager = true;
       }
       await this.deals.save(survivor);
       await this.deals.delete(dropped.map(d => d.id));
       removed += dropped.length;
     }
-    if (removed) console.log(`dedupeAllManagerLeads: ${removed} ta dublikat lid tozalandi`);
+    if (removed || flagged) console.log(`consolidateDuplicateLeads: ${removed} ta dublikat birlashtirildi${flagged ? `, ${flagged} ta guruh qo'lda ko'rib chiqilsin (2+ sotuv)` : ''}`);
   }
 
   private parseOwnerId(value: any) {

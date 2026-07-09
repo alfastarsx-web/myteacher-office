@@ -2141,10 +2141,12 @@ function currentUserDeals(){
   const u=currentUser();
   if(u.role==='admin') return deals;
   if(u.role==='operator') return deals.filter(d=>String(d.operatorId)===String(u.id));
-  // Menejer: o'ziga biriktirilganlar + hali biriktirilmagan (operator malakali qilgan) lidlar —
-  // backend list() bilan bir xil qoida, aks holda ular hech qaysi ko'rinishda chiqmay qolardi
+  // Menejer: o'ziga biriktirilganlar + hali biriktirilmagan lidlar — menejer voronkasidagilar,
+  // hamda operator malakali qilib yuborgan (op_malakali + sentToManager) egasiz lidlar.
+  // backend list()/canSee bilan bir xil qoida (single-row model).
   const OP_STAGE_IDS=['op_yangi','op_qayta','op_malakali','op_yutqazilgan'];
-  return hasPerm('all',u)?deals:deals.filter(d=>d.ownerId===u.id || (d.ownerId==null && !OP_STAGE_IDS.includes(d.col)));
+  const managerSees=d=>d.ownerId===u.id || (d.ownerId==null && (!OP_STAGE_IDS.includes(d.col) || (d.col==='op_malakali' && (d._sentToManager||d.sentToManager))));
+  return hasPerm('all',u)?deals:deals.filter(managerSees);
 }
 function managerById(id){ return managers.find(m=>String(m.id)===String(id)); }
 function managerInitials(m){ return (m?.avatar || m?.name?.split(' ').map(x=>x[0]).join('') || '—').slice(0,2).toUpperCase(); }
@@ -3360,36 +3362,14 @@ async function moveDealToStage(deal,target,options={}){
           : `⏳ Sotuv qual dan ${winDays} kundan kech bo'ldi — operator bonusi yozilmadi`);
       }
     }
-    // Operator malakali qilganda → menejer voronkasiga yangi lid qo'shish
-    // (apiToken bo'lsa, bu handoff backendda DealsService.update() ichida server tomonida bajariladi —
-    // chunki operator sessiyasida boshqa foydalanuvchilar (menejerlar) umuman ko'rinmaydi)
+    // Operator malakali qilganda: ALOHIDA yozuv YARATILMAYDI (single-row). O'sha lidning o'zi
+    // sentToManager=true bo'lib menejerlarga ochiladi (backend list()/canSee shuni tan oladi).
     if(target===STAGE_OP_QUAL && !deal._sentToManager && !deal.sentToManager){
       deal._sentToManager=true;
+      deal.sentToManager=true;
       deal.qualAt=deal.qualAt||new Date().toISOString();
       saveDealExtra(deal.id, {sentToManager:true, qualAt:deal.qualAt, col:'op_malakali'});
-      if(!apiToken){
-        const now=new Date();
-        const mn=['yan','fev','mar','apr','may','iyn','iyl','avg','sen','okt','noy','dek'];
-        deals.push({
-          id: Date.now(),
-          customerName: deal.customerName,
-          phone: deal.phone,
-          phones: deal.phones||[],
-          dealName: deal.dealName||deal.customerName,
-          price: 0,
-          col: 'malakali',
-          note: `Operator tomonidan malakali qilindi`,
-          operatorId: deal.operatorId||currentManagerId,
-          ownerId: managers.find(m=>m.role==='manager' && (m.email||'').toLowerCase()==='sarafroz@gmail.com')?.id || managers.find(m=>m.role==='manager')?.id || null,
-          date: `${now.getDate()} ${mn[now.getMonth()]}`,
-          adSource: deal.adSource||'',
-          leadChannel: deal.leadChannel||'',
-          messages: [],
-          _fromOperator: true,
-          _operatorDealId: deal.id,
-        });
-      }
-      showToast(`✅ "${customerTitle(deal)}" → Menejer voronkasiga Malakali sifatida qo'shildi`);
+      showToast(`✅ "${customerTitle(deal)}" → Malakali qilindi, menejerlarga yuborildi`);
     } else {
       showToast(`"${customerTitle(deal)}" → ${activeCols().find(c=>c.id===target)?.label||COLS.find(c=>c.id===target)?.label}`);
     }
