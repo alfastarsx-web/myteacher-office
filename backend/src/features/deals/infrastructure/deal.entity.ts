@@ -63,6 +63,10 @@ export class DealEntity {
   fullCall: boolean;
   @Column({ nullable: true, type: 'varchar' })
   fullCallAt: string | null;
+  // Har bir full call qo'ng'irog'i alohida hodisa (ISO vaqt) — bir lidga bir necha marta
+  // qo'ng'iroq qilinsa har biri hisoblanadi. fullCall/fullCallAt orqaga moslik uchun saqlanadi.
+  @Column({ type: 'jsonb', default: () => "'[]'" })
+  fullCalls: string[];
   @Column({ default: false })
   sentToManager: boolean;
   @Column({ nullable: true, type: 'int' })
