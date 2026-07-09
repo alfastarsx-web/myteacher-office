@@ -1734,9 +1734,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
             </div>
             <div class="deal-info-row" id="dwFullCallRow" style="justify-content:space-between;display:none">
               <span style="display:flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.08 4.18 2 2 0 014.06 2h3a2 2 0 012 1.72c.12.9.33 1.77.64 2.61a2 2 0 01-.45 2.11L8.1 9.9a16 16 0 006 6l1.46-1.15a2 2 0 012.11-.45c.84.31 1.71.52 2.61.64A2 2 0 0122 16.92z"/></svg>Full call (15+ daqiqa)</span>
-              <button id="dwFullCall" onclick="toggleFullCall()" style="width:38px;height:22px;border-radius:999px;border:0;background:var(--br);position:relative;cursor:pointer;transition:.2s;flex-shrink:0">
-                <span style="position:absolute;width:18px;height:18px;border-radius:50%;background:#fff;top:2px;left:2px;transition:.15s;box-shadow:0 1px 2px rgba(0,0,0,.16)"></span>
-              </button>
+              <span style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+                <button onclick="removeFullCall()" title="Bittasini olib tashlash" style="width:26px;height:26px;border-radius:8px;border:1px solid var(--br);background:#fff;cursor:pointer;font-size:16px;font-weight:800;color:var(--tm);line-height:1">−</button>
+                <span id="dwFullCallCount" style="min-width:20px;text-align:center;font-weight:900;font-size:15px;color:var(--td)">0</span>
+                <button onclick="addFullCall()" title="Full call qo'shish" style="width:26px;height:26px;border-radius:8px;border:0;background:#22C55E;cursor:pointer;font-size:16px;font-weight:800;color:#fff;line-height:1">+</button>
+              </span>
             </div>
             <div class="deal-info-row"><span>Reklama:</span><span id="dwAdSource">—</span></div>
             <div class="deal-info-row"><span>Ro'yxat vaqti:</span><span id="dwRegisteredAt">—</span></div>
@@ -2205,7 +2207,14 @@ async function api(path,options={}){
   }
   if(!res.ok){
     if(res.status===401)clearSession(true);
-    throw new Error(data.error || 'API xatolik');
+    // Shartnoma serverda topilmadi (birlashtirilgan/o'chirilgan yoki boshqa menejerga o'tgan) —
+    // eski ekrandagi yozuv bilan ishlaganda shunday bo'ladi. Ro'yxatni jimgina yangilaymiz.
+    if(res.status===404 && /^\/api\/deals\//.test(path)){
+      loadApiData().catch(()=>{});
+      const e=new Error('Bu shartnoma yangilangan yoki birlashtirilgan — ro\'yxat yangilandi, qaytadan oching');
+      e.status=404; throw e;
+    }
+    const err=new Error(data.error || 'API xatolik'); err.status=res.status; throw err;
   }
   apiOnline=true;
   return data;
@@ -2213,7 +2222,7 @@ async function api(path,options={}){
 function dealFromApi(d){
   const date=d.createdAt?formatDealDate(d.createdAt):'Bugun';
   const phones=dealPhones(d);
-  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,courseDuration:d.courseDuration||null,paymentType:d.paymentType||null,lostFromStage:d.lostFromStage||null,paidAmount:Number(d.paidAmount||0),payments:Array.isArray(d.payments)?d.payments:[],firstPaymentAt:d.firstPaymentAt||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
+  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,fullCalls:Array.isArray(d.fullCalls)?d.fullCalls:(d.fullCall&&d.fullCallAt?[d.fullCallAt]:[]),courseDuration:d.courseDuration||null,paymentType:d.paymentType||null,lostFromStage:d.lostFromStage||null,paidAmount:Number(d.paidAmount||0),payments:Array.isArray(d.payments)?d.payments:[],firstPaymentAt:d.firstPaymentAt||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
 }
 // localStorage ga deal extra fieldlarini saqlaymiz
 function saveDealExtra(id, fields){
@@ -2409,6 +2418,7 @@ async function loadApiData(){
       if(ex.appInstalledAt !== undefined && !d.appInstalledAt) d.appInstalledAt = ex.appInstalledAt;
       if(ex.fullCall !== undefined && !d.fullCall) d.fullCall = ex.fullCall;
       if(ex.fullCallAt !== undefined && !d.fullCallAt) d.fullCallAt = ex.fullCallAt;
+      if(Array.isArray(ex.fullCalls) && !(Array.isArray(d.fullCalls)&&d.fullCalls.length)) d.fullCalls = ex.fullCalls;
       if(ex.qualAt !== undefined && !d.qualAt) d.qualAt = ex.qualAt;
       if(ex.sentToManager !== undefined && !d._sentToManager) d._sentToManager = ex.sentToManager;
       if(ex.col !== undefined && d.col !== ex.col && ['op_yangi','op_qayta','op_malakali','op_yutqazilgan'].includes(ex.col)) d.col = ex.col;
@@ -3731,11 +3741,8 @@ function renderDealWorkspace(){
   }
   const fullCallRow=document.getElementById('dwFullCallRow');
   if(fullCallRow)fullCallRow.style.display=currentUser().role==='manager'?'flex':'none';
-  const fullCallBtn=document.getElementById('dwFullCall');
-  if(fullCallBtn){
-    fullCallBtn.style.background=d.fullCall?'#22C55E':'var(--br)';
-    fullCallBtn.querySelector('span').style.left=d.fullCall?'18px':'2px';
-  }
+  const fcCountEl=document.getElementById('dwFullCallCount');
+  if(fcCountEl)fcCountEl.textContent=dealFullCallCount(d);
   renderWorkspacePayments(d);
   renderWorkspaceTimeline(d);
   renderWorkspaceTasks(d);
@@ -4005,38 +4012,33 @@ async function toggleAppInstalled(){
   renderDealStats();
   curView==='list'?renderList():renderKanban();
 }
-async function toggleFullCall(){
+function dealFullCallCount(d){
+  return Array.isArray(d.fullCalls)&&d.fullCalls.length?d.fullCalls.length:(d.fullCall?1:0);
+}
+// Har bir full call qo'ng'irog'i alohida hodisa — + har bosilganda bittasi qo'shiladi, − oxirgisini olib tashlaydi
+async function changeFullCall(delta){
   if(currentUser().role!=='manager'){showToast('Faqat menejer full call belgilay oladi');return;}
   const d=currentWorkspaceDeal();
   if(!d)return;
-  d.fullCall=!d.fullCall;
-  if(d.fullCall && !d.fullCallAt)d.fullCallAt=new Date().toISOString();
-  const btn=document.getElementById('dwFullCall');
-  if(btn){
-    btn.style.background=d.fullCall?'#22C55E':'var(--br)';
-    btn.querySelector('span').style.left=d.fullCall?'18px':'2px';
-  }
-  if(d.fullCall){
-    showToast('📞 Full call belgilandi');
-  }
-  saveDealExtra(d.id, {fullCall: d.fullCall, fullCallAt: d.fullCallAt});
+  const list=Array.isArray(d.fullCalls)?[...d.fullCalls]:(d.fullCall&&d.fullCallAt?[d.fullCallAt]:[]);
+  if(delta>0)list.push(new Date().toISOString());
+  else{ if(!list.length){return;} list.pop(); }
+  d.fullCalls=list; d.fullCall=list.length>0; d.fullCallAt=list.length?list[list.length-1]:null;
+  const el=document.getElementById('dwFullCallCount'); if(el)el.textContent=list.length;
+  saveDealExtra(d.id,{fullCall:d.fullCall,fullCallAt:d.fullCallAt,fullCalls:list});
   if(apiToken){
     try{
-      const data=await api(`/api/deals/${d.id}`,{method:'PATCH',body:{fullCall:d.fullCall}});
+      const data=await api(`/api/deals/${d.id}`,{method:'PATCH',body:delta>0?{addFullCall:true}:{removeLastFullCall:true}});
       Object.assign(d,dealFromApi(data.deal));
-    }catch(err){
-      d.fullCall=!d.fullCall;
-      if(btn){
-        btn.style.background=d.fullCall?'#22C55E':'var(--br)';
-        btn.querySelector('span').style.left=d.fullCall?'18px':'2px';
-      }
-      showToast(err.message);
-      return;
-    }
+      const el2=document.getElementById('dwFullCallCount'); if(el2)el2.textContent=dealFullCallCount(d);
+    }catch(err){ showToast(err.message); renderDealWorkspace(); return; }
   }
+  showToast(delta>0?`📞 Full call qo'shildi (jami ${dealFullCallCount(d)})`:'Full call olib tashlandi');
   renderDealStats();
   curView==='list'?renderList():renderKanban();
 }
+function addFullCall(){ return changeFullCall(1); }
+function removeFullCall(){ return changeFullCall(-1); }
 function saveWorkspaceNote(){
   const d=currentWorkspaceDeal();
   if(!d)return;
@@ -4351,18 +4353,10 @@ function managerKpiCounts(user,salesList){
   const todayKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date());
   const weekRange=analyticsDateRange('week');
   const tashkentDateKey=iso=>iso?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)):'';
-  const isFullCallOn=(d,dateKey)=>{
-    if(d.fullCall)return tashkentDateKey(d.fullCallAt||d.createdAt)===dateKey;
-    if(d.col===STAGE_WON)return tashkentDateKey(d.updatedAt||d.createdAt)===dateKey;
-    return false;
-  };
-  const isFullCallInRange=(d,range)=>{
-    if(d.fullCall)return inRange(d.fullCallAt||d.createdAt,range);
-    if(d.col===STAGE_WON)return inRange(d.updatedAt||d.createdAt,range);
-    return false;
-  };
-  const dailyFullCalls=myDeals.filter(d=>isFullCallOn(d,todayKey)).length;
-  const weeklyFullCalls=myDeals.filter(d=>isFullCallInRange(d,weekRange)).length;
+  // Full call — hodisa asosida (har qo'ng'iroq alohida, dublikat yozuvlar sanalmaydi)
+  const fcEvents=managerFullCallEvents(user);
+  const dailyFullCalls=fcEvents.filter(e=>e.day===todayKey).length;
+  const weeklyFullCalls=fcEvents.filter(e=>inRange(e.ts,weekRange)).length;
   const dailySales=salesList.filter(d=>tashkentDateKey(d.updatedAt||d.createdAt)===todayKey).length;
   const weeklySales=salesList.filter(d=>inRange(d.updatedAt||d.createdAt,weekRange)).length;
   return { dailyFullCalls, dailySales, weeklyFullCalls, weeklySales };
@@ -4402,6 +4396,37 @@ function calculateManagerCompensation(user,periodDate=new Date()){
 function paymentDeals(){
   return currentUserDeals().filter(d=>d.col===STAGE_WON);
 }
+// Menejerning full call HODISALARI — har bir qo'ng'iroq alohida (vaqt bilan). Bir lidga bir
+// necha marta qo'ng'iroq qilinsa har biri hisoblanadi; dublikat lid yozuvlari esa bir xil vaqt
+// bilan takrorlangani uchun (lid+vaqt bo'yicha dedupe) ikki marta sanalmaydi. Sotuv (Yutgan)
+// ham — o'sha kunda shu lidga boshqa full call bo'lmasa — bitta full call deb qo'shiladi.
+function fullCallEventsFrom(dealsList){
+  const tk = iso => iso ? new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)) : '';
+  const idKey = d => String(d.phone || '').replace(/\D/g,'') || ('n:' + String(d.customerName || '').trim().toLowerCase()) || ('id:' + d.id);
+  const events = [];
+  const seen = new Set();
+  const add = (d, ts) => {
+    if (!ts) return;
+    const k = idKey(d) + '|' + ts;   // bir xil lid + bir xil vaqt = bitta hodisa (dublikat yozuv sanalmaydi)
+    if (seen.has(k)) return;
+    seen.add(k);
+    events.push({ ts, day: tk(ts) });
+  };
+  dealsList.forEach(d => {
+    const list = Array.isArray(d.fullCalls) && d.fullCalls.length ? d.fullCalls
+      : (d.fullCall ? [d.fullCallAt || d.createdAt] : []);
+    list.forEach(ts => add(d, ts));
+    if (d.col === STAGE_WON) {
+      const wts = d.wonAt || d.updatedAt || d.createdAt;
+      const wday = tk(wts);
+      if (!list.some(ts => tk(ts) === wday)) add(d, wts);   // sotuv = full call (o'sha kunda boshqasi bo'lmasa)
+    }
+  });
+  return events;
+}
+function managerFullCallEvents(user){
+  return fullCallEventsFrom(deals.filter(d => String(d.ownerId) === String(user.id)));
+}
 // ════════════════════════════════════════
 //  MENEJER BUGUNGI KO'RSATKICHLARI (faqat o'ziga tegishli)
 // ════════════════════════════════════════
@@ -4421,13 +4446,9 @@ function calculateManagerOverview(user){
     return list.filter(d => { const k = identityKey(d); if (seen.has(k)) return false; seen.add(k); return true; });
   };
 
-  // Full call — menejer qo'lda belgilagan, yoki sotuv (Yutgan) bo'lib qolgan bo'lsa avtomatik hisoblanadi
-  const isFullCallToday = d => {
-    if (d.fullCall) return tashkentDateKey(d.fullCallAt || d.createdAt) === todayKey;
-    if (d.col === STAGE_WON) return tashkentDateKey(d.updatedAt || d.createdAt) === todayKey;
-    return false;
-  };
-  const todayFullCall = dedupeByIdentity(myDeals.filter(isFullCallToday)).length;
+  // Full call — hodisa asosida: har bir qo'ng'iroq alohida sanaladi (dublikat yozuvlar emas)
+  const fcEvents = managerFullCallEvents(user);
+  const todayFullCall = fcEvents.filter(e => e.day === todayKey).length;
   // Full call bonusi: sozlamadagi limit tagacha rate, oshsa hammasi rateAbove
   const fullCallBonus = tierBonus(todayFullCall, compSettings.manager.fullCall);
 
@@ -4442,22 +4463,11 @@ function calculateManagerOverview(user){
   const monthRevenue = monthWon.reduce((sum,d) => sum + Number(d.price || 0), 0);
   const todaySalesBonus = managerSalesReward(wonToday, monthRevenue);
 
-  // Bu oydagi ishlagan (sotgan) summasi va oylik bonus — bonus kunlik tier bo'yicha yig'iladi
+  // Bu oydagi ishlagan (sotgan) summasi va oylik bonus — full call bonusi kunlik tier bo'yicha
   const monthSoldAmount = monthRevenue;
   const monthSalesBonus = managerSalesReward(monthWon, monthRevenue);
-  // Full call kunlik — har kuni lid bo'yicha dedupe qilib sanaymiz
-  const fcSeenByDay = {};
   const fcByDay = {};
-  myDeals.forEach(d => {
-    let key = null;
-    if (d.fullCall) key = tashkentDateKey(d.fullCallAt || d.createdAt);
-    else if (d.col === STAGE_WON) key = tashkentDateKey(d.updatedAt || d.createdAt);
-    if (!key || key.slice(0,7) !== monthKey) return;
-    const idk = key + '|' + identityKey(d);
-    if (fcSeenByDay[idk]) return;
-    fcSeenByDay[idk] = true;
-    fcByDay[key] = (fcByDay[key] || 0) + 1;
-  });
+  fcEvents.forEach(e => { if (e.day.slice(0,7) === monthKey) fcByDay[e.day] = (fcByDay[e.day] || 0) + 1; });
   const monthFullCallBonus = Object.values(fcByDay).reduce((s,n) => s + tierBonus(n, compSettings.manager.fullCall), 0);
   const monthBonus = monthSalesBonus + monthFullCallBonus;
 
@@ -4506,13 +4516,8 @@ function calculateAdminOverview(){
     return true;
   }).length;
 
-  // Full call — menejer qo'lda belgilagan, yoki sotuv (Yutgan) bo'lib qolgan bo'lsa avtomatik hisoblanadi
-  const isFullCallToday = d => {
-    if (d.fullCall) return tashkentDateKey(d.fullCallAt || d.createdAt) === todayKey;
-    if (d.col === STAGE_WON) return tashkentDateKey(d.updatedAt || d.createdAt) === todayKey;
-    return false;
-  };
-  const todayFullCall = all.filter(isFullCallToday).length;
+  // Full call — hodisa asosida (har qo'ng'iroq alohida, dublikat yozuvlar sanalmaydi), barcha xodimlar
+  const todayFullCall = fullCallEventsFrom(all).filter(e => e.day === todayKey).length;
 
   // Sotuv — bugungi va shu oydagi
   const wonToday = all.filter(d => d.col === STAGE_WON && tashkentDateKey(d.updatedAt || d.createdAt) === todayKey);

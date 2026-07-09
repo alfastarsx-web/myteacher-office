@@ -244,11 +244,22 @@ export class DealsService implements OnApplicationBootstrap {
       deal.appInstalled = nextAppInstalled;
     }
     if (body.qualAt !== undefined) deal.qualAt = body.qualAt || null;
-    if (body.fullCall !== undefined) {
+    // Full call — har bir qo'ng'iroq alohida hodisa. addFullCall bitta qo'ng'iroq qo'shadi,
+    // removeLastFullCall oxirgisini olib tashlaydi. Eski toggle (body.fullCall) ham ishlaydi.
+    if (body.addFullCall || body.removeLastFullCall || body.fullCall !== undefined) {
       if (user.role !== UserRole.Manager) throw new ForbiddenException('Faqat menejer full call belgisini qo‘ya oladi');
-      const nextFullCall = Boolean(body.fullCall);
-      if (nextFullCall && !deal.fullCall) deal.fullCallAt = new Date().toISOString();
-      deal.fullCall = nextFullCall;
+      const list = Array.isArray(deal.fullCalls) ? [...deal.fullCalls]
+        : (deal.fullCall && deal.fullCallAt ? [deal.fullCallAt] : []);
+      if (body.addFullCall) list.push(new Date().toISOString());
+      else if (body.removeLastFullCall) list.pop();
+      else if (body.fullCall !== undefined) {
+        // Orqaga moslik: yoqilsa hodisa yo'q bo'lsa bittasini qo'shadi, o'chirilsa hammasini tozalaydi
+        if (Boolean(body.fullCall)) { if (!list.length) list.push(new Date().toISOString()); }
+        else list.length = 0;
+      }
+      deal.fullCalls = list;
+      deal.fullCall = list.length > 0;
+      deal.fullCallAt = list.length ? list[list.length - 1] : null;
     }
     if (body.sentToManager !== undefined) deal.sentToManager = Boolean(body.sentToManager);
     if (body.courseDuration !== undefined) {
