@@ -265,7 +265,9 @@ export class DealsService implements OnApplicationBootstrap {
     // Full call — har bir qo'ng'iroq alohida hodisa. addFullCall bitta qo'ng'iroq qo'shadi,
     // removeLastFullCall oxirgisini olib tashlaydi. Eski toggle (body.fullCall) ham ishlaydi.
     if (body.addFullCall || body.removeLastFullCall || body.fullCall !== undefined) {
-      if (user.role !== UserRole.Manager) throw new ForbiddenException('Faqat menejer full call belgisini qo‘ya oladi');
+      if (user.role !== UserRole.Manager && user.role !== UserRole.Admin && user.permissions?.all !== true) {
+        throw new ForbiddenException('Faqat menejer yoki admin full call belgisini qo‘ya oladi');
+      }
       const list = Array.isArray(deal.fullCalls) ? [...deal.fullCalls]
         : (deal.fullCall && deal.fullCallAt ? [deal.fullCallAt] : []);
       if (body.addFullCall) list.push(new Date().toISOString());
