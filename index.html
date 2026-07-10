@@ -283,6 +283,9 @@ table.crm-t{width:100%;border-collapse:collapse}
 .msg-lbl{font-size:11px;color:var(--mu)}
 .msg-txt{font-size:13px;color:var(--tm);line-height:1.5}
 .msg-comment{background:#FFFBEB;border-left:3px solid var(--yellow);padding:6px 10px;border-radius:4px;font-size:12px;color:var(--tm)}
+.event-row .msg-av.sys{background:#EEF2F7;font-size:12px}
+.msg-event{display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:12px;color:var(--tm);background:#F8FAFC;border:1px solid var(--brl);border-radius:6px;padding:5px 10px}
+.msg-event .msg-time{color:var(--mu);font-size:10.5px}
 .task-card{background:var(--wh);border:1px solid var(--br);border-radius:10px;padding:12px 14px;margin-top:4px;max-width:340px}
 .task-card-hdr{display:flex;align-items:center;gap:8px;margin-bottom:8px}
 .task-card-ico{width:32px;height:32px;background:var(--blue-l);border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
@@ -2224,7 +2227,7 @@ async function api(path,options={}){
 function dealFromApi(d){
   const date=d.createdAt?formatDealDate(d.createdAt):'Bugun';
   const phones=dealPhones(d);
-  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,fullCalls:Array.isArray(d.fullCalls)?d.fullCalls:(d.fullCall&&d.fullCallAt?[d.fullCallAt]:[]),courseDuration:d.courseDuration||null,paymentType:d.paymentType||null,lostFromStage:d.lostFromStage||null,paidAmount:Number(d.paidAmount||0),payments:Array.isArray(d.payments)?d.payments:[],firstPaymentAt:d.firstPaymentAt||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
+  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],events:Array.isArray(d.events)?d.events:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,fullCalls:Array.isArray(d.fullCalls)?d.fullCalls:(d.fullCall&&d.fullCallAt?[d.fullCallAt]:[]),courseDuration:d.courseDuration||null,paymentType:d.paymentType||null,lostFromStage:d.lostFromStage||null,paidAmount:Number(d.paidAmount||0),payments:Array.isArray(d.payments)?d.payments:[],firstPaymentAt:d.firstPaymentAt||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
 }
 // localStorage ga deal extra fieldlarini saqlaymiz
 function saveDealExtra(id, fields){
@@ -3798,6 +3801,22 @@ async function addWorkspacePhone(){
   renderCurrentDeals();
   showToast('Telefon qo‘shildi ✓');
 }
+// Tizim hodisasini o'qiladigan matnga aylantiradi (ismlar va bosqich nomlari bilan)
+function dealEventText(ev){
+  const who=id=>{const m=managerById(id);return m?esc(m.name):'Foydalanuvchi';};
+  const stageLabel=id=>{const c=[...COLS,...OPERATOR_COLS].find(x=>x.id===id);return c?esc(c.label):esc(id||'');};
+  switch(ev.type){
+    case 'created': return ev.role==='operator'?`Operator ${who(ev.by)} lidni qabul qildi`:`${who(ev.by)} lidni yaratdi`;
+    case 'qualified': return `Operator ${who(ev.by)} malakali qildi — menejerlarga yuborildi`;
+    case 'claimed': return `Menejer ${who(ev.by)} lidni o'ziga oldi`;
+    case 'assigned': return `${who(ev.to)}ga biriktirildi${ev.by&&ev.by!==ev.to?` (${who(ev.by)})`:''}`;
+    case 'stage': return `Bosqich: ${stageLabel(ev.from)} → ${stageLabel(ev.to)} (${who(ev.by)})`;
+    default: return esc(ev.type||'');
+  }
+}
+function dealEventIcon(type){
+  return {created:'🟢',qualified:'🎯',claimed:'📌',assigned:'📌',stage:'🔄'}[type]||'•';
+}
 function renderWorkspaceTimeline(d){
   const taskCards=(d.tasks||[]).map(t=>`
     <div class="task-card">
@@ -3808,15 +3827,22 @@ function renderWorkspaceTimeline(d){
       <div class="task-card-btns"><button class="btn-toldirish" onclick="toggleWorkspaceTask(${t.id || 0})">${t.done?'Qaytarish':"To'ldirish"}</button></div>
     </div>
   `).join('');
-  const commentCards=[...(d.comments||[])].sort((a,b)=>new Date(a.time||0)-new Date(b.time||0)).map(c=>`
+  // Izohlar va tizim hodisalarini vaqt bo'yicha birlashtirib ko'rsatamiz
+  const feed=[];
+  (d.comments||[]).forEach(c=>feed.push({t:new Date(c.time||0).getTime(), html:`
     <div class="msg-row">
       <div class="msg-av adm">🧑</div>
       <div class="msg-b">
         <div class="msg-meta"><span class="msg-name adm">${esc(c.from || 'Admin')}</span><span class="msg-lbl">Commented</span><span class="msg-time">${esc(formatCommentTime(c.time))}</span></div>
         <div class="msg-comment">${esc(c.text)}</div>
       </div>
-    </div>
-  `).join('');
+    </div>`}));
+  (d.events||[]).forEach(ev=>feed.push({t:new Date(ev.at||0).getTime(), html:`
+    <div class="msg-row event-row">
+      <div class="msg-av sys">${dealEventIcon(ev.type)}</div>
+      <div class="msg-b"><div class="msg-event"><span>${dealEventText(ev)}</span><span class="msg-time">${esc(formatCommentTime(ev.at))}</span></div></div>
+    </div>`}));
+  const commentCards=feed.sort((a,b)=>a.t-b.t).map(f=>f.html).join('');
   document.getElementById('dwTimeline').innerHTML=`
     <div class="chat-divider">Shartnoma tarixi</div>
     ${d.messages.map(m=>`
