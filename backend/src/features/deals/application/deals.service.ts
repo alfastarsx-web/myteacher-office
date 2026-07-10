@@ -122,7 +122,8 @@ export class DealsService implements OnApplicationBootstrap {
       sentToManager: Boolean(body.sentToManager) || (body.stageId || defaultStageId) === OPERATOR_QUAL_STAGE_ID,
       courseDuration: Number.isInteger(Number(body.courseDuration)) && Number(body.courseDuration) >= 1 && Number(body.courseDuration) <= 6 ? Number(body.courseDuration) : null,
       paymentType: VALID_PAYMENT_TYPES.includes(body.paymentType) ? body.paymentType : null,
-      createdBy: user.id
+      createdBy: user.id,
+      events: [{ type: 'created', at: new Date().toISOString(), by: user.id, role: user.role }]
     });
     return this.deals.save(deal);
   }
@@ -172,6 +173,7 @@ export class DealsService implements OnApplicationBootstrap {
     // ro'yxatida u endi ko'rinmaydi, konflikt yo'qoladi.
     if (user.role === UserRole.Manager && deal.ownerId == null) {
       deal.ownerId = user.id;
+      this.logEvent(deal, 'claimed', user.id, { to: user.id });
     }
     const prevStageId = deal.stageId;
     const prevCommentsLength = deal.comments?.length || 0;
@@ -180,6 +182,10 @@ export class DealsService implements OnApplicationBootstrap {
     this.assertStageRules(nextStageId, nextPrice, body, user, deal);
     if (nextStageId !== prevStageId && user.role !== UserRole.Admin && user.permissions?.all !== true) {
       await this.assertStageChangeJustified(deal, body, prevCommentsLength);
+    }
+    // Bosqich o'zgarishini tarixga yozamiz (foydalanuvchi ochiq ko'chirgan bo'lsa)
+    if (body.stageId !== undefined && String(body.stageId) !== prevStageId) {
+      this.logEvent(deal, 'stage', user.id, { from: prevStageId, to: String(body.stageId) });
     }
     ['customerName', 'dealName', 'stageId', 'note', 'adSource', 'registeredAt', 'learningGoal', 'leadChannel'].forEach(key => {
       if (body[key] !== undefined) deal[key] = String(body[key]);
@@ -221,6 +227,9 @@ export class DealsService implements OnApplicationBootstrap {
     if (body.ownerId !== undefined && user.role === UserRole.Admin) {
       const prevOwnerId = deal.ownerId;
       deal.ownerId = this.parseOwnerId(body.ownerId);
+      if (deal.ownerId && deal.ownerId !== prevOwnerId) {
+        this.logEvent(deal, 'assigned', user.id, { to: deal.ownerId });
+      }
       // Operator voronkasidagi lid menejerga biriktirilsa, bosqichi ham menejer voronkasiga o'tadi.
       // (Modal saqlashda body.stageId ham keladi — o'sha holatda ham xaritalash shart, aks holda
       // lid op_* bosqichida "yopishib" qolib, menejer kanbanida ko'rinmay qolardi.)
@@ -362,6 +371,12 @@ export class DealsService implements OnApplicationBootstrap {
     return saved;
   }
 
+  // Tizim hodisasini lid tarixiga yozadi
+  private logEvent(deal: DealEntity, type: string, by: number | null, extra: Record<string, any> = {}) {
+    if (!Array.isArray(deal.events)) deal.events = [];
+    deal.events = [...deal.events, { type, at: new Date().toISOString(), by, ...extra }];
+  }
+
   private mapOperatorStageToManager(stageId: string) {
     if (stageId === 'op_malakali') return 'malakali';
     if (stageId === 'op_yutqazilgan') return 'yutqazilgan';
@@ -377,6 +392,7 @@ export class DealsService implements OnApplicationBootstrap {
     deal.sentToManager = true;
     if (!deal.qualAt) deal.qualAt = new Date().toISOString();
     if (!deal.operatorId) deal.operatorId = user.id;
+    this.logEvent(deal, 'qualified', user.id);
     await this.notifyManagersNewQualLead(deal, user.id);
   }
 
@@ -444,6 +460,7 @@ export class DealsService implements OnApplicationBootstrap {
       const ownerId = this.parseOwnerId(body.ownerId);
       const absorbed = new Set<number>();
       for (const deal of rows) {
+        if (ownerId && ownerId !== deal.ownerId) this.logEvent(deal, 'assigned', user.id, { to: ownerId });
         deal.ownerId = ownerId;
         // Operator voronkasidagi lid menejerga o'tsa, bosqichini ham menejer voronkasiga
         // o'tkazamiz — aks holda menejer kanbanida op_* ustuni yo'qligi uchun lid ko'rinmaydi.
@@ -481,6 +498,7 @@ export class DealsService implements OnApplicationBootstrap {
     if (!rows.length) throw new NotFoundException('Shartnomalar topilmadi');
     const nowIso = new Date().toISOString();
     rows.forEach(deal => {
+      if (deal.stageId !== stageId) this.logEvent(deal, 'stage', user.id, { from: deal.stageId, to: stageId });
       deal.stageId = stageId;
       // op_malakali'ga ommaviy ko'chirilgan operator lidi ham menejerlarga ochilsin (handoff bayrog'i)
       if (stageId === OPERATOR_QUAL_STAGE_ID && !deal.sentToManager) {

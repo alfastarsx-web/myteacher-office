@@ -45,6 +45,11 @@ export class DealEntity {
   @Column({ type: 'jsonb', default: () => "'[]'" })
   comments: Array<{ text: string; from: string; time: string }>;
 
+  // Tizim hodisalari jurnali (amoCRM/Bitrix uslubi): yaratildi, biriktirildi, bosqich o'zgardi.
+  // Foydalanuvchi izohlaridan alohida saqlanadi; tarixda alohida ko'rsatiladi.
+  @Column({ type: 'jsonb', default: () => "'[]'" })
+  events: Array<{ type: string; at: string; by: number | null; [k: string]: any }>;
+
   @ManyToOne(() => UserEntity, user => user.deals, { eager: false, nullable: true })
   owner: UserEntity;
 
