@@ -174,6 +174,8 @@ export class DealsService implements OnApplicationBootstrap {
     if (user.role === UserRole.Manager && deal.ownerId == null) {
       deal.ownerId = user.id;
       this.logEvent(deal, 'claimed', user.id, { to: user.id });
+      // Lid vazifalari ham yangi egaga ko'chsin — aks holda yangi menejer ularni ko'rmaydi
+      await this.tasks.reassignDealTasks(deal.id, deal.id, user.id);
     }
     const prevStageId = deal.stageId;
     const prevCommentsLength = deal.comments?.length || 0;
@@ -229,6 +231,8 @@ export class DealsService implements OnApplicationBootstrap {
       deal.ownerId = this.parseOwnerId(body.ownerId);
       if (deal.ownerId && deal.ownerId !== prevOwnerId) {
         this.logEvent(deal, 'assigned', user.id, { to: deal.ownerId });
+        // Lid vazifalari ham yangi menejerga ko'chsin
+        await this.tasks.reassignDealTasks(deal.id, deal.id, deal.ownerId);
       }
       // Operator voronkasidagi lid menejerga biriktirilsa, bosqichi ham menejer voronkasiga o'tadi.
       // (Modal saqlashda body.stageId ham keladi — o'sha holatda ham xaritalash shart, aks holda
@@ -460,7 +464,10 @@ export class DealsService implements OnApplicationBootstrap {
       const ownerId = this.parseOwnerId(body.ownerId);
       const absorbed = new Set<number>();
       for (const deal of rows) {
-        if (ownerId && ownerId !== deal.ownerId) this.logEvent(deal, 'assigned', user.id, { to: ownerId });
+        if (ownerId && ownerId !== deal.ownerId) {
+          this.logEvent(deal, 'assigned', user.id, { to: ownerId });
+          await this.tasks.reassignDealTasks(deal.id, deal.id, ownerId); // vazifalar ham yangi egaga ko'chsin
+        }
         deal.ownerId = ownerId;
         // Operator voronkasidagi lid menejerga o'tsa, bosqichini ham menejer voronkasiga
         // o'tkazamiz — aks holda menejer kanbanida op_* ustuni yo'qligi uchun lid ko'rinmaydi.
