@@ -2882,7 +2882,7 @@ function renderDealStats(){
       {icon:'👥', label:'Ishga olingan', value:a.todayProcessed, unit:'ta', sub:'Bugun barcha xodimlar bo\'yicha', color:'#2563EB', bg:'#EFF6FF', accent:'#BFDBFE'},
       {icon:'📱', label:'Install', value:a.todayApp, unit:'ta', sub:'Bugun o\'rnatilgan', color:'#0891B2', bg:'#ECFEFF', accent:'#A5F3FC'},
       {icon:'🎯', label:'Qual', value:a.todayQual, unit:'ta', sub:'Bugun malakali qilingan', color:'#7C3AED', bg:'#F5F3FF', accent:'#C4B5FD'},
-      {icon:'📞', label:'Full call', value:a.todayFullCall, unit:'ta', sub:'15+ daqiqa yoki sotuv', color:'#DB2777', bg:'#FDF2F8', accent:'#FBCFE8'},
+      {icon:'📞', label:'Full call', value:a.todayFullCall, unit:'ta', sub:'Qo\'lda belgilangan qo\'ng\'iroqlar', color:'#DB2777', bg:'#FDF2F8', accent:'#FBCFE8'},
       {icon:'🏆', label:'Sotuv', value:a.todaySoldCount, unit:'ta', sub:'Bugungi muvaffaqiyatli', color:'#16A34A', bg:'#F0FDF4', accent:'#86EFAC'},
       {icon:'💰', label:'Summa', value:formatMoney(a.todayCash), unit:'', sub:`Bu oy: ${formatMoney(a.monthCash)}`, color:'#D97706', bg:'#FFFBEB', accent:'#FDE68A'},
     ];
@@ -2898,7 +2898,7 @@ function renderDealStats(){
   const act = managerActionsToday(currentUser());
   const managerCards = [
     {icon:'⚡', label:'Amallar', value:`${act.total} ta`, sub:`Izoh: ${act.comments} · Vazifa: ${act.tasks} · Ko'chirish: ${act.moves}`, color:'#D97706', bg:'linear-gradient(135deg,#FFFBEB,#FEF3C7)', accent:'#FDE68A'},
-    {icon:'📞', label:'Full call', value:`${m.todayFullCall} ta`, sub:'15+ daqiqa yoki sotuv', color:'#DB2777', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', accent:'#FBCFE8'},
+    {icon:'📞', label:'Full call', value:`${m.todayFullCall} ta`, sub:'Qo\'lda belgilangan qo\'ng\'iroqlar', color:'#DB2777', bg:'linear-gradient(135deg,#FDF2F8,#FCE7F3)', accent:'#FBCFE8'},
     {icon:'🏆', label:'Bugungi bonus', value:formatMoney(todayBonus), sub:`Sotuv: ${formatMoney(salesBonus)} · Full call: ${formatMoney(m.fullCallBonus)}`, color:'#2563EB', bg:'linear-gradient(135deg,#EFF6FF,#DBEAFE)', accent:'#BFDBFE'},
     {icon:'💵', label:'Bugungi sotuv summasi', value:formatMoney(m.todaySoldAmount), sub:`${m.todaySoldCount} ta · Bu oy: ${formatMoney(m.monthSoldAmount)}`, color:'#16A34A', bg:'linear-gradient(135deg,#F0FDF4,#DCFCE7)', accent:'#86EFAC'},
     {icon:'🏅', label:'Oylik bonus summasi', value:formatMoney(m.monthBonus), sub:`Sotuv: ${formatMoney(m.monthSalesBonus)} · Full call: ${formatMoney(m.monthFullCallBonus)}`, tag:'bu oy', color:'#7C3AED', bg:'linear-gradient(135deg,#F5F3FF,#EDE9FE)', accent:'#C4B5FD'},
@@ -4402,10 +4402,11 @@ function calculateManagerCompensation(user,periodDate=new Date()){
 function paymentDeals(){
   return currentUserDeals().filter(d=>d.col===STAGE_WON);
 }
-// Menejerning full call HODISALARI — har bir qo'ng'iroq alohida (vaqt bilan). Bir lidga bir
-// necha marta qo'ng'iroq qilinsa har biri hisoblanadi; dublikat lid yozuvlari esa bir xil vaqt
-// bilan takrorlangani uchun (lid+vaqt bo'yicha dedupe) ikki marta sanalmaydi. Sotuv (Yutgan)
-// ham — o'sha kunda shu lidga boshqa full call bo'lmasa — bitta full call deb qo'shiladi.
+// Menejerning full call HODISALARI — FAQAT qo'lda belgilangan qo'ng'iroqlar (har biri alohida vaqt bilan).
+// Bir lidga bir necha marta qo'ng'iroq qilinsa har biri hisoblanadi; dublikat lid yozuvlari esa
+// bir xil vaqt bilan takrorlangani uchun (lid+vaqt bo'yicha dedupe) ikki marta sanalmaydi.
+// DIQQAT: sotuv (Yutgan) endi AVTOMATIK full call deb sanalmaydi — menejer qo'ng'iroqni +/- bilan
+// o'zi belgilaydi. Aks holda soxta/xato yutgan bitim ham full call bo'lib bonusni oshirib yuborardi.
 function fullCallEventsFrom(dealsList){
   const tk = iso => iso ? new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)) : '';
   const idKey = d => String(d.phone || '').replace(/\D/g,'') || ('n:' + String(d.customerName || '').trim().toLowerCase()) || ('id:' + d.id);
@@ -4422,11 +4423,6 @@ function fullCallEventsFrom(dealsList){
     const list = Array.isArray(d.fullCalls) && d.fullCalls.length ? d.fullCalls
       : (d.fullCall ? [d.fullCallAt || d.createdAt] : []);
     list.forEach(ts => add(d, ts));
-    if (d.col === STAGE_WON) {
-      const wts = d.wonAt || d.updatedAt || d.createdAt;
-      const wday = tk(wts);
-      if (!list.some(ts => tk(ts) === wday)) add(d, wts);   // sotuv = full call (o'sha kunda boshqasi bo'lmasa)
-    }
   });
   return events;
 }
