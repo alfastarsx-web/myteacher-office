@@ -3723,7 +3723,7 @@ function renderDealWorkspace(){
     appBtn.querySelector('span').style.left=d.appInstalled?'18px':'2px';
   }
   const fullCallRow=document.getElementById('dwFullCallRow');
-  if(fullCallRow)fullCallRow.style.display=currentUser().role==='manager'?'flex':'none';
+  if(fullCallRow)fullCallRow.style.display=(currentUser().role==='manager'||isAdmin())?'flex':'none';
   const fcCountEl=document.getElementById('dwFullCallCount');
   if(fcCountEl)fcCountEl.textContent=dealFullCallCount(d);
   renderWorkspacePayments(d);
@@ -4023,7 +4023,7 @@ function dealFullCallCount(d){
 }
 // Har bir full call qo'ng'irog'i alohida hodisa — + har bosilganda bittasi qo'shiladi, − oxirgisini olib tashlaydi
 async function changeFullCall(delta){
-  if(currentUser().role!=='manager'){showToast('Faqat menejer full call belgilay oladi');return;}
+  if(currentUser().role!=='manager' && !isAdmin()){showToast('Faqat menejer yoki admin full call belgilay oladi');return;}
   const d=currentWorkspaceDeal();
   if(!d)return;
   const list=Array.isArray(d.fullCalls)?[...d.fullCalls]:(d.fullCall&&d.fullCallAt?[d.fullCallAt]:[]);
