@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException, OnApplicationBootstrap } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { PasswordService } from '../../../common/crypto/password.service';
@@ -21,12 +21,12 @@ const VALID_PAYMENT_TYPES = ['naqd', 'karta', 'otkazma'];
 const OPERATOR_STAGE_IDS = ['op_yangi', 'op_qayta', 'op_malakali', 'op_yutqazilgan'];
 
 @Injectable()
-export class DealsService implements OnApplicationBootstrap {
-  // Boot paytida mavjud dublikatlarni bir marta tozalaymiz — eski ma'lumotdagi
-  // "bitta lid ikki menejerda" holatlarini birlashtiradi (idempotent).
-  async onApplicationBootstrap() {
-    try { await this.consolidateDuplicateLeads(); } catch (e) { console.warn('consolidateDuplicateLeads:', (e as Error).message); }
-  }
+export class DealsService {
+  // DIQQAT: boot paytidagi avtomatik dublikat tozalash (consolidateDuplicateLeads) O'CHIRILDI.
+  // Sababi: u har deploy'da ishlab, telefoni bo'sh + ismi bir xil lidlarni (masalan operatorlarning
+  // Facebook lidlari — "Liza", "Diyora" kabi) noto'g'ri birlashtirib O'CHIRIB yuborardi.
+  // Dublikatlarni real vaqtda faqat TELEFON bo'yicha (mergeDuplicateManagerLeads) va faqat menejerga
+  // biriktirishda tozalaymiz — bu operator lidlariga tegmaydi. Kerak bo'lsa qo'lda ishga tushiriladi.
 
   constructor(
     @InjectRepository(DealEntity) private readonly deals: Repository<DealEntity>,
