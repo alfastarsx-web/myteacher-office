@@ -486,11 +486,11 @@ export class DealsService implements OnApplicationBootstrap {
       const keys = new Set<string>();
       saved.forEach(d => { if (d.ownerId != null && !OPERATOR_STAGE_IDS.includes(d.stageId)) { const k = this.phoneKey(d); if (k) keys.add(k); } });
       for (const k of keys) await this.mergeDuplicateManagerLeads(k);
-      return { deals: saved };
+      return saved; // controller { deals: ... } bilan o'raydi — bu yerda massiv qaytaramiz
     }
 
     const saved = await this.deals.save(rows);
-    return { deals: saved };
+    return saved;
   }
 
   async bulkAssignStage(body: any, user: UserEntity) {
