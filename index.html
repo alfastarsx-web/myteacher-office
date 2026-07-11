@@ -2144,11 +2144,10 @@ function currentUserDeals(){
   const u=currentUser();
   if(u.role==='admin') return deals;
   if(u.role==='operator') return deals.filter(d=>String(d.operatorId)===String(u.id));
-  // Menejer: o'ziga biriktirilganlar + hali biriktirilmagan lidlar — menejer voronkasidagilar,
-  // hamda operator malakali qilib yuborgan (op_malakali + sentToManager) egasiz lidlar.
-  // backend list()/canSee bilan bir xil qoida (single-row model).
-  const OP_STAGE_IDS=['op_yangi','op_qayta','op_malakali','op_yutqazilgan'];
-  const managerSees=d=>d.ownerId===u.id || (d.ownerId==null && (!OP_STAGE_IDS.includes(d.col) || (d.col==='op_malakali' && (d._sentToManager||d.sentToManager))));
+  // Menejer: o'ziga biriktirilganlar + hali biriktirilmagan, LEKIN operator TOPSHIRGAN lidlar —
+  // faqat "Malakali" (handoff) yoki op_malakali+sentToManager. Oddiy egasiz "yangi" (admin import)
+  // lidlar menejerga chiqmaydi. backend list()/canSee bilan bir xil qoida.
+  const managerSees=d=>d.ownerId===u.id || (d.ownerId==null && (d.col==='malakali' || (d.col==='op_malakali' && (d._sentToManager||d.sentToManager))));
   return hasPerm('all',u)?deals:deals.filter(managerSees);
 }
 function managerById(id){ return managers.find(m=>String(m.id)===String(id)); }
