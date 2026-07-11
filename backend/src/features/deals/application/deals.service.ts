@@ -60,11 +60,11 @@ export class DealsService {
       user.permissions?.all === true ||
       deal.ownerId === user.id ||
       (user.role === UserRole.Operator && deal.operatorId === user.id) ||
-      // Menejer hali biriktirilmagan lidni ochib ishlay oladi: menejer voronkasidagi egasiz lid,
-      // YOKI operator malakali qilib menejerga yuborilgan (op_malakali + sentToManager) egasiz lid.
-      // list() ham xuddi shu qoida bilan qaytaradi, aks holda "Shartnoma topilmadi" bo'lardi.
+      // Menejer hali biriktirilmagan lidni ochib ishlay oladi FAQAT operator topshirgan bo'lsa:
+      // "Malakali" bosqichidagi egasiz lid yoki op_malakali + sentToManager. Oddiy egasiz "yangi"
+      // (admin import) lidlarni menejer ko'rmaydi. list() ham shu qoida bilan qaytaradi.
       (user.role === UserRole.Manager && deal.ownerId == null &&
-        (!OPERATOR_STAGE_IDS.includes(deal.stageId) || (deal.stageId === OPERATOR_QUAL_STAGE_ID && deal.sentToManager === true)))
+        (deal.stageId === 'malakali' || (deal.stageId === OPERATOR_QUAL_STAGE_ID && deal.sentToManager === true)))
     );
   }
 
@@ -77,12 +77,14 @@ export class DealsService {
         .orderBy('deal.id', 'ASC')
         .getMany();
     }
-    // Menejer: o'ziga biriktirilgan YOKI hali biriktirilmagan lidlar — menejer voronkasidagilar,
-    // hamda operator malakali qilib yuborgan (op_malakali + sentToManager) egasiz lidlar.
+    // Menejer: o'ziga biriktirilgan lidlar + hali biriktirilmagan, LEKIN operator TOPSHIRGAN lidlar.
+    // Egasiz lid faqat "Malakali" bosqichida (operator handoff) yoki op_malakali + sentToManager
+    // bo'lsagina ko'rinadi. Oddiy egasiz "yangi" (admin import) lidlar hamma menejerga chiqmaydi —
+    // ular faqat adminda ko'rinadi, admin operator/menejerga taqsimlaydi.
     return this.deals.createQueryBuilder('deal')
-      .where('(deal.ownerId = :id OR (deal.ownerId IS NULL AND (deal.stageId NOT IN (:...opStages) OR (deal.stageId = :qual AND deal.sentToManager = true))))', {
+      .where('(deal.ownerId = :id OR (deal.ownerId IS NULL AND (deal.stageId = :malakali OR (deal.stageId = :qual AND deal.sentToManager = true))))', {
         id: user.id,
-        opStages: OPERATOR_STAGE_IDS,
+        malakali: 'malakali',
         qual: OPERATOR_QUAL_STAGE_ID,
       })
       .orderBy('deal.id', 'ASC')
