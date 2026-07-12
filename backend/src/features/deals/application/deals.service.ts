@@ -331,7 +331,8 @@ export class DealsService {
         `${remaining > 0 ? `⏳ Qoldiq: <b>${remaining.toLocaleString('uz-UZ')} so’m</b>` : `✅ To‘liq to‘landi`}`
       ).catch(() => {});
     }
-    if (nextStageId === OPERATOR_QUAL_STAGE_ID && prevStageId !== OPERATOR_QUAL_STAGE_ID && !deal.sentToManager) {
+    const willHandoff = nextStageId === OPERATOR_QUAL_STAGE_ID && prevStageId !== OPERATOR_QUAL_STAGE_ID && !deal.sentToManager;
+    if (willHandoff) {
       await this.handoffQualifiedLead(deal, user);
     }
     if (nextStageId === WON_STAGE_ID && prevStageId !== WON_STAGE_ID) {
@@ -368,6 +369,9 @@ export class DealsService {
       deal.stageId = this.mapOperatorStageToManager(deal.stageId);
     }
     const saved = await this.deals.save(deal);
+    // Menejerlarga "yangi malakali lid" xabari FAQAT lid muvaffaqiyatli saqlangandan keyin ketadi —
+    // aks holda saqlash yiqilsa "xabar bor, lekin lid o'tmagan" holati chiqadi.
+    if (willHandoff) await this.notifyManagersNewQualLead(saved, user.id);
     // Menejerga tegishli bo'lib qolgan lid uchun bir xil telefonli dublikatni birlashtiramiz.
     // Agar shu yozuvning o'zi birlashuvda o'chib ketsa, saqlangan yozuvni qaytaramiz.
     if (saved.ownerId != null && !OPERATOR_STAGE_IDS.includes(saved.stageId)) {
@@ -401,7 +405,7 @@ export class DealsService {
     if (!deal.qualAt) deal.qualAt = new Date().toISOString();
     if (!deal.operatorId) deal.operatorId = user.id;
     this.logEvent(deal, 'qualified', user.id);
-    await this.notifyManagersNewQualLead(deal, user.id);
+    // Xabar update() ichida, lid SAQLANGANDAN keyin yuboriladi (notifyManagersNewQualLead)
   }
 
   private async notifyManagersNewQualLead(deal: DealEntity, fromUserId: number) {

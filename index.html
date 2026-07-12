@@ -6934,6 +6934,11 @@ function connectNotifSocket() {
     if (notifPanelOpen) renderNotifList();
     showNotifToast(notif);
     playNotifSound();
+    // Yangi malakali lid / biriktirish / bosqich o'zgarishi — lidlar ro'yxatini yangilaymiz,
+    // aks holda yangi kelgan lid menejer ekranida ko'rinmaydi va uni ochib bo'lmaydi
+    if (['qual_lead','deal_assigned','stage_changed','comment_added'].includes(notif.type)) {
+      scheduleDealsRefresh();
+    }
   });
 
   notifSocket.on('notifications:read_ok', () => {
@@ -7008,6 +7013,13 @@ function renderNotifList() {
   `).join('');
 }
 
+// Bildirishnoma kelganda lidlar ro'yxatini yangilaymiz (debounce — bir necha xabar bir marta yuklansin)
+let _dealsRefreshTimer = null;
+function scheduleDealsRefresh(){
+  if(!apiToken) return;
+  clearTimeout(_dealsRefreshTimer);
+  _dealsRefreshTimer = setTimeout(() => { loadApiData().catch(()=>{}); }, 1200);
+}
 async function openNotif(id, dealId) {
   // O'qildi deb belgilaymiz
   const notif = notifications.find(n => n.id === id);
@@ -7022,6 +7034,10 @@ async function openNotif(id, dealId) {
   if (dealId) {
     toggleNotifPanel();
     goPage('shartnomalar');
+    // Lid local ro'yxatda bo'lmasa (yangi kelgan) — avval yuklab olamiz, keyin ochamiz
+    if (apiToken && !deals.find(d => String(d.id) === String(dealId))) {
+      await loadApiData().catch(()=>{});
+    }
     setTimeout(() => openDealWorkspace(dealId), 300);
   }
 }
