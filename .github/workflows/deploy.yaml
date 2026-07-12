@@ -9,18 +9,54 @@ jobs:
     steps:
       - name: deploy
         run: |
-          mkdir ~/.ssh
+          mkdir -p ~/.ssh
           echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
           chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
-          ssh root@${{ secrets.SSH_HOST }} << EOF
-            set -e
-            source ~/.nvm/nvm.sh 2>/dev/null || true
-            source ~/.profile 2>/dev/null || true
-            cd /var/www/myteacher-office
-            git pull
-            cd backend
-            npm i -f
-            npm run build
-            pm2 restart mycrm-api
-          EOF
+
+          HOST="${{ secrets.SSH_HOST }}"
+          SSH_OPTS="-o BatchMode=yes -o ConnectTimeout=30 -o ServerAliveInterval=15 -o ServerAliveCountMax=3 -o StrictHostKeyChecking=accept-new"
+
+          # Serverda bajariladigan buyruqlar (idempotent — qayta ishga tushirsa ham xavfsiz)
+          cat > /tmp/remote-deploy.sh <<'REMOTE'
+          set -e
+          source ~/.nvm/nvm.sh 2>/dev/null || true
+          source ~/.profile 2>/dev/null || true
+          cd /var/www/myteacher-office
+          git pull
+          cd backend
+          npm i -f
+          npm run build
+          pm2 restart mycrm-api
+          REMOTE
+
+          # SSH ulanishi vaqti-vaqti bilan uzilib turadi (exit 255). Faqat ulanish
+          # xatolarida qayta urinamiz; remote buyruq xatosida (build va h.k.) darrov to'xtaymiz.
+          max=5
+          attempt=0
+          while :; do
+            attempt=$((attempt+1))
+            echo "::group::Deploy urinish $attempt/$max"
+            ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+            code=0
+            ssh $SSH_OPTS root@"$HOST" 'bash -s' < /tmp/remote-deploy.sh || code=$?
+            echo "::endgroup::"
+
+            if [ "$code" -eq 0 ]; then
+              echo "Deploy muvaffaqiyatli ($attempt-urinishda)."
+              exit 0
+            fi
+
+            if [ "$code" -ne 255 ]; then
+              echo "Remote buyruq xatosi (exit $code) — bu ulanish muammosi emas, to'xtatildi."
+              exit "$code"
+            fi
+
+            if [ "$attempt" -ge "$max" ]; then
+              echo "SSH ulanishi $max marta uzildi (exit 255). Deploy bajarilmadi."
+              exit 1
+            fi
+
+            wait_s=$((attempt*10))
+            echo "SSH ulanishi uzildi (exit 255). ${wait_s}s dan keyin qayta uriniladi..."
+            sleep "$wait_s"
+          done
