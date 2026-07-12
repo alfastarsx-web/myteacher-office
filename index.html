@@ -2223,10 +2223,18 @@ async function api(path,options={}){
   apiOnline=true;
   return data;
 }
+// Backend mapOperatorStageToManager'ning ko'zgusi: egasi bor (menejer/admin biriktirgan yoki
+// o'ziga olgan) lid operator voronkasi bosqichida qolib ketmasin. Aks holda List uni "Yangi"
+// yorlig'i ostida ko'rsatadi-yu, menejer Kanbanida op_* ustuni bo'lmagani uchun lid "yo'qolib"
+// qoladi. Egasiz operator lidlariga (ownerId=null) tegilmaydi — ular operator voronkasida qoladi.
+const OP_STAGE_TO_MANAGER={op_malakali:'malakali',op_yutqazilgan:'yutqazilgan',op_yangi:'yangi',op_qayta:'yangi'};
+function normalizeOwnedStage(stageId, ownerId){
+  return (ownerId!=null && OP_STAGE_TO_MANAGER[stageId]) ? OP_STAGE_TO_MANAGER[stageId] : stageId;
+}
 function dealFromApi(d){
   const date=d.createdAt?formatDealDate(d.createdAt):'Bugun';
   const phones=dealPhones(d);
-  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:d.stageId,price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],events:Array.isArray(d.events)?d.events:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,fullCalls:Array.isArray(d.fullCalls)?d.fullCalls:(d.fullCall&&d.fullCallAt?[d.fullCallAt]:[]),courseDuration:d.courseDuration||null,paymentType:d.paymentType||null,lostFromStage:d.lostFromStage||null,paidAmount:Number(d.paidAmount||0),payments:Array.isArray(d.payments)?d.payments:[],firstPaymentAt:d.firstPaymentAt||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
+  return {id:Number(d.id),customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,col:normalizeOwnedStage(d.stageId, d.ownerId ?? null),price:Number(d.price||0),date,createdAt:d.createdAt||null,updatedAt:d.updatedAt||null,note:d.note || '',adSource:d.adSource || '',registeredAt:d.registeredAt || '',age:d.age ?? '',learningGoal:d.learningGoal || '',leadChannel:d.leadChannel || '',comments:Array.isArray(d.comments)?d.comments:[],events:Array.isArray(d.events)?d.events:[],ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:Boolean(d.appInstalled),appInstalledAt:d.appInstalledAt||null,qualAt:d.qualAt||null,fullCall:Boolean(d.fullCall),fullCallAt:d.fullCallAt||null,fullCalls:Array.isArray(d.fullCalls)?d.fullCalls:(d.fullCall&&d.fullCallAt?[d.fullCallAt]:[]),courseDuration:d.courseDuration||null,paymentType:d.paymentType||null,lostFromStage:d.lostFromStage||null,paidAmount:Number(d.paidAmount||0),payments:Array.isArray(d.payments)?d.payments:[],firstPaymentAt:d.firstPaymentAt||null,_sentToManager:Boolean(d.sentToManager),createdBy:d.createdBy};
 }
 // localStorage ga deal extra fieldlarini saqlaymiz
 function saveDealExtra(id, fields){
