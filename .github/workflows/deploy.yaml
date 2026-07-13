@@ -21,7 +21,7 @@ jobs:
           set -e
           source ~/.nvm/nvm.sh 2>/dev/null || true
           source ~/.profile 2>/dev/null || true
-          cd /var/www/myteacher-office
+          cd /var/www/mycrm
           git pull
           cd backend
           npm i -f
