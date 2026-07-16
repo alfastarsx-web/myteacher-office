@@ -438,14 +438,8 @@ export class DealsService {
       .andWhere('deal.stageId NOT IN (:...opStages)', { opStages: OPERATOR_STAGE_IDS })
       .getMany();
     if (!echoes.length) return [];
-    const have = new Set((original.comments || []).map(c => `${c.time}|${c.text}`));
-    echoes.forEach(echo => (echo.comments || []).forEach(c => {
-      const key = `${c.time}|${c.text}`;
-      if (!have.has(key)) {
-        original.comments = [...(original.comments || []), c];
-        have.add(key);
-      }
-    }));
+    // Echo'dagi izoh + full call + to'lov + ilova + tarixni asl yozuvga ko'chiramiz (yo'qotmaymiz)
+    this.absorbDealArtifacts(original, echoes);
     const ids = echoes.map(e => e.id);
     await this.deals.delete(ids);
     return ids;
@@ -588,10 +582,59 @@ export class DealsService {
     return String(raw).replace(/\D/g, '');
   }
 
+  // Dublikat yozuvlar birlashtirilganda FAQAT izoh emas, balki mijoz bilan bog'liq barcha
+  // "artefaktlar" — full call hodisalari (bonusga ta'sir qiladi), to'lovlar/pul, ilova
+  // o'rnatilishi va tarix — saqlanadigan yozuvga (keeper) ko'chiriladi. Ilgari faqat izoh
+  // ko'chib, qolgani o'chib ketardi: shu sababli Ziyodaning full call bonusi tushib qolgan
+  // (yo'qolgan qo'ng'iroqlar) va to'lovlar yo'qolishi xavfi bor edi. Idempotent: hodisalar
+  // vaqt/kalit bo'yicha dedupe qilinadi, qayta ishlatilsa dublikat qo'shmaydi.
+  private absorbDealArtifacts(keeper: DealEntity, dropped: DealEntity[]) {
+    const seenC = new Set((keeper.comments || []).map(c => `${c.time}|${c.text}`));
+    const fc = new Set((Array.isArray(keeper.fullCalls) ? keeper.fullCalls : []).map(String));
+    const payKey = (p: any) => `${p.at}|${p.amount}|${p.by}`;
+    const seenPay = new Set((keeper.payments || []).map(payKey));
+    const evKey = (e: any) => `${e.type}|${e.at}`;
+    const seenEv = new Set((Array.isArray(keeper.events) ? keeper.events : []).map(evKey));
+    for (const d of dropped) {
+      (d.comments || []).forEach(c => {
+        const k = `${c.time}|${c.text}`;
+        if (!seenC.has(k)) { keeper.comments = [...(keeper.comments || []), c]; seenC.add(k); }
+      });
+      const fromCalls = Array.isArray(d.fullCalls) && d.fullCalls.length
+        ? d.fullCalls : (d.fullCall && d.fullCallAt ? [d.fullCallAt] : []);
+      fromCalls.forEach(t => { if (t) fc.add(String(t)); });
+      (d.payments || []).forEach(p => {
+        const k = payKey(p);
+        if (!seenPay.has(k)) { keeper.payments = [...(keeper.payments || []), p]; seenPay.add(k); }
+      });
+      (Array.isArray(d.events) ? d.events : []).forEach(e => {
+        const k = evKey(e);
+        if (!seenEv.has(k)) { keeper.events = [...(keeper.events || []), e]; seenEv.add(k); }
+      });
+      if (d.appInstalled && !keeper.appInstalled) keeper.appInstalled = true;
+      if (d.appInstalledAt && (!keeper.appInstalledAt || d.appInstalledAt < keeper.appInstalledAt)) keeper.appInstalledAt = d.appInstalledAt;
+      if (!keeper.operatorId && d.operatorId) keeper.operatorId = d.operatorId;
+      if (d.qualAt && (!keeper.qualAt || d.qualAt < keeper.qualAt)) keeper.qualAt = d.qualAt;
+      if (d.sentToManager) keeper.sentToManager = true;
+    }
+    const fcArr = [...fc].sort();
+    keeper.fullCalls = fcArr;
+    keeper.fullCall = fcArr.length > 0;
+    keeper.fullCallAt = fcArr.length ? fcArr[fcArr.length - 1] : keeper.fullCallAt;
+    // Pulni hech qachon yo'qotmaymiz: birlashtirilgan to'lovlar yig'indisi va har bir yozuvdagi
+    // paidAmount ning eng kattasidan kamaymaydi (isAdvancedDeal ko'pi bilan bitta pulli yoz;
+    // uni har holda hisobga olamiz).
+    const paySum = (keeper.payments || []).reduce((s, p) => s + Number(p.amount || 0), 0);
+    const droppedPaidMax = dropped.reduce((m, d) => Math.max(m, Number(d.paidAmount || 0)), 0);
+    keeper.paidAmount = Math.max(Number(keeper.paidAmount || 0), paySum, droppedPaidMax);
+    const firstPay = (keeper.payments || []).map(p => p.at).filter(Boolean).sort()[0];
+    if (firstPay && (!keeper.firstPaymentAt || firstPay < keeper.firstPaymentAt)) keeper.firstPaymentAt = firstPay;
+  }
+
   // Bir xil telefonli lid ikki menejerda bo'lib qolmasligini ta'minlaydi.
-  // Menejer voronkasidagi (op_* emas) egali bir xil telefonli lidlardan eng faolini
-  // (ko'p izohli, teng bo'lsa eng eski) saqlaydi, qolganlarining izoh/vazifalarini unga
-  // ko'chiradi va o'zlarini o'chiradi. Saqlangan lid id sini qaytaradi.
+  // Menejer voronkasidagi (op_* emas) egali bir xil telefonli lidlardan pulli/faol yozuvni
+  // (avval yakunlangan/pulli, teng bo'lsa ko'p izohli, teng bo'lsa eng eski) saqlaydi,
+  // qolganlarining izoh/full call/to'lov/vazifalarini unga ko'chiradi va o'zlarini o'chiradi.
   private async mergeDuplicateManagerLeads(phoneKey: string): Promise<number | null> {
     if (!phoneKey) return null;
     const owned = await this.deals.createQueryBuilder('deal')
@@ -603,17 +646,12 @@ export class DealsService {
     // Ikki yoki undan ortiq yakunlangan (sotilgan/to'langan) yozuvni birlashtirmaymiz — pulni yo'qotmaslik uchun
     if (group.filter(d => this.isAdvancedDeal(d)).length >= 2) return group[0].id;
     const score = (d: DealEntity) => (d.comments?.length || 0);
-    group.sort((a, b) => score(b) - score(a) || a.id - b.id);
+    // Pulli (yakunlangan) yozuv keeper bo'lib qolsin — bosqichi va puli o'zida saqlansin
+    group.sort((a, b) => (Number(this.isAdvancedDeal(b)) - Number(this.isAdvancedDeal(a))) || score(b) - score(a) || a.id - b.id);
     const keeper = group[0];
     const dropped = group.slice(1);
-    const seen = new Set((keeper.comments || []).map(c => `${c.time}|${c.text}`));
-    for (const d of dropped) {
-      (d.comments || []).forEach(c => {
-        const k = `${c.time}|${c.text}`;
-        if (!seen.has(k)) { keeper.comments = [...(keeper.comments || []), c]; seen.add(k); }
-      });
-      await this.tasks.reassignDealTasks(d.id, keeper.id, keeper.ownerId);
-    }
+    this.absorbDealArtifacts(keeper, dropped);
+    for (const d of dropped) await this.tasks.reassignDealTasks(d.id, keeper.id, keeper.ownerId);
     await this.deals.save(keeper);
     await this.deals.delete(dropped.map(d => d.id));
     return keeper.id;
@@ -666,14 +704,8 @@ export class DealsService {
       const keepPool = advanced.length === 1 ? advanced : group.filter(d => !this.isAdvancedDeal(d));
       const survivor = this.pickSurvivor(keepPool);
       const dropped = group.filter(d => d.id !== survivor.id);
-      const seen = new Set((survivor.comments || []).map(c => `${c.time}|${c.text}`));
-      for (const d of dropped) {
-        (d.comments || []).forEach(c => {
-          const k = `${c.time}|${c.text}`;
-          if (!seen.has(k)) { survivor.comments = [...(survivor.comments || []), c]; seen.add(k); }
-        });
-        await this.tasks.reassignDealTasks(d.id, survivor.id, survivor.ownerId ?? null);
-      }
+      this.absorbDealArtifacts(survivor, dropped);
+      for (const d of dropped) await this.tasks.reassignDealTasks(d.id, survivor.id, survivor.ownerId ?? null);
       // Single-row holat: egali lid op bosqichda qolmasin; egasiz operator originali menejerlarga ochiq bo'lsin
       if (survivor.ownerId != null && OPERATOR_STAGE_IDS.includes(survivor.stageId)) {
         survivor.stageId = this.mapOperatorStageToManager(survivor.stageId);

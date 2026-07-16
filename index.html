@@ -4436,6 +4436,30 @@ function fullCallEventsFrom(dealsList){
 function managerFullCallEvents(user){
   return fullCallEventsFrom(deals.filter(d => String(d.ownerId) === String(user.id)));
 }
+// Menejer o'zi qilgan full call qo'ng'iroqlari ro'yxati (davr bo'yicha) — qaysi lidga, qachon.
+// Bonus bilan bir xil dedupe: bir xil lid + bir xil vaqt = bitta qo'ng'iroq.
+function managerFullCallList(user, range){
+  const mine = deals.filter(d => String(d.ownerId) === String(user.id));
+  const idKey = d => String(d.phone||'').replace(/\D/g,'') || ('n:'+String(d.customerName||'').trim().toLowerCase()) || ('id:'+d.id);
+  const seen = new Set();
+  const rows = [];
+  mine.forEach(d => {
+    const list = Array.isArray(d.fullCalls)&&d.fullCalls.length ? d.fullCalls : (d.fullCall ? [d.fullCallAt||d.createdAt] : []);
+    list.forEach(ts => {
+      if(!ts || !inRange(ts, range)) return;
+      const k = idKey(d)+'|'+ts;
+      if(seen.has(k)) return; seen.add(k);
+      rows.push({deal: customerTitle(d), ts});
+    });
+  });
+  return rows.sort((a,b)=> new Date(b.ts)-new Date(a.ts));
+}
+// Menejer lidlarida o'rnatilgan ilovalar ro'yxati (davr bo'yicha)
+function managerInstallList(user, range){
+  return deals.filter(d => String(d.ownerId) === String(user.id) && d.appInstalled && inRange(d.appInstalledAt||d.createdAt, range))
+    .map(d => ({deal: customerTitle(d), ts: d.appInstalledAt||d.createdAt}))
+    .sort((a,b)=> new Date(b.ts)-new Date(a.ts));
+}
 // ════════════════════════════════════════
 //  MENEJER BUGUNGI KO'RSATKICHLARI (faqat o'ziga tegishli)
 // ════════════════════════════════════════
@@ -4990,6 +5014,8 @@ function renderManagerAnalytics(wrap, user, range, periodLabel){
   const onlineH = Math.round(userOnlineSeconds(user)/3600*10)/10;
   const calc = calculateManagerCompensation(user);
   const recent = recentDealActions(user);
+  const fcList = managerFullCallList(user, range);
+  const installList = managerInstallList(user, range);
 
   // Overall score
   const overallScore = Math.round((quality.score + taskQ.score + Math.min(100, act.comments*10) + Math.min(100, act.wonDeals*20))/4);
@@ -5091,6 +5117,50 @@ function renderManagerAnalytics(wrap, user, range, periodLabel){
               ['Har 3 sotuv bonusi', formatMoney(calc.earnings.tripleBonus)],
               ['Jami sof', formatMoney(calc.earnings.netPayment)],
             ].map(([l,v])=>`<div style="display:flex;justify-content:space-between;padding:7px 0;border-bottom:1px solid var(--brl);font-size:13px"><span style="color:var(--mu)">${l}</span><strong>${v}</strong></div>`).join('')}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="analytics-main">
+      <div class="an-panel">
+        <div class="an-panel-head">
+          <div class="an-panel-title">📞 Full call ro'yxati</div>
+          <span class="an-badge">${fcList.length} ta · ${periodLabel}</span>
+        </div>
+        <div class="an-panel-body">
+          <div class="deal-activity-list">
+            ${fcList.length ? fcList.map(r=>`
+              <div class="dal-item">
+                <div class="dal-dot" style="background:#10B981"></div>
+                <div class="dal-info">
+                  <div class="dal-name">${esc(r.deal)}</div>
+                  <div class="dal-sub">📞 Full call qo'ng'iroq</div>
+                </div>
+                <div class="dal-time">${formatCommentTime(r.ts)}</div>
+              </div>
+            `).join('') : '<div style="color:var(--mu);font-size:13px;text-align:center;padding:20px">Bu davrda full call yo\'q</div>'}
+          </div>
+        </div>
+      </div>
+
+      <div class="an-panel">
+        <div class="an-panel-head">
+          <div class="an-panel-title">📱 Ilova o'rnatilganlar</div>
+          <span class="an-badge">${installList.length} ta · ${periodLabel}</span>
+        </div>
+        <div class="an-panel-body">
+          <div class="deal-activity-list">
+            ${installList.length ? installList.map(r=>`
+              <div class="dal-item">
+                <div class="dal-dot" style="background:#A855F7"></div>
+                <div class="dal-info">
+                  <div class="dal-name">${esc(r.deal)}</div>
+                  <div class="dal-sub">📱 Ilova o'rnatildi</div>
+                </div>
+                <div class="dal-time">${formatCommentTime(r.ts)}</div>
+              </div>
+            `).join('') : '<div style="color:var(--mu);font-size:13px;text-align:center;padding:20px">Bu davrda ilova o\'rnatilmagan</div>'}
           </div>
         </div>
       </div>
