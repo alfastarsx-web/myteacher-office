@@ -37,13 +37,23 @@ jobs:
             attempt=$((attempt+1))
             echo "::group::Deploy urinish $attempt/$max"
             ssh-keyscan -H "$HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-            code=0
-            ssh $SSH_OPTS root@"$HOST" 'bash -s' < /tmp/remote-deploy.sh || code=$?
+            set +e +o pipefail
+            ssh $SSH_OPTS root@"$HOST" 'bash -s' < /tmp/remote-deploy.sh 2>&1 | tee /tmp/ssh-out.log
+            code=${PIPESTATUS[0]}
+            set -e -o pipefail
             echo "::endgroup::"
 
             if [ "$code" -eq 0 ]; then
               echo "Deploy muvaffaqiyatli ($attempt-urinishda)."
               exit 0
+            fi
+
+            # Autentifikatsiya xatosi (deploy kaliti serverda ishlamayapti) ham exit 255 beradi,
+            # lekin qayta urinish foydasiz — kalit tuzatilmaguncha hech qachon o'tmaydi. Darrov to'xtaymiz.
+            if grep -qiE "Permission denied|Too many authentication failures|publickey" /tmp/ssh-out.log; then
+              echo "SSH AUTENTIFIKATSIYA xatosi — deploy kaliti serverda ishlamayapti."
+              echo "SSH_PRIVATE_KEY secret'ining public jufti serverda root ~/.ssh/authorized_keys da bo'lishi kerak (SSH_HOST ham to'g'ri bo'lsin). Qayta urinilmaydi."
+              exit "$code"
             fi
 
             if [ "$code" -ne 255 ]; then
