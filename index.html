@@ -224,6 +224,13 @@ table.crm-t{width:100%;border-collapse:collapse}
 .col-collapsed-eye{color:var(--mu);margin-top:6px;line-height:0}
 .col-collapsed:hover .col-collapsed-eye{color:var(--blue)}
 .col-collapsed-label{writing-mode:vertical-rl;transform:rotate(180deg);font-size:12px;font-weight:700;color:var(--tm);letter-spacing:.3px;white-space:nowrap}
+/* Kanban: kelgusi oy shartnomalarining yig'ma chizig'i */
+.mfold{display:flex;align-items:center;gap:7px;margin:10px 0 6px;padding:7px 9px;border-radius:8px;background:#EEF2F7;border:1px dashed var(--br);cursor:pointer;user-select:none;transition:background .12s}
+.mfold:hover{background:#E3EAF3}
+.mfold-chev{color:var(--mu);flex-shrink:0;transition:transform .15s}
+.mfold.open .mfold-chev{transform:rotate(90deg)}
+.mfold-name{font-size:12px;font-weight:800;color:var(--td);white-space:nowrap}
+.mfold-meta{margin-left:auto;font-size:11px;font-weight:700;color:var(--mu);white-space:nowrap}
 .col-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;min-height:60px;transition:background .15s,outline .15s}
 .col-body.over{background:rgba(37,99,235,.05);outline:2px dashed var(--blue);outline-offset:-5px;border-radius:8px}
 .kcard{background:var(--wh);border:1px solid var(--br);border-radius:8px;padding:13px;cursor:grab;transition:box-shadow .15s,border-color .15s,opacity .2s,transform .15s;user-select:none;box-shadow:var(--shadow-sm)}
@@ -2274,7 +2281,13 @@ function parseTaskDueTime(due){
   const months={yan:0,fev:1,mar:2,apr:3,may:4,iyn:5,iyl:6,avg:7,sen:8,okt:9,noy:10,dek:11};
   const dateMatch=text.match(/(\d{1,2})\s+([a-z]+)/);
   if(dateMatch && months[dateMatch[2].slice(0,3)]!==undefined){
-    return new Date(now.getFullYear(),months[dateMatch[2].slice(0,3)],Number(dateMatch[1]),hour,minute,0,0).getTime();
+    const mIdx=months[dateMatch[2].slice(0,3)];
+    const day=Number(dateMatch[1]);
+    let dt=new Date(now.getFullYear(),mIdx,day,hour,minute,0,0);
+    // Vazifa muddati yilsiz yoziladi ("5 yanvar"). Agar shu yil bilan olganda sana ancha
+    // o'tmishda qolsa — u aslida kelasi yilga tegishli (masalan dekabrda "5 yanvar" qo'yilsa).
+    if(dt.getTime() < now.getTime()-182*86400000) dt=new Date(now.getFullYear()+1,mIdx,day,hour,minute,0,0);
+    return dt.getTime();
   }
   const parsed=Date.parse(due);
   return Number.isNaN(parsed)?Number.MAX_SAFE_INTEGER:parsed;
@@ -3147,6 +3160,36 @@ function toggleStageHidden(id){
   try{ localStorage.setItem(hiddenStagesKey(),JSON.stringify([...set])); }catch{}
   renderKanban();
 }
+// ══ Kanban: "keyingi oydan boshlanadigan" shartnomalarni oy bo'yicha yig'ish ══
+// Eng yaqin ochiq vazifasi kelgusi oy(lar)ga to'g'ri kelgan shartnoma o'sha oyning yig'ma
+// chizig'iga tushadi (default: yopiq). Ustun sarlavhasidagi soni/summasi esa faqat joriy
+// oyda ochiq qolgan ishni ko'rsatadi — menejerning shu oygi real yuki.
+const MONTH_NAMES_UZ=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
+function monthKeyFrom(ms){
+  return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit'}).format(new Date(ms)).slice(0,7);
+}
+function monthLabelFrom(mk){
+  const [y,m]=mk.split('-').map(Number);
+  const curY=Number(monthKeyFrom(Date.now()).slice(0,4));
+  return MONTH_NAMES_UZ[m-1]+(y!==curY?` ${y}`:'');
+}
+// Eng yaqin ochiq vazifa vaqti (vazifa yo'q bo'lsa null). Muddati o'tgan vazifa ham
+// hisobga olinadi — u "hozir ishlash kerak" degani, kelajakka surilmaydi.
+function earliestOpenTaskTime(d){
+  const ts=(d.tasks||[]).filter(t=>!t.done).map(t=>parseTaskDueTime(t.due)).filter(t=>t!==Number.MAX_SAFE_INTEGER);
+  return ts.length?Math.min(...ts):null;
+}
+function monthFoldsKey(){ return `mtcrm_open_month_folds_${currentManagerId}`; }
+function getOpenMonthFolds(){
+  try{ return new Set(JSON.parse(localStorage.getItem(monthFoldsKey())||'[]')); }catch{ return new Set(); }
+}
+function toggleMonthFold(colId,mk){
+  const set=getOpenMonthFolds();
+  const k=`${colId}|${mk}`;
+  set.has(k)?set.delete(k):set.add(k);
+  try{ localStorage.setItem(monthFoldsKey(),JSON.stringify([...set])); }catch{}
+  renderKanban();
+}
 // Qisman to'lov progress chizig'i — to'langan foizga qarab rang: qizil → sariq → ko'k → yashil
 function dealPayPercent(d){
   if(!d || !Number(d.price) || !Number(d.paidAmount))return 0;
@@ -3182,6 +3225,8 @@ function renderKanban(){
   const managerFunnelPhones=new Set(rows.filter(d=>!OP_STAGE_SET.has(d.col) && d.phone).map(d=>d.phone));
   // Bosqich filtri tanlanganda yashirish e'tiborga olinmaydi — foydalanuvchi aynan shu ustunni so'ragan
   const hiddenStages=dealFilters.stageId?new Set():getHiddenStages();
+  const curMonthKey=monthKeyFrom(Date.now());
+  const openFolds=getOpenMonthFolds();
   document.getElementById('sBoard').innerHTML=stages.map(col=>{
     let colRows=rows.filter(d=>d.col===col.id || (!hasOpQualCol && col.id==='malakali' && d.col===STAGE_OP_QUAL));
     if(!hasOpQualCol && col.id==='malakali'){
@@ -3191,12 +3236,24 @@ function renderKanban(){
       colRows=colRows.filter(d=>Date.now()-new Date(d.qualAt||d.updatedAt||d.createdAt).getTime()<=opQualWindowMs);
     }
     const cd=colRows.map(d=>({...d,_kanbanTask:kanbanTaskInfo(d)})).sort((a,b)=>(a._kanbanTask.sort-b._kanbanTask.sort) || (Number(b.id||0)-Number(a.id||0)));
-    const tot=cd.reduce((s,d)=>s+d.price,0);
+    // Eng yaqin ochiq vazifasi kelgusi oyda bo'lganlarni oy bo'yicha ajratamiz — ular ustunda
+    // yig'ma chiziq ostida turadi va joriy oy soni/summasiga kirmaydi.
+    const futureByMonth=new Map();
+    const current=[];
+    cd.forEach(d=>{
+      const t=earliestOpenTaskTime(d);
+      const mk=t?monthKeyFrom(t):null;
+      if(mk && mk>curMonthKey){
+        if(!futureByMonth.has(mk))futureByMonth.set(mk,[]);
+        futureByMonth.get(mk).push(d);
+      } else current.push(d);
+    });
+    const tot=current.reduce((s,d)=>s+d.price,0);
     if(hiddenStages.has(col.id)){
       return `<div class="col-collapsed" onclick="toggleStageHidden('${col.id}')" title="${esc(col.label)} — ochish">
         <div class="col-collapsed-bar" style="background:${col.color}"></div>
         <span class="col-collapsed-eye"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span>
-        <div class="col-collapsed-label">${esc(col.label)}${cd.length?` · ${cd.length}`:''}</div>
+        <div class="col-collapsed-label">${esc(col.label)}${current.length?` · ${current.length}`:''}</div>
       </div>`;
     }
     return `<div class="col">
@@ -3204,36 +3261,53 @@ function renderKanban(){
         <div class="col-bar" style="background:${col.color}"></div>
         <button class="col-eye" title="Ustunni yashirish" onclick="toggleStageHidden('${col.id}')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><path d="M17.94 17.94A10.94 10.94 0 0112 20C5 20 1 12 1 12a18.45 18.45 0 015.06-5.94M9.9 4.24A10.94 10.94 0 0112 4c7 0 11 8 11 8a18.5 18.5 0 01-2.16 3.19"/><line x1="1" y1="1" x2="23" y2="23"/></svg></button>
         <div class="col-title">${col.label}</div>
-        <div class="col-amt">${cd.length} · ${formatMoney(tot)}</div>
+        <div class="col-amt">${current.length} · ${formatMoney(tot)}</div>
       </div>
       <div class="col-body" data-col="${col.id}">
         <button class="btn-add" onclick="openModal(null,'${col.id}')">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Shartnoma yaratish
         </button>
-        ${cd.map(d=>{
-          const staleDays=![STAGE_WON,'yutqazilgan'].includes(d.col)?daysSinceUpdate(d):0;
+        ${current.map(kanbanCardHtml).join('')}
+        ${[...futureByMonth.keys()].sort().map(mk=>{
+          const list=futureByMonth.get(mk);
+          const sum=list.reduce((s,d)=>s+d.price,0);
+          const open=openFolds.has(`${col.id}|${mk}`);
+          const label=monthLabelFrom(mk);
           return `
-          <div class="kcard" draggable="true" data-id="${d.id}">
-            <div class="kcard-top">
-              <div><div class="dn">${esc(customerTitle(d))}</div><div class="ds">${isAdmin()?esc(dealOwnerLabel(d)):esc(dealTitle(d))}</div></div>
-              <span class="kcard-date">${d.date||''}</span>
+            <div class="mfold${open?' open':''}" onclick="toggleMonthFold('${col.id}','${mk}')" title="${esc(label)} — ${open?'yig\'ish':'ochish'}">
+              <svg class="mfold-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="13" height="13"><polyline points="9 18 15 12 9 6"/></svg>
+              <span class="mfold-name">${esc(label)}</span>
+              <span class="mfold-meta">${list.length} · ${formatMoney(sum)}</span>
             </div>
-            ${dealPayProgressHtml(d)}
-            <div class="kcard-foot">
-              ${d._kanbanTask.html}
-              <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
-                ${staleDays>=3?`<span title="${staleDays} kun harakatsiz" style="display:inline-flex;align-items:center;gap:3px;background:#FEE2E2;color:#DC2626;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px">⚠️ ${staleDays} kun</span>`:''}
-                ${d.appInstalled?'<span title="Ilova o\'rnatilgan" style="display:inline-flex;align-items:center;gap:3px;background:#DCFCE7;color:#16A34A;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px">📱 Ilova</span>':''}
-                ${d.price?`<span class="kcard-price">${formatMoney(d.price)}</span>`:''}
-              </div>
-            </div>
-          </div>`;
+            ${open?list.map(kanbanCardHtml).join(''):''}`;
         }).join('')}
       </div>
     </div>`;
   }).join('');
   bindDrag();
+}
+
+// Kanban kartochkasi — joriy oy ro'yxatida ham, oy yig'ma chizig'i ichida ham ishlatiladi.
+// d._kanbanTask renderKanban ichida biriktiriladi.
+function kanbanCardHtml(d){
+  const staleDays=![STAGE_WON,'yutqazilgan'].includes(d.col)?daysSinceUpdate(d):0;
+  return `
+  <div class="kcard" draggable="true" data-id="${d.id}">
+    <div class="kcard-top">
+      <div><div class="dn">${esc(customerTitle(d))}</div><div class="ds">${isAdmin()?esc(dealOwnerLabel(d)):esc(dealTitle(d))}</div></div>
+      <span class="kcard-date">${d.date||''}</span>
+    </div>
+    ${dealPayProgressHtml(d)}
+    <div class="kcard-foot">
+      ${d._kanbanTask.html}
+      <div style="display:flex;align-items:center;gap:6px;margin-left:auto">
+        ${staleDays>=3?`<span title="${staleDays} kun harakatsiz" style="display:inline-flex;align-items:center;gap:3px;background:#FEE2E2;color:#DC2626;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px">⚠️ ${staleDays} kun</span>`:''}
+        ${d.appInstalled?'<span title="Ilova o\'rnatilgan" style="display:inline-flex;align-items:center;gap:3px;background:#DCFCE7;color:#16A34A;font-size:10px;font-weight:700;padding:2px 7px;border-radius:999px">📱 Ilova</span>':''}
+        ${d.price?`<span class="kcard-price">${formatMoney(d.price)}</span>`:''}
+      </div>
+    </div>
+  </div>`;
 }
 
 async function prepareStageTransition(deal,target,priceInput){
