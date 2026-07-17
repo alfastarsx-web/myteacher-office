@@ -4488,9 +4488,20 @@ function paymentDeals(){
 // bir xil vaqt bilan takrorlangani uchun (lid+vaqt bo'yicha dedupe) ikki marta sanalmaydi.
 // DIQQAT: sotuv (Yutgan) endi AVTOMATIK full call deb sanalmaydi — menejer qo'ng'iroqni +/- bilan
 // o'zi belgilaydi. Aks holda soxta/xato yutgan bitim ham full call bo'lib bonusni oshirib yuborardi.
+// Bitta lidni ikki marta sanamaslik uchun kalit — FAQAT telefon (raqamlari) bo'yicha.
+// Telefonsiz lid har doim ALOHIDA hisoblanadi.
+// Ilgari telefon bo'lmasa kalit mijoz ismiga tushib ketardi va bir xil ismli IKKI HAR XIL
+// odam (Facebook/Instagram lidlarida telefon ko'pincha bo'lmaydi) bitta bo'lib sanalardi —
+// shuning uchun operatorlarning qual lidlari kam ko'rinardi (4 ta o'rniga 2 ta).
+// Bu dedupe eski "echo" modeli uchun kerak edi; single-row modelda echo yaratilmaydi, ammo
+// eski ma'lumotlarda qolgan bir xil telefonli nusxalar uchun himoya sifatida saqlanadi.
+function leadDedupeKey(d){
+  const phone = String(d.phone || '').replace(/\D/g,'');
+  return phone ? 'p:' + phone : 'id:' + d.id;
+}
 function fullCallEventsFrom(dealsList){
   const tk = iso => iso ? new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)) : '';
-  const idKey = d => String(d.phone || '').replace(/\D/g,'') || ('n:' + String(d.customerName || '').trim().toLowerCase()) || ('id:' + d.id);
+  const idKey = leadDedupeKey;
   const events = [];
   const seen = new Set();
   const add = (d, ts) => {
@@ -4514,7 +4525,7 @@ function managerFullCallEvents(user){
 // Bonus bilan bir xil dedupe: bir xil lid + bir xil vaqt = bitta qo'ng'iroq.
 function managerFullCallList(user, range){
   const mine = deals.filter(d => String(d.ownerId) === String(user.id));
-  const idKey = d => String(d.phone||'').replace(/\D/g,'') || ('n:'+String(d.customerName||'').trim().toLowerCase()) || ('id:'+d.id);
+  const idKey = leadDedupeKey;
   const seen = new Set();
   const rows = [];
   mine.forEach(d => {
@@ -4547,7 +4558,7 @@ function calculateManagerOverview(user){
 
   // Dublikat lid yozuvlari bonusni oshirib yubormasligi uchun — telefon (raqamlar) yoki mijoz
   // ismi bo'yicha bir xil lidni bir marta sanaymiz
-  const identityKey = d => String(d.phone || '').replace(/\D/g,'') || ('n:' + String(d.customerName || '').trim().toLowerCase()) || ('id:' + d.id);
+  const identityKey = leadDedupeKey;
   const dedupeByIdentity = list => {
     const seen = new Set();
     return list.filter(d => { const k = identityKey(d); if (seen.has(k)) return false; seen.add(k); return true; });
@@ -4600,24 +4611,24 @@ function calculateAdminOverview(){
   const todayProcessed = all.filter(isProcessedToday).length;
 
   // Install — operatorlar tomonidan bugun "ilova o'rnatildi" deb belgilangan lidlar
-  // (handoff echo nusxasi ham appInstalled bilan ko'chiriladi — telefon bo'yicha dedupe)
+  // (bir xil telefonli eski nusxalar ikki marta sanalmasin — telefon bo'yicha dedupe)
   const isAppToday = d => tashkentDateKey(d.appInstalledAt || d.createdAt) === todayKey;
   const appSeen = new Set();
   const todayApp = all.filter(d => {
     if (!d.appInstalled || !isAppToday(d)) return false;
-    const key = d.phone || d.customerName || `id:${d.id}`;
+    const key = leadDedupeKey(d);
     if (appSeen.has(key)) return false;
     appSeen.add(key);
     return true;
   }).length;
 
-  // Qual — operatorlar tomonidan bugun malakali qilingan lidlar (echo yozuvlar dedupe qilinadi)
+  // Qual — operatorlar tomonidan bugun malakali qilingan lidlar (telefon bo'yicha dedupe)
   const qualStages = new Set(['op_malakali','yangi','malakali','taklif','muzokaralar','sotib_olishga_rozi','qisman','yutgan']);
   const isQualToday = d => tashkentDateKey(d.qualAt || d.createdAt) === todayKey;
   const qualMatchesToday = all.filter(d => qualStages.has(d.col) && isQualToday(d));
   const qualSeen = new Set();
   const todayQual = qualMatchesToday.filter(d => {
-    const key = d.phone || d.customerName || `id:${d.id}`;
+    const key = leadDedupeKey(d);
     if (qualSeen.has(key)) return false;
     qualSeen.add(key);
     return true;
@@ -4670,15 +4681,13 @@ function calculateOperatorBonus(user){
   const todayProcessed = myDeals.filter(isProcessedToday).length;
 
   // Qual lidlar — op_malakali yoki undan yuqori bosqich.
-  // DIQQAT: operator lidni malakali qilganda, backend menejer voronkasiga bitta "echo" yozuv
-  // ham yaratadi (bir xil telefon/operatorId bilan) — shu sababli bir xil lid ikki marta
-  // (asl op_malakali yozuv + echo) hisoblanib ketmasligi uchun telefon bo'yicha dedupe qilamiz.
+  // Dedupe faqat telefon bo'yicha (leadDedupeKey) — telefonsiz lid alohida sanaladi.
   const qualStages = new Set(['op_malakali','yangi','malakali','taklif','muzokaralar','sotib_olishga_rozi','qisman','yutgan']);
   const qualDeals = myDeals.filter(d => qualStages.has(d.col));
   const dedupeQualLeads = list => {
     const seen = new Set();
     return list.filter(d => {
-      const key = d.phone || d.customerName || `id:${d.id}`;
+      const key = leadDedupeKey(d);
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -4686,8 +4695,7 @@ function calculateOperatorBonus(user){
   };
   const todayQual = dedupeQualLeads(qualDeals.filter(isQualToday)).length;
 
-  // Sotilgan lidlar (menejer yutgan) — handoff echo va asl nusxa ikkalasi ham sotilgan
-  // bo'lib qolsa, telefon bo'yicha dedupe bitta marta sanaydi
+  // Sotilgan lidlar (menejer yutgan) — bir xil telefonli nusxalar bir marta sanaladi
   const soldDeals = dedupeQualLeads(myDeals.filter(d => d.col === STAGE_WON));
   const todaySold = soldDeals.filter(isToday).length;
 
@@ -4867,22 +4875,21 @@ function calcOperatorAnalytics(user, range){
   const myDeals = deals.filter(d => d.operatorId===user.id);
   const newContacts = myDeals.filter(d => inRange(d.createdAt||d.date, range)).length;
   const qualStages = ['op_malakali','yangi','malakali','taklif','muzokaralar','sotib_olishga_rozi','qisman','yutgan'];
-  // Echo yozuvlar (operator malakali qilganda menejer voronkasiga yaratiladigan nusxa) bir xil
-  // telefon raqamiga ega bo'ladi — shu sababli dedupe qilmasak, bitta qualifikatsiya 2 marta hisoblanadi.
+  // Dedupe faqat telefon bo'yicha (leadDedupeKey) — telefonsiz lid alohida sanaladi.
   const qualMatches = myDeals.filter(d => qualStages.includes(d.col) && inRange(d.qualAt||d.createdAt, range));
   const qualSeenKeys = new Set();
   const qualMatchesDeduped = qualMatches.filter(d => {
-    const key = d.phone || d.customerName || `id:${d.id}`;
+    const key = leadDedupeKey(d);
     if (qualSeenKeys.has(key)) return false;
     qualSeenKeys.add(key);
     return true;
   });
   const qualDeals = qualMatchesDeduped.length;
-  // Handoff echo nusxalari ilova/sotuvda ham ikki marta sanalmasligi uchun telefon bo'yicha dedupe
+  // Bir xil telefonli eski nusxalar ilova/sotuvda ikki marta sanalmasin
   const dedupeByPhone = list => {
     const seen = new Set();
     return list.filter(d => {
-      const key = d.phone || d.customerName || `id:${d.id}`;
+      const key = leadDedupeKey(d);
       if (seen.has(key)) return false;
       seen.add(key);
       return true;
@@ -5481,7 +5488,7 @@ function renderOperatorPayments(){
   const oc=compSettings.operator;
   const tk=iso=>iso?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)):'';
   const monthKey=tk(new Date().toISOString()).slice(0,7);
-  // Joriy oyda malakali qilingan lidlar (telefon bo'yicha dedupe — echo yozuvlar ikki marta sanalmasin)
+  // Joriy oyda malakali qilingan lidlar (telefon bo'yicha dedupe)
   const seen=new Set();
   const monthQuals=op.qualDeals.filter(d=>{
     if(tk(d.qualAt||d.createdAt).slice(0,7)!==monthKey)return false;
