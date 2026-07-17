@@ -2859,15 +2859,10 @@ function renderKpiChips(cards){
 }
 // ── AMALLAR HISOBI ──
 // Menejerning bugungi harakatlari: izoh yozish + vazifa qo'yish + bosqich ko'chirish.
-// Izoh/vazifa serverdagi ma'lumotdan (sana bo'yicha), ko'chirishlar esa shu brauzerdagi
-// kunlik hisoblagichdan olinadi (tizimda bosqich o'zgarishlari tarixi saqlanmaydi).
-function stageMoveCounterKey(){
-  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date());
-  return `mtcrm_stage_moves_${currentManagerId}_${day}`;
-}
-function bumpStageMoveCounter(){
-  try{localStorage.setItem(stageMoveCounterKey(),String(Number(localStorage.getItem(stageMoveCounterKey())||0)+1));}catch{}
-}
+// Hammasi SERVERDAGI ma'lumotdan (sana bo'yicha) hisoblanadi — shu sababli qaysi kompyuterda
+// kirilganidan qat'i nazar bir xil chiqadi. Bosqich ko'chirishlari backenddagi `events`
+// (hodisalar jurnali, type='stage') dan olinadi. Ilgari ko'chirishlar shu brauzerning
+// localStorage hisoblagichidan olinardi — shuning uchun ikki kompyuterda har xil son chiqardi.
 function managerActionsToday(user){
   const todayKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date());
   const tk=iso=>iso?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)):'';
@@ -2877,8 +2872,13 @@ function managerActionsToday(user){
     (d.comments||[]).forEach(c=>{ if(c.from===user.name && tk(c.time)===todayKey)comments++; });
     (d.tasks||[]).forEach(t=>{ if(String(t.ownerId)===String(user.id) && tk(t.createdAt)===todayKey)tasks++; });
   });
+  // Bosqich ko'chirishlari — bugun shu menejer tomonidan qilingan 'stage' hodisalari
   let moves=0;
-  try{moves=Number(localStorage.getItem(stageMoveCounterKey())||0);}catch{}
+  deals.forEach(d=>{
+    (Array.isArray(d.events)?d.events:[]).forEach(e=>{
+      if(e && e.type==='stage' && String(e.by)===String(user.id) && tk(e.at)===todayKey)moves++;
+    });
+  });
   return {comments,tasks,moves,total:comments+tasks+moves};
 }
 function renderDealStats(){
@@ -3427,8 +3427,8 @@ async function moveDealToStage(deal,target,options={}){
       const data=await api(`/api/deals/${deal.id}`,{method:'PATCH',body});
       Object.assign(deal,dealFromApi(data.deal));
     }
-    // Amallar hisobi: menejerning bosqich ko'chirishlari kunlik hisoblagichga yoziladi
-    if(prev.col!==target && currentUser().role==='manager')bumpStageMoveCounter();
+    // Amallar hisobi: bosqich ko'chirishlari backend `events` jurnaliga yoziladi (logEvent),
+    // hisoblash managerActionsToday da shundan olinadi — brauzerga bog'liq emas.
     renderFooterTicker();
     if(target===STAGE_WON){
       showSalePopup(customerTitle(deal),formatMoney(deal.price),managerInitials(managerById(deal.ownerId)) || 'MT');
