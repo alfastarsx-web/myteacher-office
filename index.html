@@ -231,6 +231,24 @@ table.crm-t{width:100%;border-collapse:collapse}
 .mfold.open .mfold-chev{transform:rotate(90deg)}
 .mfold-name{font-size:12px;font-weight:800;color:var(--td);white-space:nowrap}
 .mfold-meta{margin-left:auto;font-size:11px;font-weight:700;color:var(--mu);white-space:nowrap}
+/* Operator bonus hisoboti jadvali */
+.rep-table{width:100%;border-collapse:collapse;font-size:13px}
+.rep-table th{text-align:left;font-size:11px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.3px;padding:8px 10px;border-bottom:1px solid var(--br)}
+.rep-table td{padding:9px 10px;border-bottom:1px solid var(--brl);color:var(--td)}
+.rep-table tr:last-child td{border-bottom:none}
+.rep-day-row td{background:var(--bg);font-weight:800;color:var(--td);font-size:12px}
+.rep-day-row .rep-day-sum{text-align:right;color:#16A34A}
+.rep-badge{display:inline-block;font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;color:#fff}
+.rep-plus{color:#16A34A;font-weight:800;text-align:right;white-space:nowrap}
+.rep-minus{color:#DC2626;font-weight:800;text-align:right;white-space:nowrap}
+.rep-time{color:var(--mu);font-size:12px;white-space:nowrap}
+.rep-empty{color:var(--mu);font-size:13px;text-align:center;padding:22px}
+.rep-fin{display:flex;justify-content:space-between;align-items:center;padding:11px 12px;border-radius:10px;margin-bottom:8px;font-size:13px}
+.rep-fin-in{background:linear-gradient(135deg,#F0FDF4,#ECFDF5)}
+.rep-fin-out{background:linear-gradient(135deg,#FEF2F2,#FEE2E2)}
+.rep-fin-net{background:linear-gradient(135deg,#EFF6FF,#DBEAFE);font-weight:800}
+.rep-fin-label{font-weight:700;color:var(--td)}
+.rep-scroll{overflow-x:auto}
 .col-body{flex:1;overflow-y:auto;padding:12px;display:flex;flex-direction:column;gap:10px;min-height:60px;transition:background .15s,outline .15s}
 .col-body.over{background:rgba(37,99,235,.05);outline:2px dashed var(--blue);outline-offset:-5px;border-radius:8px}
 .kcard{background:var(--wh);border:1px solid var(--br);border-radius:8px;padding:13px;cursor:grab;transition:box-shadow .15s,border-color .15s,opacity .2s,transform .15s;user-select:none;box-shadow:var(--shadow-sm)}
@@ -4952,6 +4970,46 @@ function calcOperatorAnalytics(user, range){
   return {newContacts, qualDeals, appInstalled, soldDeals:soldDeals.length, bonusSold, lostDeals, convRate, qualBonus, saleBonus, appBonus, totalBonus:qualBonus+saleBonus+appBonus};
 }
 
+// Operator qual hisoboti (davr bo'yicha): kunlarga guruhlangan malakali lidlar va har biriga
+// yozilgan bonus. Kunlik bosqichli stavka — o'sha kuni limitdan oshsa hammasi yuqori stavkada
+// (tierBonus bilan bir xil mantiq). Dedupe telefon bo'yicha (leadDedupeKey).
+function operatorQualReport(user, range){
+  const myDeals=deals.filter(d=>d.operatorId===user.id);
+  const qualStages=new Set(['op_malakali','yangi','malakali','taklif','muzokaralar','sotib_olishga_rozi','qisman','yutgan']);
+  const tk=iso=>iso?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)):'';
+  const oc=compSettings.operator;
+  const seen=new Set();
+  const deduped=myDeals.filter(d=>qualStages.has(d.col) && inRange(d.qualAt||d.createdAt, range))
+    .filter(d=>{const k=leadDedupeKey(d);if(seen.has(k))return false;seen.add(k);return true;});
+  const byDay={};
+  deduped.forEach(d=>{const day=tk(d.qualAt||d.createdAt);(byDay[day] ||= []).push(d);});
+  const days=Object.keys(byDay).sort().reverse().map(day=>{
+    const list=byDay[day].sort((a,b)=>new Date(b.qualAt||b.createdAt)-new Date(a.qualAt||a.createdAt));
+    const rate=list.length<=Number(oc.qual.limit||0)?Number(oc.qual.rate||0):Number(oc.qual.rateAbove||0);
+    return {day, rate, count:list.length, subtotal:list.length*rate,
+      leads:list.map(d=>({name:customerTitle(d), ts:d.qualAt||d.createdAt, col:d.col, bonus:rate}))};
+  });
+  return {days, total:days.reduce((s,x)=>s+x.subtotal,0), count:deduped.length};
+}
+// Operator ilova (install) bonuslari hisoboti (davr bo'yicha)
+function operatorInstallReport(user, range){
+  const myDeals=deals.filter(d=>d.operatorId===user.id);
+  const rate=Number(compSettings.operator.app.rate||0);
+  const seen=new Set();
+  const rows=myDeals.filter(d=>d.appInstalled && inRange(d.appInstalledAt||d.createdAt, range))
+    .filter(d=>{const k=leadDedupeKey(d);if(seen.has(k))return false;seen.add(k);return true;})
+    .map(d=>({name:customerTitle(d), ts:d.appInstalledAt||d.createdAt, bonus:rate}))
+    .sort((a,b)=>new Date(b.ts)-new Date(a.ts));
+  return {rows, total:rows.length*rate, count:rows.length};
+}
+// O'zbekcha qisqa sana (kunlik guruh sarlavhasi uchun): "2026-07-22" -> "22 iyul"
+function shortDateUz(dayKey){
+  const mn=['yanvar','fevral','mart','aprel','may','iyun','iyul','avgust','sentabr','oktabr','noyabr','dekabr'];
+  const [y,m,d]=String(dayKey).split('-').map(Number);
+  if(!m||!d)return dayKey;
+  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date());
+  return dayKey===today?'Bugun':`${d} ${mn[m-1]}`;
+}
 function recentDealActions(user, limit=8){
   const myDeals = deals.filter(d => String(d.ownerId)===String(user.id) || d.operatorId===user.id);
   const actions = [];
@@ -5338,6 +5396,13 @@ function renderOperatorAnalytics(wrap, user, range, periodLabel){
   const op = calcOperatorAnalytics(user, range);
   const onlineH = Math.round(userOnlineSeconds(user)/3600*10)/10;
   const recent = recentDealActions(user);
+  const qualRep = operatorQualReport(user, range);
+  const installRep = operatorInstallReport(user, range);
+  // To'lovlar/tuzatishlar (kirim +/chiqim −). createdAt bo'lsa davr bo'yicha, bo'lmasa hammasi.
+  const myAdj = paymentAdjustments.filter(x=>(!x.managerId || String(x.managerId)===String(user.id)) && (x.createdAt?inRange(x.createdAt,range):true));
+  const adjTotal = myAdj.reduce((s,a)=>s+Number(a.amount||0),0);
+  const netBalance = op.totalBonus + adjTotal;
+  const OP_STATUS={op_malakali:['Malakali','#10B981'],yangi:['Menejerda','#2563EB'],malakali:['Menejerda','#2563EB'],taklif:['Taklif','#F59E0B'],muzokaralar:['Muzokara','#8B5CF6'],sotib_olishga_rozi:['Rozi','#0EA5E9'],qisman:["Qisman to'lov",'#F59E0B'],yutgan:['Sotildi ✓','#16A34A']};
 
   wrap.innerHTML = `
     <div class="analytics-hero">
@@ -5434,6 +5499,58 @@ function renderOperatorAnalytics(wrap, user, range, periodLabel){
               '<div style="padding:10px;border-radius:10px;background:#FEE2E2;color:#991B1B;font-size:12px;font-weight:700">⚠️ Konversiya past — sifatni oshiring</div>'}
           </div>
         </div>
+      </div>
+    </div>
+
+    <div class="an-panel" style="margin-top:18px">
+      <div class="an-panel-head">
+        <div class="an-panel-title">🏅 Qual lidlar bonusi</div>
+        <span class="an-badge">${qualRep.count} ta · ${formatMoney(qualRep.total)} · ${periodLabel}</span>
+      </div>
+      <div class="an-panel-body rep-scroll">
+        ${qualRep.days.length?`<table class="rep-table">
+          <thead><tr><th>Mijoz</th><th>Holat</th><th>Vaqt</th><th style="text-align:right">Bonus</th></tr></thead>
+          <tbody>
+            ${qualRep.days.map(day=>`
+              <tr class="rep-day-row"><td colspan="3">${shortDateUz(day.day)} · ${day.count} ta × ${formatMoney(day.rate)}</td><td class="rep-day-sum">+${formatMoney(day.subtotal)}</td></tr>
+              ${day.leads.map(l=>{const st=OP_STATUS[l.col]||['—','#6B7280'];return `<tr>
+                <td>${esc(l.name)}</td>
+                <td><span class="rep-badge" style="background:${st[1]}">${st[0]}</span></td>
+                <td class="rep-time">${esc(formatCommentTime(l.ts))}</td>
+                <td class="rep-plus">+${formatMoney(l.bonus)}</td>
+              </tr>`}).join('')}
+            `).join('')}
+          </tbody>
+        </table>`:'<div class="rep-empty">Bu davrda malakali lid yo\'q</div>'}
+      </div>
+    </div>
+
+    <div class="an-panel" style="margin-top:14px">
+      <div class="an-panel-head">
+        <div class="an-panel-title">📱 Ilova bonuslari</div>
+        <span class="an-badge">${installRep.count} ta · ${formatMoney(installRep.total)} · ${periodLabel}</span>
+      </div>
+      <div class="an-panel-body rep-scroll">
+        ${installRep.rows.length?`<table class="rep-table">
+          <thead><tr><th>Mijoz</th><th>Vaqt</th><th style="text-align:right">Bonus</th></tr></thead>
+          <tbody>${installRep.rows.map(r=>`<tr><td>${esc(r.name)}</td><td class="rep-time">${esc(formatCommentTime(r.ts))}</td><td class="rep-plus">+${formatMoney(r.bonus)}</td></tr>`).join('')}</tbody>
+        </table>`:'<div class="rep-empty">Bu davrda ilova o\'rnatilmagan</div>'}
+      </div>
+    </div>
+
+    <div class="an-panel" style="margin-top:14px">
+      <div class="an-panel-head">
+        <div class="an-panel-title">💰 Moliyaviy hisobot</div>
+        <span class="an-badge">${periodLabel}</span>
+      </div>
+      <div class="an-panel-body">
+        <div class="rep-fin rep-fin-in"><span class="rep-fin-label">🏅 Qual bonusi (${qualRep.count} ta)</span><span class="rep-plus">+${formatMoney(op.qualBonus)}</span></div>
+        <div class="rep-fin rep-fin-in"><span class="rep-fin-label">📱 Ilova bonusi (${installRep.count} ta)</span><span class="rep-plus">+${formatMoney(op.appBonus)}</span></div>
+        <div class="rep-fin rep-fin-in"><span class="rep-fin-label">🎯 Sotuv bonusi (${op.bonusSold} ta)</span><span class="rep-plus">+${formatMoney(op.saleBonus)}</span></div>
+        <div class="rep-fin rep-fin-in" style="border:1px solid #86EFAC"><span class="rep-fin-label">Jami ishlab topilgan (${periodLabel})</span><span class="rep-plus">+${formatMoney(op.totalBonus)}</span></div>
+        ${myAdj.length?`<div style="margin:14px 0 6px;font-size:12px;font-weight:700;color:var(--mu)">To'lovlar va tuzatishlar (chiqim − / kirim +)</div>
+          ${myAdj.map(a=>{const neg=Number(a.amount)<0;return `<div class="rep-fin ${neg?'rep-fin-out':'rep-fin-in'}"><span class="rep-fin-label">${esc(a.reason||'Tuzatish')}</span><span class="${neg?'rep-minus':'rep-plus'}">${neg?'−':'+'}${formatMoney(Math.abs(Number(a.amount||0)))}</span></div>`}).join('')}`:''}
+        <div class="rep-fin rep-fin-net"><span class="rep-fin-label">Sof qoldiq</span><span class="${netBalance<0?'rep-minus':'rep-plus'}">${netBalance<0?'−':''}${formatMoney(Math.abs(netBalance))}</span></div>
       </div>
     </div>
 
