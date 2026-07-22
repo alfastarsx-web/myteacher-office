@@ -263,7 +263,10 @@ export class DealsService {
       if (nextAppInstalled && !deal.appInstalled) deal.appInstalledAt = new Date().toISOString();
       deal.appInstalled = nextAppInstalled;
     }
-    if (body.qualAt !== undefined) deal.qualAt = body.qualAt || null;
+    // qualAt operator bonusining sanasi — faqat qiymat berilganda o'rnatamiz, hech qachon
+    // null bilan O'CHIRMAYMIZ. Aks holda malakali lidni oddiy tahrirlash (masalan telefon)
+    // paytida yuborilgan qualAt:null bonusni yo'qotardi.
+    if (body.qualAt) deal.qualAt = String(body.qualAt);
     // Full call — har bir qo'ng'iroq alohida hodisa. addFullCall bitta qo'ng'iroq qo'shadi,
     // removeLastFullCall oxirgisini olib tashlaydi. Eski toggle (body.fullCall) ham ishlaydi.
     if (body.addFullCall || body.removeLastFullCall || body.fullCall !== undefined) {

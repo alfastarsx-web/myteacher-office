@@ -2257,7 +2257,12 @@ function clearDealExtra(id){
 
 function dealToApiPayload(d){
   const phones=dealPhones(d);
-  const payload={customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,stageId:d.col,price:d.price,note:d.note,adSource:d.adSource,registeredAt:d.registeredAt,age:d.age,learningGoal:d.learningGoal,leadChannel:d.leadChannel,comments:d.comments,ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:d.appInstalled||false,qualAt:d.qualAt||null,sentToManager:d._sentToManager||d.sentToManager||false};
+  // DIQQAT: qualAt va sentToManager bu yerda YUBORILMAYDI. Ular malakali qilish (handoff)
+  // holatini va operator bonusini belgilaydi; modal orqali oddiy tahrirlashda (masalan telefon
+  // o'zgartirish) ularni null/false qilib yuborsak, backend mavjud qualAt/sentToManager ni
+  // o'chirib, bonusni yo'qotardi va lidni menejerlardan yashirardi. Bu maydonlarni faqat
+  // bosqich o'zgarishi (backend willHandoff) yoki create (op_malakali) boshqaradi.
+  const payload={customerName:d.customerName,dealName:d.dealName,phone:phones[0] || '',phones,stageId:d.col,price:d.price,note:d.note,adSource:d.adSource,registeredAt:d.registeredAt,age:d.age,learningGoal:d.learningGoal,leadChannel:d.leadChannel,comments:d.comments,ownerId:d.ownerId ?? null,operatorId:d.operatorId ?? null,appInstalled:d.appInstalled||false};
   if(d.closePassword)payload.closePassword=d.closePassword;
   if(d.courseDuration)payload.courseDuration=d.courseDuration;
   if(d.paymentType)payload.paymentType=d.paymentType;
