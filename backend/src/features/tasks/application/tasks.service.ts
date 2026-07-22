@@ -4,13 +4,24 @@ import { Repository } from 'typeorm';
 import { UserRole } from '../../users/domain/user-role.enum';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 import { TaskEntity } from '../infrastructure/task.entity';
+import { DealEntity } from '../../deals/infrastructure/deal.entity';
 import { NotificationsGateway } from '../../notifications/notifications.gateway';
 import { UsersService } from '../../users/application/users.service';
+
+// Operator lidini menejerga topshirganda bosqichni menejer voronkasiga o'tkazish xaritasi
+// (DealsService.mapOperatorStageToManager bilan bir xil — circular importdan qochish uchun takror).
+const OP_STAGE_TO_MANAGER: Record<string, string> = {
+  op_malakali: 'malakali',
+  op_yutqazilgan: 'yutqazilgan',
+  op_yangi: 'yangi',
+  op_qayta: 'yangi'
+};
 
 @Injectable()
 export class TasksService {
   constructor(
     @InjectRepository(TaskEntity) private readonly tasks: Repository<TaskEntity>,
+    @InjectRepository(DealEntity) private readonly deals: Repository<DealEntity>,
     private readonly notifications: NotificationsGateway,
     private readonly users: UsersService
   ) {}
@@ -26,9 +37,28 @@ export class TasksService {
     await this.users.markActiveOnAction(user.id);
     const title = String(body.title || '').trim();
     if (!title) throw new BadRequestException('Vazifa nomi kerak');
-    const ownerId = this.canManageAll(user) ? Number(body.ownerId || user.id) : user.id;
+    // Vazifa egasini aniqlaymiz:
+    //  - admin / all ruxsatli: istalgan menejer (body.ownerId), yo'q bo'lsa o'zi
+    //  - operator: TANLANGAN menejer (body.ownerId) — operator vazifani doim menejerga qo'yadi,
+    //    o'ziga emas. Aks holda menejer vazifani ham, lidni ham ko'rmasdi.
+    //  - oddiy menejer: faqat o'zi
+    let ownerId: number;
+    if (this.canManageAll(user)) {
+      ownerId = Number(body.ownerId || user.id);
+    } else if (user.role === UserRole.Operator) {
+      ownerId = Number(body.ownerId || 0);
+      if (!ownerId || ownerId === user.id) throw new BadRequestException('Vazifa uchun menejer tanlang');
+    } else {
+      ownerId = user.id;
+    }
+    const dealId = body.dealId ? Number(body.dealId) : null;
+    // Operator lidga menejer uchun vazifa qo'ysa — lid o'sha menejerga biriktiriladi (handoff):
+    // menejerning "Malakali" ustuniga tushadi va vazifa unga tegishli bo'ladi.
+    if (user.role === UserRole.Operator && dealId) {
+      await this.handoffDealToManager(dealId, ownerId, user.id);
+    }
     const task = await this.tasks.save(this.tasks.create({
-      dealId: body.dealId ? Number(body.dealId) : null,
+      dealId,
       ownerId,
       title,
       due: String(body.due || 'Bugun'),
@@ -63,6 +93,22 @@ export class TasksService {
 
   async hasOpenTaskForDeal(dealId: number) {
     return (await this.tasks.count({ where: { dealId, done: false } })) > 0;
+  }
+
+  // Operator lidga menejer uchun vazifa qo'yganda lidni o'sha menejerga topshiradi:
+  // egasini o'rnatadi, operator voronkasi bosqichini menejer voronkasiga o'tkazadi va
+  // handoff bayrog'ini (sentToManager) qo'yadi. Shu tariqa lid menejerning ustuniga tushadi.
+  async handoffDealToManager(dealId: number, managerId: number, byUserId: number) {
+    const deal = await this.deals.findOne({ where: { id: dealId } });
+    if (!deal || deal.ownerId === managerId) return;
+    deal.ownerId = managerId;
+    if (OP_STAGE_TO_MANAGER[deal.stageId]) deal.stageId = OP_STAGE_TO_MANAGER[deal.stageId];
+    deal.sentToManager = true;
+    if (!deal.qualAt) deal.qualAt = new Date().toISOString();
+    if (!deal.operatorId) deal.operatorId = byUserId;
+    if (!Array.isArray(deal.events)) deal.events = [];
+    deal.events = [...deal.events, { type: 'assigned', at: new Date().toISOString(), by: byUserId, to: managerId }];
+    await this.deals.save(deal);
   }
 
   // Dublikat lidlar birlashtirilganda vazifalarni saqlanib qolgan lidga ko'chiradi
