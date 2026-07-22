@@ -28,6 +28,11 @@ export class DealsController {
     return this.deals.fixMisplacedOperatorLeads(req.user);
   }
 
+  @Post('backfill-qualat')
+  async backfillMissingQualAt(@Req() req: AuthedRequest) {
+    return this.deals.backfillMissingQualAt(req.user);
+  }
+
   @Patch('bulk/owner')
   async bulkAssignOwner(@Body() body: any, @Req() req: AuthedRequest) {
     return { deals: await this.deals.bulkAssignOwner(body, req.user) };

@@ -564,6 +564,33 @@ export class DealsService {
     return { fixed: rows.length + stuck.length, ids: [...rows, ...stuck].map(row => row.id) };
   }
 
+  // Bir martalik tuzatish: qual bosqichda (op_malakali yoki menejer voronkasi) turgan, lekin
+  // qualAt'i yo'q lidlarga sanani tiklaydi — eski modal bug'i qualAt'ni o'chirib yuborgan
+  // bo'lishi mumkin, natijada operator bonusi noto'g'ri kunga tushardi. Sana manbasi: tarixdagi
+  // 'qualified' hodisasi, bo'lmasa op_malakali'ga o'tish hodisasi, bo'lmasa lid yaratilgan sana.
+  async backfillMissingQualAt(user: UserEntity) {
+    if (user.role !== UserRole.Admin) throw new ForbiddenException('Faqat Admin bu tuzatishni ishga tushira oladi');
+    const QUAL_STAGES = ['op_malakali', 'yangi', 'malakali', 'taklif', 'muzokaralar', 'sotib_olishga_rozi', 'qisman', 'yutgan'];
+    const rows = await this.deals.createQueryBuilder('deal')
+      .where('deal.qualAt IS NULL')
+      .andWhere('deal.stageId IN (:...s)', { s: QUAL_STAGES })
+      .getMany();
+    const pickDate = (deal: DealEntity): string => {
+      const events = Array.isArray(deal.events) ? deal.events : [];
+      const qualified = events.find(e => e && e.type === 'qualified' && e.at);
+      if (qualified) return String(qualified.at);
+      const toQual = events
+        .filter(e => e && e.type === 'stage' && e.to === OPERATOR_QUAL_STAGE_ID && e.at)
+        .map(e => String(e.at))
+        .sort();
+      if (toQual.length) return toQual[0];
+      return new Date(deal.createdAt || Date.now()).toISOString();
+    };
+    rows.forEach(deal => { deal.qualAt = pickDate(deal); });
+    if (rows.length) await this.deals.save(rows);
+    return { fixed: rows.length, ids: rows.map(r => r.id) };
+  }
+
   async delete(id: number, user: UserEntity) {
     this.assertCrmAccess(user);
     if (user.role !== UserRole.Admin) throw new ForbiddenException('Faqat Admin shartnomani o‘chira oladi');
