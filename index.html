@@ -3424,8 +3424,17 @@ async function moveDealToStage(deal,target,options={}){
       if(prepared.courseDuration)body.courseDuration=prepared.courseDuration;
       if(prepared.paymentType)body.paymentType=prepared.paymentType;
       saveDealExtra(deal.id, {col: target});
+      const prevId=deal.id;
       const data=await api(`/api/deals/${deal.id}`,{method:'PATCH',body});
       Object.assign(deal,dealFromApi(data.deal));
+      // Backend bir xil telefonli dublikatlarni birlashtirgan bo'lsa (mergeDuplicateManagerLeads),
+      // javob boshqa (keeper) yozuv bo'ladi va id o'zgaradi. Vazifa/izohlar keeper yozuvida, shu
+      // sababli to'liq sync qilamiz — aks holda workspace eski id ni izlab lidni, vazifa va
+      // izohlarni "yo'qotgandek" ko'rsatardi.
+      if(String(data.deal.id)!==String(prevId)){
+        if(String(workspaceDealId)===String(prevId)) workspaceDealId=data.deal.id;
+        await loadApiData().catch(()=>{});
+      }
     }
     // Amallar hisobi: bosqich ko'chirishlari backend `events` jurnaliga yoziladi (logEvent),
     // hisoblash managerActionsToday da shundan olinadi — brauzerga bog'liq emas.
@@ -3984,8 +3993,12 @@ function prepareWorkspaceTaskForm(){
   if(date && !date.value)date.value=new Date().toISOString().slice(0,10);
   if(time && !time.value)time.value='18:00';
   if(owner){
-    const selected=String(currentWorkspaceDeal()?.ownerId || currentManagerId || '');
-    owner.innerHTML=managers.map(m=>`<option value="${m.id}" ${String(m.id)===selected?'selected':''}>${esc(m.name)}</option>`).join('');
+    // Operator vazifani doim MENEJERGA qo'yadi (lid o'sha menejerga o'tadi) — ro'yxatda faqat
+    // menejerlar. Admin/menejer uchun avvalgidek (lid egasi yoki o'zi default).
+    const op=isOperator();
+    const pickable=op?managers.filter(m=>m.role==='manager'):managers;
+    const selected=String(currentWorkspaceDeal()?.ownerId || (op?(pickable[0]?.id||''):currentManagerId) || '');
+    owner.innerHTML=pickable.map(m=>`<option value="${m.id}" ${String(m.id)===selected?'selected':''}>${esc(m.name)}</option>`).join('');
   }
 }
 function formatTaskDue(date,time){
@@ -4027,6 +4040,17 @@ async function sendWorkspaceItem(){
         const data=await api('/api/tasks',{method:'POST',body:{dealId:d.id,title:text,due,ownerId}});
         Object.assign(localTask,taskFromApi(data.task));
       }catch(err){showToast(err.message);return;}
+    }
+    // Operator vazifani menejerga qo'ysa — backend lidni o'sha menejerga topshiradi (handoff).
+    // Lid endi operator ro'yxatidan chiqadi, shuning uchun to'liq sync qilamiz.
+    const opHandoff=isOperator() && String(ownerId)!==String(currentManagerId);
+    if(opHandoff && apiToken){
+      document.getElementById('dwComposerText').value='';
+      showToast(`Vazifa ${owner}ga topshirildi — lid unga o‘tkazildi ✓`);
+      await loadApiData().catch(()=>{});
+      closeDealWorkspace();
+      curView==='list'?renderList():renderKanban();
+      return;
     }
     showToast('Vazifa qo‘shildi ✓');
   }else if(composerMode==='comment'){
