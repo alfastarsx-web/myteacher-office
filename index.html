@@ -3641,7 +3641,15 @@ function openModal(id=null,defCol=null){
   document.getElementById('mLearningGoal').value=d?d.learningGoal || '':'';
   document.getElementById('mNt').value=d?d.note:'';
   const sel=document.getElementById('mS');
-  sel.innerHTML=modalStages().map(c=>`<option value="${c.id}">${esc(c.label).toUpperCase()}</option>`).join('');
+  let stageOpts=modalStages().slice();
+  // Lidning joriy bosqichi ro'yxatda bo'lmasa (masalan operator menejerga topshirilgan lidni
+  // ochsa), uni ham qo'shamiz — aks holda select birinchi variantga "tushib" ketib, saqlashda
+  // lidning bosqichini buzardi (o'zidan o'zi op_yangi ga tushib qolardi).
+  if(d && d.col && !stageOpts.some(c=>c.id===d.col)){
+    const cur=[...COLS,...OPERATOR_COLS].find(c=>c.id===d.col);
+    if(cur) stageOpts=[cur,...stageOpts];
+  }
+  sel.innerHTML=stageOpts.map(c=>`<option value="${c.id}">${esc(c.label).toUpperCase()}</option>`).join('');
   sel.value=d?d.col:defCol;
   updS(sel);
   document.getElementById('mClosePassword').value='';
@@ -3711,7 +3719,9 @@ async function saveDeal(){
   document.getElementById('mN').classList.remove('err');
   const ownerSelect=document.getElementById('mOwner');
   const existing=editId?deals.find(x=>x.id===editId):null;
-  const ownerId=isAdmin()?(ownerSelect?.value || null):isOperator()?null:currentManagerId;
+  // Admin va operator ikkalasi ham owner dropdowndan menejer tanlashi mumkin (operator uchun bu
+  // lidni o'sha menejerga topshirish — handoff). Menejer roli uchun har doim o'zi egasi bo'ladi.
+  const ownerId=isOperator()?(ownerSelect?.value || null):isAdmin()?(ownerSelect?.value || null):currentManagerId;
   const operatorId=isOperator()?currentManagerId:(existing?.operatorId||null);
   const prepared=await prepareStageTransition(existing || {price,col:null},col,priceInput);
   if(!prepared)return;
