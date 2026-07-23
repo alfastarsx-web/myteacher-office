@@ -228,9 +228,28 @@ export class DealsService {
       deal.phones = phones;
     }
     if (body.price !== undefined) deal.price = this.parsePrice(body.price);
-    if (body.ownerId !== undefined && user.role === UserRole.Admin) {
+    // Egasini o'zgartirish: admin istalgan menejerga; operator esa o'z lidini MENEJERGA
+    // topshira oladi (modal orqali handoff — faqat menejerga, egasizga qaytara olmaydi).
+    let ownerAssignAllowed = false;
+    if (body.ownerId !== undefined) {
+      if (user.role === UserRole.Admin) {
+        ownerAssignAllowed = true;
+      } else if (user.role === UserRole.Operator) {
+        const targetId = this.parseOwnerId(body.ownerId);
+        if (targetId && targetId !== deal.ownerId) {
+          const target = await this.users.findById(targetId);
+          ownerAssignAllowed = target?.role === UserRole.Manager;
+        }
+      }
+    }
+    if (ownerAssignAllowed) {
       const prevOwnerId = deal.ownerId;
       deal.ownerId = this.parseOwnerId(body.ownerId);
+      // Operator handoffida lid menejerlarga ochiq bo'lsin va qual sanasi belgilansin
+      if (user.role === UserRole.Operator && deal.ownerId) {
+        deal.sentToManager = true;
+        if (!deal.qualAt) deal.qualAt = new Date().toISOString();
+      }
       if (deal.ownerId && deal.ownerId !== prevOwnerId) {
         this.logEvent(deal, 'assigned', user.id, { to: deal.ownerId });
         // Lid vazifalari ham yangi menejerga ko'chsin
