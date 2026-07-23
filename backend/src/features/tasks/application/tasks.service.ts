@@ -38,24 +38,29 @@ export class TasksService {
     const title = String(body.title || '').trim();
     if (!title) throw new BadRequestException('Vazifa nomi kerak');
     // Vazifa egasini aniqlaymiz:
-    //  - admin / all ruxsatli: istalgan menejer (body.ownerId), yo'q bo'lsa o'zi
-    //  - operator: TANLANGAN menejer (body.ownerId) — operator vazifani doim menejerga qo'yadi,
-    //    o'ziga emas. Aks holda menejer vazifani ham, lidni ham ko'rmasdi.
+    //  - admin / all ruxsatli: istalgan foydalanuvchi (body.ownerId), yo'q bo'lsa o'zi
+    //  - operator: o'ziga, boshqa operatorga yoki menejerga (body.ownerId), yo'q bo'lsa o'zi
     //  - oddiy menejer: faqat o'zi
     let ownerId: number;
     if (this.canManageAll(user)) {
       ownerId = Number(body.ownerId || user.id);
     } else if (user.role === UserRole.Operator) {
-      ownerId = Number(body.ownerId || 0);
-      if (!ownerId || ownerId === user.id) throw new BadRequestException('Vazifa uchun menejer tanlang');
+      ownerId = Number(body.ownerId || user.id);
     } else {
       ownerId = user.id;
     }
     const dealId = body.dealId ? Number(body.dealId) : null;
-    // Operator lidga menejer uchun vazifa qo'ysa — lid o'sha menejerga biriktiriladi (handoff):
-    // menejerning "Malakali" ustuniga tushadi va vazifa unga tegishli bo'ladi.
-    if (user.role === UserRole.Operator && dealId) {
-      await this.handoffDealToManager(dealId, ownerId, user.id);
+    // Operator lidga BOSHQA birov uchun vazifa qo'ysa, lid o'sha odamga o'tadi:
+    //  - menejer  → menejer voronkasiga handoff (lid menejerники bo'ladi)
+    //  - boshqa operator → lid o'sha operatorga o'tadi (operator voronkasida qoladi)
+    //  - o'ziga (self) → hech narsa o'tmaydi, oddiy eslatma vazifasi
+    if (user.role === UserRole.Operator && dealId && ownerId && ownerId !== user.id) {
+      const target = await this.users.findById(ownerId);
+      if (target?.role === UserRole.Manager) {
+        await this.handoffDealToManager(dealId, ownerId, user.id);
+      } else if (target?.role === UserRole.Operator) {
+        await this.reassignDealToOperator(dealId, ownerId, user.id);
+      }
     }
     const task = await this.tasks.save(this.tasks.create({
       dealId,
@@ -108,6 +113,18 @@ export class TasksService {
     if (!deal.operatorId) deal.operatorId = byUserId;
     if (!Array.isArray(deal.events)) deal.events = [];
     deal.events = [...deal.events, { type: 'assigned', at: new Date().toISOString(), by: byUserId, to: managerId }];
+    await this.deals.save(deal);
+  }
+
+  // Operator lidga boshqa operator uchun vazifa qo'yganda lidni o'sha operatorga topshiradi:
+  // operatorId yangi operatorga o'zgaradi (lid operator voronkasida qoladi, menejerga o'tmaydi).
+  // Shu tariqa yangi operator lidni ko'radi va ishlaydi.
+  async reassignDealToOperator(dealId: number, operatorId: number, byUserId: number) {
+    const deal = await this.deals.findOne({ where: { id: dealId } });
+    if (!deal || deal.operatorId === operatorId) return;
+    deal.operatorId = operatorId;
+    if (!Array.isArray(deal.events)) deal.events = [];
+    deal.events = [...deal.events, { type: 'assigned', at: new Date().toISOString(), by: byUserId, to: operatorId }];
     await this.deals.save(deal);
   }
 
