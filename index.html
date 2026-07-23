@@ -4016,12 +4016,15 @@ function prepareWorkspaceTaskForm(){
   if(date && !date.value)date.value=new Date().toISOString().slice(0,10);
   if(time && !time.value)time.value='18:00';
   if(owner){
-    // Operator vazifani doim MENEJERGA qo'yadi (lid o'sha menejerga o'tadi) — ro'yxatda faqat
-    // menejerlar. Admin/menejer uchun avvalgidek (lid egasi yoki o'zi default).
+    // Operator vazifani menejerga (lid handoff), boshqa operatorga (lid o'sha operatorga o'tadi)
+    // yoki o'ziga (oddiy eslatma, lid o'zida qoladi) qo'ya oladi. Admin/menejer uchun avvalgidek.
     const op=isOperator();
-    const pickable=op?managers.filter(m=>m.role==='manager'):managers;
-    const selected=String(currentWorkspaceDeal()?.ownerId || (op?(pickable[0]?.id||''):currentManagerId) || '');
-    owner.innerHTML=pickable.map(m=>`<option value="${m.id}" ${String(m.id)===selected?'selected':''}>${esc(m.name)}</option>`).join('');
+    const pickable=op?managers.filter(m=>m.role==='manager'||m.role==='operator'):managers;
+    const selected=String(currentWorkspaceDeal()?.ownerId || currentManagerId || '');
+    owner.innerHTML=pickable.map(m=>{
+      const tag=op?(String(m.id)===String(currentManagerId)?' (men)':m.role==='manager'?' (menejer)':' (operator)'):'';
+      return `<option value="${m.id}" ${String(m.id)===selected?'selected':''}>${esc(m.name)}${tag}</option>`;
+    }).join('');
   }
 }
 function formatTaskDue(date,time){
@@ -4064,10 +4067,11 @@ async function sendWorkspaceItem(){
         Object.assign(localTask,taskFromApi(data.task));
       }catch(err){showToast(err.message);return;}
     }
-    // Operator vazifani menejerga qo'ysa — backend lidni o'sha menejerga topshiradi (handoff).
-    // Lid endi operator ro'yxatidan chiqadi, shuning uchun to'liq sync qilamiz.
-    const opHandoff=isOperator() && String(ownerId)!==String(currentManagerId);
-    if(opHandoff && apiToken){
+    // Operator vazifani BOSHQA birovga (menejer yoki boshqa operator) qo'ysa, backend lidni
+    // o'sha odamga topshiradi va lid operatorning ro'yxatidan chiqadi — to'liq sync qilamiz.
+    // O'ziga qo'ysa lid joyida qoladi — oddiy vazifa (workspace ochiq qoladi).
+    const leadMovesAway=isOperator() && String(ownerId)!==String(currentManagerId);
+    if(leadMovesAway && apiToken){
       document.getElementById('dwComposerText').value='';
       showToast(`Vazifa ${owner}ga topshirildi — lid unga o‘tkazildi ✓`);
       await loadApiData().catch(()=>{});
