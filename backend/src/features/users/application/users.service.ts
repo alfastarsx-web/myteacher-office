@@ -75,8 +75,18 @@ export class UsersService {
   }
 
   async listFor(user: UserEntity) {
-    const rows = user.role === UserRole.Admin || user.permissions?.roles === true ? await this.users.find() : [user];
-    return rows.map(item => this.publicUser(item));
+    if (user.role === UserRole.Admin || user.permissions?.roles === true) {
+      return (await this.users.find()).map(item => this.publicUser(item));
+    }
+    // Operatorlar lidni menejerga topshirish va vazifa biriktirish uchun menejerlar ro'yxatiga
+    // muhtoj — o'zini va barcha menejerlarni qaytaramiz. Aks holda vazifa formasidagi menejer
+    // dropdowni bo'sh chiqadi. Boshqa foydalanuvchilar faqat o'zini ko'radi.
+    if (user.role === UserRole.Operator) {
+      const managers = await this.findManagers();
+      const rows = [user, ...managers.filter(m => m.id !== user.id)];
+      return rows.map(item => this.publicUser(item));
+    }
+    return [this.publicUser(user)];
   }
 
   async create(body: any) {
