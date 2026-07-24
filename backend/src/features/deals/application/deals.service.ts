@@ -397,7 +397,7 @@ export class DealsService {
     // Menejerga tegishli bo'lib qolgan lid uchun bir xil telefonli dublikatni birlashtiramiz.
     // Agar shu yozuvning o'zi birlashuvda o'chib ketsa, saqlangan yozuvni qaytaramiz.
     if (saved.ownerId != null && !OPERATOR_STAGE_IDS.includes(saved.stageId)) {
-      const keeperId = await this.mergeDuplicateManagerLeads(this.phoneKey(saved));
+      const keeperId = await this.mergeDuplicateManagerLeads(this.phoneKey(saved), saved.id);
       if (keeperId && keeperId !== saved.id) {
         return (await this.deals.findOne({ where: { id: keeperId } })) || saved;
       }
@@ -684,7 +684,10 @@ export class DealsService {
   // Menejer voronkasidagi (op_* emas) egali bir xil telefonli lidlardan pulli/faol yozuvni
   // (avval yakunlangan/pulli, teng bo'lsa ko'p izohli, teng bo'lsa eng eski) saqlaydi,
   // qolganlarining izoh/full call/to'lov/vazifalarini unga ko'chiradi va o'zlarini o'chiradi.
-  private async mergeDuplicateManagerLeads(phoneKey: string): Promise<number | null> {
+  // preferId — foydalanuvchi hozirgina yangilagan (bosqichini o'zgartirgan) yozuv. Uni keeper
+  // qilib saqlaymiz: aks holda merge eski dublikatni tanlab, foydalanuvchining bosqich
+  // o'zgarishini bekor qilardi va vazifasini boshqa yozuvga ko'chirib "yo'qotardi".
+  private async mergeDuplicateManagerLeads(phoneKey: string, preferId?: number): Promise<number | null> {
     if (!phoneKey) return null;
     const owned = await this.deals.createQueryBuilder('deal')
       .where('deal.ownerId IS NOT NULL')
@@ -695,8 +698,12 @@ export class DealsService {
     // Ikki yoki undan ortiq yakunlangan (sotilgan/to'langan) yozuvni birlashtirmaymiz — pulni yo'qotmaslik uchun
     if (group.filter(d => this.isAdvancedDeal(d)).length >= 2) return group[0].id;
     const score = (d: DealEntity) => (d.comments?.length || 0);
-    // Pulli (yakunlangan) yozuv keeper bo'lib qolsin — bosqichi va puli o'zida saqlansin
-    group.sort((a, b) => (Number(this.isAdvancedDeal(b)) - Number(this.isAdvancedDeal(a))) || score(b) - score(a) || a.id - b.id);
+    // Keeper tartibi: (1) pulli/yakunlangan yozuv — puli va won holati saqlansin; (2) foydalanuvchi
+    // hozirgina yangilagan yozuv (preferId) — bosqichi va vazifasi o'zida qolsin; (3) ko'p izohli; (4) eng eski.
+    group.sort((a, b) =>
+      (Number(this.isAdvancedDeal(b)) - Number(this.isAdvancedDeal(a))) ||
+      (Number(b.id === preferId) - Number(a.id === preferId)) ||
+      score(b) - score(a) || a.id - b.id);
     const keeper = group[0];
     const dropped = group.slice(1);
     this.absorbDealArtifacts(keeper, dropped);
