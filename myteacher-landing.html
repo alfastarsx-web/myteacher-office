@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="uz" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MyTeacher — AI va Mentor nazorati ostida Ingliz tili</title>
+  <meta name="description" content="MyTeacher — AI Speaking Partner, o'yinlashtirilgan darslar va shaxsiy Mentor nazorati bilan Ingliz tilini 3 baravar tezroq o'rganing. 35,000+ faol talaba." />
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Fonts: Plus Jakarta Sans — same as the real app -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'] },
+          colors: {
+            navy:   '#0F172A',
+            ink:    '#1A1A1A',
+            ink2:   '#6B6860',
+            cream:  '#ECEAE3',
+            sand:   '#F6F4EF',
+            yellow: { DEFAULT: '#F5B700', soft: '#FCD34D' },
+            teal:   { DEFAULT: '#0D9488', soft: '#2DD4BF' },
+            bluey:  '#3B82F6',
+          },
+          boxShadow: {
+            card:   '0 6px 30px -12px rgba(15,23,42,0.14)',
+            soft:   '0 12px 40px -18px rgba(15,23,42,0.22)',
+            device: '0 45px 90px -30px rgba(15,23,42,0.45)',
+            teal:   '0 14px 40px -14px rgba(13,148,136,0.45)',
+          },
+          keyframes: {
+            floaty:    { '0%,100%': { transform: 'translateY(0)' }, '50%': { transform: 'translateY(-10px)' } },
+            pulseRing: { '0%': { transform: 'scale(0.9)', opacity: '0.7' }, '80%,100%': { transform: 'scale(1.7)', opacity: '0' } },
+          },
+          animation: {
+            floaty:    'floaty 6s ease-in-out infinite',
+            pulseRing: 'pulseRing 2.4s ease-out infinite',
+          },
+        },
+      },
+    };
+  </script>
+
+  <style>
+    :root { color-scheme: light; }
+    body { background: #F6F4EF; }
+    ::selection { background: #0D9488; color: #fff; }
+
+    .text-teal-grad { background: linear-gradient(100deg,#0D9488,#2DD4BF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+    .reveal { opacity: 0; transform: translateY(22px); transition: opacity .6s cubic-bezier(.2,.7,.2,1), transform .6s cubic-bezier(.2,.7,.2,1); }
+    .reveal.in { opacity: 1; transform: none; }
+    .glass { background: rgba(246,244,239,0.8); backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); }
+
+    /* ── Live device mockup ── */
+    .device { position: relative; border-radius: 46px; background: #0F172A; padding: 10px; box-shadow: 0 45px 90px -30px rgba(15,23,42,0.45); }
+    .device .screen { position: relative; width: 300px; height: 620px; border-radius: 38px; overflow: hidden; background: #ECEAE3; }
+    .device iframe { position: absolute; top: 0; left: 0; width: 375px; height: 812px; border: 0; transform-origin: top left; }
+    /* scale 0.8 → 375*0.8=300 wide; per-screen translateY crops the file's own body padding */
+    .fr-home   { transform: scale(0.8) translateY(-24px); }
+    .fr-report { transform: scale(0.8) translateY(-28px); }
+    .fr-plain  { transform: scale(0.8) translateY(0); }
+    /* transparent click-catcher so the page scrolls over embedded phones */
+    .device .catch { position: absolute; inset: 0; z-index: 5; }
+
+    .device.sm .screen { width: 232px; height: 480px; border-radius: 30px; }
+    .device.sm { border-radius: 36px; padding: 8px; }
+    .device.sm iframe { transform-origin: top left; }
+    .device.sm .fr-home   { transform: scale(0.619) translateY(-24px); }  /* 375*0.619≈232 */
+    .device.sm .fr-report { transform: scale(0.619) translateY(-28px); }
+    .device.sm .fr-plain  { transform: scale(0.619) translateY(0); }
+
+    @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } .reveal { opacity: 1; transform: none; } }
+  </style>
+</head>
+
+<body class="bg-sand text-ink font-sans antialiased">
+
+  <!-- ============ HEADER ============ -->
+  <header class="fixed top-0 inset-x-0 z-50">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6">
+      <div id="header-bar" class="mt-3 flex items-center justify-between rounded-2xl px-4 sm:px-5 py-2.5 transition-all duration-300 border border-transparent">
+        <a href="#top" class="flex items-center gap-2.5">
+          <span class="relative flex h-9 w-9 items-center justify-center">
+            <span class="absolute left-1 top-1 h-3.5 w-3.5 rounded-full bg-teal"></span>
+            <span class="absolute right-1 top-0.5 h-3 w-3 rounded-full bg-yellow"></span>
+            <span class="absolute left-2 bottom-1 h-3 w-3 rounded-full bg-bluey"></span>
+          </span>
+          <span class="leading-none">
+            <span class="block text-[10px] font-700 tracking-widest text-ink2">MY</span>
+            <span class="block -mt-0.5 text-lg font-800 tracking-tight text-navy">Teacher</span>
+          </span>
+        </a>
+
+        <nav class="hidden lg:flex items-center gap-1 text-sm font-600 text-ink2">
+          <a href="#mentor" class="rounded-lg px-3.5 py-2 hover:text-navy hover:bg-cream transition">Mentor Tizimi</a>
+          <a href="#app" class="rounded-lg px-3.5 py-2 hover:text-navy hover:bg-cream transition">Ilova Fitchalari</a>
+          <a href="#webinar" class="rounded-lg px-3.5 py-2 hover:text-navy hover:bg-cream transition">Vebinar</a>
+          <a href="#results" class="rounded-lg px-3.5 py-2 hover:text-navy hover:bg-cream transition">Natijalar</a>
+          <a href="#pricing" class="rounded-lg px-3.5 py-2 hover:text-navy hover:bg-cream transition">Tariflar</a>
+        </nav>
+
+        <div class="flex items-center gap-2">
+          <a href="#pricing" class="hidden sm:inline-flex items-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-700 text-white shadow-soft hover:bg-navy/90 transition">
+            <i data-lucide="smartphone" class="h-4 w-4"></i> Ilovani Yuklab Olish
+          </a>
+          <button id="menu-btn" class="lg:hidden inline-flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 bg-white text-navy" aria-label="Menyu">
+            <i data-lucide="menu" class="h-5 w-5"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="lg:hidden hidden mx-4 mt-2 rounded-2xl glass border border-black/10 shadow-card p-2">
+      <a href="#mentor" class="mobile-link block rounded-lg px-4 py-3 text-navy hover:bg-cream">Mentor Tizimi</a>
+      <a href="#app" class="mobile-link block rounded-lg px-4 py-3 text-navy hover:bg-cream">Ilova Fitchalari</a>
+      <a href="#webinar" class="mobile-link block rounded-lg px-4 py-3 text-navy hover:bg-cream">Vebinar</a>
+      <a href="#results" class="mobile-link block rounded-lg px-4 py-3 text-navy hover:bg-cream">Natijalar</a>
+      <a href="#pricing" class="mobile-link block rounded-lg px-4 py-3 text-navy hover:bg-cream">Tariflar</a>
+    </div>
+  </header>
+
+  <!-- ============ HERO ============ -->
+  <section id="top" class="relative overflow-hidden pt-28 pb-16 sm:pt-36 sm:pb-24">
+    <div class="pointer-events-none absolute -top-24 -left-24 h-96 w-96 rounded-full bg-teal/10 blur-3xl"></div>
+    <div class="pointer-events-none absolute top-10 right-0 h-80 w-80 rounded-full bg-yellow/10 blur-3xl"></div>
+
+    <div class="relative mx-auto max-w-7xl px-4 sm:px-6">
+      <div class="grid lg:grid-cols-[1.05fr_0.95fr] gap-14 items-center">
+        <div class="reveal">
+          <div class="inline-flex items-center gap-2 rounded-full border border-teal/25 bg-teal/10 px-3.5 py-1.5 text-xs font-700 text-teal">
+            <span class="relative flex h-2 w-2"><span class="absolute inline-flex h-full w-full rounded-full bg-teal opacity-70 animate-pulseRing"></span><span class="relative inline-flex h-2 w-2 rounded-full bg-teal"></span></span>
+            O'zbekistonning #1 AI + Mentor ilovasi
+          </div>
+
+          <h1 class="mt-6 text-4xl sm:text-5xl lg:text-[3.5rem] font-800 leading-[1.06] text-navy" style="text-wrap:balance;">
+            Shunchaki ilova emas. <span class="text-teal-grad">AI va shaxsiy Mentor</span> nazorati ostida Ingliz tilini <span class="whitespace-nowrap">3&nbsp;baravar</span> tezroq.
+          </h1>
+
+          <p class="mt-6 max-w-xl text-lg text-ink2 leading-relaxed">
+            AI Speaking Partner bilan mashq, kunlik intizomiy nazorat va <span class="font-700 text-navy">35,000+ o'quvchining</span> isbotlangan natijasi — hammasi bitta ilovada.
+          </p>
+
+          <div class="mt-8 flex flex-col sm:flex-row gap-3">
+            <a href="#pricing" class="group inline-flex items-center justify-center gap-3 rounded-2xl bg-navy px-6 py-4 font-700 text-white shadow-soft hover:bg-navy/90 transition">
+              <i data-lucide="smartphone" class="h-5 w-5"></i> Ilovani Bepul Yuklab Olish
+              <i data-lucide="arrow-right" class="h-4 w-4 transition-transform group-hover:translate-x-1"></i>
+            </a>
+            <a href="#webinar" class="inline-flex items-center justify-center gap-2.5 rounded-2xl border border-black/10 bg-white px-6 py-4 font-700 text-navy hover:bg-cream transition">
+              <span class="relative flex h-2.5 w-2.5"><span class="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-70 animate-pulseRing"></span><span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500"></span></span>
+              Jonli Vebinarga Yozilish
+            </a>
+          </div>
+
+          <div class="mt-5 flex flex-wrap items-center gap-3">
+            <a href="#pricing" class="inline-flex items-center gap-2.5 rounded-xl border border-black/10 bg-white px-4 py-2.5 hover:border-black/20 shadow-sm transition">
+              <i data-lucide="apple" class="h-6 w-6 text-navy"></i>
+              <span class="text-left leading-tight"><span class="block text-[10px] text-ink2">Yuklab oling</span><span class="block text-sm font-700 text-navy">App Store</span></span>
+            </a>
+            <a href="#pricing" class="inline-flex items-center gap-2.5 rounded-xl border border-black/10 bg-white px-4 py-2.5 hover:border-black/20 shadow-sm transition">
+              <i data-lucide="play" class="h-6 w-6 text-teal"></i>
+              <span class="text-left leading-tight"><span class="block text-[10px] text-ink2">Yuklab oling</span><span class="block text-sm font-700 text-navy">Google Play</span></span>
+            </a>
+          </div>
+
+          <div class="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-ink2">
+            <div class="flex items-center gap-2"><i data-lucide="users" class="h-4 w-4 text-teal"></i> <span><b class="text-navy">35,000+</b> faol talaba</span></div>
+            <div class="flex items-center gap-2"><i data-lucide="star" class="h-4 w-4 text-yellow fill-yellow"></i> <span><b class="text-navy">4.9/5</b> reyting</span></div>
+            <div class="flex items-center gap-2"><i data-lucide="badge-check" class="h-4 w-4 text-teal"></i> <span><b class="text-navy">94%</b> oxirigacha bitiradi</span></div>
+          </div>
+        </div>
+
+        <!-- LIVE phone: real Home screen -->
+        <div class="reveal relative flex justify-center lg:justify-end">
+          <div class="absolute left-0 sm:left-4 top-6 z-20 animate-floaty">
+            <div class="flex items-center gap-3 rounded-2xl bg-white p-3 pr-4 shadow-card border border-black/5">
+              <span class="flex h-11 w-11 items-center justify-center rounded-xl bg-yellow/15"><i data-lucide="flame" class="h-6 w-6 text-yellow"></i></span>
+              <div><div class="text-xl font-900 text-navy leading-none">47 kun</div><div class="text-xs text-ink2 mt-0.5">Streak — uzilmagan</div></div>
+            </div>
+          </div>
+          <div class="absolute -right-1 sm:right-0 bottom-10 z-20 animate-floaty" style="animation-delay:-3s">
+            <div class="flex items-center gap-3 rounded-2xl bg-white p-3 pr-4 shadow-card border border-black/5">
+              <span class="flex h-10 w-10 items-center justify-center rounded-full bg-teal text-white font-800">D</span>
+              <div><div class="text-xs text-ink2">Mentor izohi</div><div class="text-sm font-700 text-navy flex items-center gap-1.5">Zo'r talaffuz! <i data-lucide="thumbs-up" class="h-3.5 w-3.5 text-teal"></i></div></div>
+            </div>
+          </div>
+
+          <div class="device animate-floaty">
+            <div class="screen">
+              <iframe class="fr-home" src="_preview/home4.html" title="MyTeacher Home" scrolling="no" loading="lazy"></iframe>
+              <div class="catch"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- cities -->
+    <div class="relative mt-14 border-y border-black/5 py-6 bg-cream/60">
+      <div class="mx-auto max-w-7xl px-6 text-center text-xs uppercase tracking-[0.2em] text-ink2/70 mb-4">Ishonch bilan tanlangan · O'zbekiston bo'ylab</div>
+      <div class="flex items-center gap-x-8 gap-y-3 justify-center flex-wrap text-ink2 text-sm font-700">
+        <span class="flex items-center gap-2"><i data-lucide="map-pin" class="h-4 w-4 text-teal"></i> Toshkent</span>
+        <span class="flex items-center gap-2"><i data-lucide="map-pin" class="h-4 w-4 text-teal"></i> Samarqand</span>
+        <span class="flex items-center gap-2"><i data-lucide="map-pin" class="h-4 w-4 text-teal"></i> Farg'ona</span>
+        <span class="flex items-center gap-2"><i data-lucide="map-pin" class="h-4 w-4 text-teal"></i> Buxoro</span>
+        <span class="flex items-center gap-2"><i data-lucide="map-pin" class="h-4 w-4 text-teal"></i> Andijon</span>
+        <span class="flex items-center gap-2"><i data-lucide="map-pin" class="h-4 w-4 text-teal"></i> Namangan</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ MENTOR SYSTEM ============ -->
+  <section id="mentor" class="relative py-20 sm:py-28">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6">
+      <div class="max-w-3xl reveal">
+        <span class="inline-flex items-center gap-2 rounded-full border border-teal/25 bg-teal/10 px-3.5 py-1.5 text-xs font-700 text-teal"><i data-lucide="shield-check" class="h-4 w-4"></i> Bosh fitcha — Mentor tizimi</span>
+        <h2 class="mt-5 text-3xl sm:text-4xl lg:text-5xl font-800 text-navy" style="text-wrap:balance;">O'quvchini tashlab qo'ymaydigan <span class="text-teal-grad">Nazoratchi Mentor Tizimi</span></h2>
+        <p class="mt-4 text-lg text-ink2">Ilova va AI o'rgatadi — Mentor esa sizni yo'ldan qaytmaslikka majbur qiladi. Har kuni tekshiriladigan topshiriq, har hafta jonli mashq.</p>
+      </div>
+
+      <div class="mt-14 grid lg:grid-cols-[1.05fr_0.95fr] gap-10 items-center">
+        <div class="space-y-4">
+          <div class="reveal rounded-2xl border border-black/5 bg-white p-6 shadow-card hover:shadow-soft hover:-translate-y-0.5 transition">
+            <div class="flex items-start gap-4">
+              <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-teal/10 text-teal"><i data-lucide="clipboard-check" class="h-6 w-6"></i></span>
+              <div><h3 class="text-xl font-800 text-navy">Kunlik topshiriq auditi</h3>
+                <p class="mt-1.5 text-ink2 text-sm leading-relaxed">Har bir yuborilgan audio va matn shaxsiy mentor tomonidan tekshiriladi — ovozli yoki matnli aniq feedback bilan.</p>
+                <span class="mt-3 inline-flex items-center gap-1.5 text-xs font-700 text-teal"><i data-lucide="mic" class="h-3.5 w-3.5"></i> Audio/Matn ovozli izoh</span></div>
+            </div>
+          </div>
+          <div class="reveal rounded-2xl border border-black/5 bg-white p-6 shadow-card hover:shadow-soft hover:-translate-y-0.5 transition">
+            <div class="flex items-start gap-4">
+              <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-yellow/15 text-yellow"><i data-lucide="flame" class="h-6 w-6"></i></span>
+              <div><h3 class="text-xl font-800 text-navy">Intizom & Streak nazorati</h3>
+                <p class="mt-1.5 text-ink2 text-sm leading-relaxed">Darsni tashlab ketsangiz — mentor darhol xabar beradi va motivatsiya bilan qaytaradi. Streak uzilmasligi uchun kurashamiz.</p>
+                <span class="mt-3 inline-flex items-center gap-1.5 text-xs font-700 text-yellow"><i data-lucide="bell-ring" class="h-3.5 w-3.5"></i> "Dars qoldirmang!" ogohlantirishi</span></div>
+            </div>
+          </div>
+          <div class="reveal rounded-2xl border border-black/5 bg-white p-6 shadow-card hover:shadow-soft hover:-translate-y-0.5 transition">
+            <div class="flex items-start gap-4">
+              <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-bluey/10 text-bluey"><i data-lucide="video" class="h-6 w-6"></i></span>
+              <div><h3 class="text-xl font-800 text-navy">Haftalik jonli mashq</h3>
+                <p class="mt-1.5 text-ink2 text-sm leading-relaxed">Har hafta jonli Speaking Practice sessiyalari — real suhbatda gapirishga o'rganasiz, qo'rquv yo'qoladi.</p>
+                <span class="mt-3 inline-flex items-center gap-1.5 text-xs font-700 text-bluey"><i data-lucide="calendar-clock" class="h-3.5 w-3.5"></i> Live Speaking Club</span></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIVE phone: real lesson (AI chat) screen -->
+        <div class="reveal flex justify-center">
+          <div class="relative">
+            <span class="absolute -top-3 left-1/2 -translate-x-1/2 z-20 rounded-full bg-navy px-3 py-1 text-[11px] font-700 text-white shadow-soft whitespace-nowrap">↓ Ilovaning real ekrani — jonli</span>
+            <div class="device">
+              <div class="screen">
+                <iframe class="fr-plain" src="_preview/lesson.html" title="MyTeacher Dars — AI chat" scrolling="no" loading="lazy"></iframe>
+                <div class="catch"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ APP TOUR (gamified) ============ -->
+  <section id="app" class="relative py-20 sm:py-28 bg-cream border-y border-black/5">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6">
+      <div class="text-center max-w-2xl mx-auto reveal">
+        <span class="inline-flex items-center gap-2 rounded-full border border-yellow/40 bg-yellow/15 px-3.5 py-1.5 text-xs font-700 text-yellow"><i data-lucide="gamepad-2" class="h-4 w-4"></i> Ilova ichidan — jonli</span>
+        <h2 class="mt-5 text-3xl sm:text-4xl lg:text-5xl font-800 text-navy" style="text-wrap:balance;">O'rganish — o'yin kabi <span class="text-teal-grad">qiziqarli</span></h2>
+        <p class="mt-4 text-lg text-ink2">Quyidagi ekranlar — haqiqiy ilovaning o'zi. Ustiga bosib, ilovada oching.</p>
+      </div>
+
+      <!-- feature chips -->
+      <div class="mt-10 grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="reveal rounded-2xl border border-black/5 bg-white p-5 shadow-card">
+          <div class="flex items-center justify-between"><span class="flex h-11 w-11 items-center justify-center rounded-xl bg-yellow/15 text-yellow"><i data-lucide="flame" class="h-5 w-5"></i></span><span class="text-2xl font-900 text-navy">47</span></div>
+          <h3 class="mt-3 font-800 text-navy">Kunlik Streak</h3><p class="mt-1 text-sm text-ink2">Har kuni mashq — odat shakllanadi.</p>
+        </div>
+        <div class="reveal rounded-2xl border border-black/5 bg-white p-5 shadow-card">
+          <div class="flex items-center justify-between"><span class="flex h-11 w-11 items-center justify-center rounded-xl bg-teal/10 text-teal"><i data-lucide="bot" class="h-5 w-5"></i></span><span class="text-2xl font-900 text-navy">24/7</span></div>
+          <h3 class="mt-3 font-800 text-navy">AI Speaking Partner</h3><p class="mt-1 text-sm text-ink2">Istalgan vaqt AI bilan jonli suhbat.</p>
+        </div>
+        <div class="reveal rounded-2xl border border-black/5 bg-white p-5 shadow-card">
+          <div class="flex items-center justify-between"><span class="flex h-11 w-11 items-center justify-center rounded-xl bg-bluey/10 text-bluey"><i data-lucide="book-open" class="h-5 w-5"></i></span><span class="text-2xl font-900 text-navy">248</span></div>
+          <h3 class="mt-3 font-800 text-navy">Kunlik Lug'at</h3><p class="mt-1 text-sm text-ink2">Audio bilan so'z yodlash tizimi.</p>
+        </div>
+        <div class="reveal rounded-2xl border border-black/5 bg-white p-5 shadow-card">
+          <div class="flex items-center justify-between"><span class="flex h-11 w-11 items-center justify-center rounded-xl bg-navy/10 text-navy"><i data-lucide="line-chart" class="h-5 w-5"></i></span><span class="text-2xl font-900 text-navy">B1</span></div>
+          <h3 class="mt-3 font-800 text-navy">Bilim xaritam</h3><p class="mt-1 text-sm text-ink2">CEFR daraja va shaxsiy roadmap.</p>
+        </div>
+      </div>
+
+      <!-- live phones row -->
+      <div class="mt-14 grid grid-cols-2 lg:grid-cols-4 gap-6 justify-items-center">
+        <div class="reveal text-center">
+          <div class="device sm mx-auto"><div class="screen"><iframe class="fr-home" src="_preview/home2.html" title="Home" scrolling="no" loading="lazy"></iframe><div class="catch"></div></div></div>
+          <p class="mt-4 font-700 text-navy text-sm">Bosh sahifa</p><p class="text-xs text-ink2">Streak & AI Partner</p>
+        </div>
+        <div class="reveal text-center">
+          <div class="device sm mx-auto"><div class="screen"><iframe class="fr-plain" src="_preview/lugat.html" title="Lug'at" scrolling="no" loading="lazy"></iframe><div class="catch"></div></div></div>
+          <p class="mt-4 font-700 text-navy text-sm">Lug'at bo'limi</p><p class="text-xs text-ink2">248 so'z, audio</p>
+        </div>
+        <div class="reveal text-center">
+          <div class="device sm mx-auto"><div class="screen"><iframe class="fr-report" src="_preview/report.html" title="Report" scrolling="no" loading="lazy"></iframe><div class="catch"></div></div></div>
+          <p class="mt-4 font-700 text-navy text-sm">Speaking Report</p><p class="text-xs text-ink2">CEFR tahlil & ball</p>
+        </div>
+        <div class="reveal text-center">
+          <div class="device sm mx-auto"><div class="screen"><iframe class="fr-plain" src="_preview/lesson.html" title="Dars" scrolling="no" loading="lazy"></iframe><div class="catch"></div></div></div>
+          <p class="mt-4 font-700 text-navy text-sm">Dars + AI chat</p><p class="text-xs text-ink2">Video & grammatika</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ WEBINAR ============ -->
+  <section id="webinar" class="relative overflow-hidden py-20 sm:py-28">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6">
+      <div class="relative overflow-hidden rounded-3xl bg-navy shadow-soft">
+        <div class="pointer-events-none absolute -top-20 -right-16 h-72 w-72 rounded-full bg-teal/20 blur-3xl"></div>
+        <div class="pointer-events-none absolute -bottom-16 -left-10 h-60 w-60 rounded-full bg-yellow/10 blur-3xl"></div>
+        <div class="relative px-6 py-10 sm:px-12 sm:py-14">
+          <div class="grid lg:grid-cols-[1.15fr_0.85fr] gap-12 items-center">
+            <div class="reveal">
+              <div class="inline-flex items-center gap-2 rounded-full border border-red-400/30 bg-red-500/15 px-3.5 py-1.5 text-xs font-700 text-red-300">
+                <span class="relative flex h-2.5 w-2.5"><span class="absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-70 animate-pulseRing"></span><span class="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500"></span></span>
+                JONLI EFIR · BEPUL
+              </div>
+              <h2 class="mt-5 text-3xl sm:text-4xl font-800 text-white leading-tight" style="text-wrap:balance;">
+                Ingliz tilini 6 oyda ravon gapirish siri: <span class="text-yellow">Mentor intizomi va Gamifikatsiya</span>
+              </h2>
+              <div class="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-white/70">
+                <span class="flex items-center gap-2 font-700"><i data-lucide="calendar" class="h-5 w-5 text-teal-soft"></i> Har Yakshanba</span>
+                <span class="flex items-center gap-2 font-700"><i data-lucide="clock" class="h-5 w-5 text-teal-soft"></i> 20:00 (Jonli Efir)</span>
+              </div>
+              <ul class="mt-6 space-y-3">
+                <li class="flex items-start gap-3"><span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal/20 text-teal-soft"><i data-lucide="check" class="h-3.5 w-3.5"></i></span><span class="text-white/85">Bepul <b class="text-white">90 kunlik Roadmap</b> — qadamba-qadam reja</span></li>
+                <li class="flex items-start gap-3"><span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal/20 text-teal-soft"><i data-lucide="check" class="h-3.5 w-3.5"></i></span><span class="text-white/85"><b class="text-white">500 ta muhim ibora</b> PDF bonus sovg'a</span></li>
+                <li class="flex items-start gap-3"><span class="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-teal/20 text-teal-soft"><i data-lucide="check" class="h-3.5 w-3.5"></i></span><span class="text-white/85">Jonli <b class="text-white">Diagnostika Q&amp;A</b> — savollaringizga javob</span></li>
+              </ul>
+              <a href="#pricing" class="mt-8 inline-flex items-center gap-3 rounded-2xl bg-yellow px-6 py-4 font-800 text-navy shadow-soft hover:brightness-105 transition">
+                <i data-lucide="radio" class="h-5 w-5"></i> Vebinarda Bepul Qatnashish
+              </a>
+            </div>
+
+            <div class="reveal">
+              <div class="rounded-2xl border border-white/10 bg-white/5 p-6 text-center">
+                <p class="text-sm uppercase tracking-[0.2em] text-white/40">Keyingi efirgacha</p>
+                <div id="countdown" class="mt-5 grid grid-cols-4 gap-2 sm:gap-3">
+                  <div class="rounded-xl bg-white/5 border border-white/10 py-4"><div id="cd-days" class="text-3xl sm:text-4xl font-800 text-white tabular-nums">00</div><div class="mt-1 text-[10px] uppercase tracking-wider text-white/50">Kun</div></div>
+                  <div class="rounded-xl bg-white/5 border border-white/10 py-4"><div id="cd-hours" class="text-3xl sm:text-4xl font-800 text-white tabular-nums">00</div><div class="mt-1 text-[10px] uppercase tracking-wider text-white/50">Soat</div></div>
+                  <div class="rounded-xl bg-white/5 border border-white/10 py-4"><div id="cd-mins" class="text-3xl sm:text-4xl font-800 text-white tabular-nums">00</div><div class="mt-1 text-[10px] uppercase tracking-wider text-white/50">Daqiqa</div></div>
+                  <div class="rounded-xl bg-teal py-4"><div id="cd-secs" class="text-3xl sm:text-4xl font-800 text-white tabular-nums">00</div><div class="mt-1 text-[10px] uppercase tracking-wider text-white/80">Soniya</div></div>
+                </div>
+                <div class="mt-6 flex items-center justify-center gap-2 text-sm text-white/70"><i data-lucide="users" class="h-4 w-4 text-teal-soft"></i> <span>Ushbu haftada <b class="text-white">1,240+</b> kishi yozildi</span></div>
+                <div class="mt-3 h-2 w-full rounded-full bg-white/10 overflow-hidden"><div class="h-full w-[82%] rounded-full bg-gradient-to-r from-teal to-teal-soft"></div></div>
+                <p class="mt-2 text-xs text-white/40">Joylar 82% band — shoshiling!</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ RESULTS ============ -->
+  <section id="results" class="relative py-20 sm:py-28 bg-cream border-y border-black/5">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6">
+      <div class="reveal grid grid-cols-1 sm:grid-cols-3 gap-px rounded-3xl border border-black/5 bg-black/5 overflow-hidden shadow-card">
+        <div class="p-8 text-center bg-white"><div class="text-4xl sm:text-5xl font-900 text-teal-grad">35,000+</div><p class="mt-2 text-ink2 font-600">Faol talaba</p></div>
+        <div class="p-8 text-center bg-white"><div class="text-4xl sm:text-5xl font-900 text-teal-grad">94%</div><p class="mt-2 text-ink2 font-600">Kursni bitirish darajasi</p></div>
+        <div class="p-8 text-center bg-white"><div class="text-4xl sm:text-5xl font-900 text-teal-grad">4.9/5</div><p class="mt-2 text-ink2 font-600">O'rtacha reyting</p></div>
+      </div>
+
+      <div class="mt-14 text-center max-w-2xl mx-auto reveal">
+        <h2 class="text-3xl sm:text-4xl lg:text-5xl font-800 text-navy" style="text-wrap:balance;">Intizom natija keltiradi. <span class="text-teal-grad">Mana isbot.</span></h2>
+        <p class="mt-4 text-lg text-ink2">Mentor nazorati ostida o'quvchilarimiz haqiqiy natijalarga erishmoqda.</p>
+      </div>
+
+      <div class="mt-12 grid md:grid-cols-3 gap-5">
+        <figure class="reveal rounded-2xl border border-black/5 bg-white p-6 shadow-card flex flex-col">
+          <div class="flex items-center gap-1 text-yellow">
+            <i data-lucide="star" class="h-4 w-4 fill-yellow"></i><i data-lucide="star" class="h-4 w-4 fill-yellow"></i><i data-lucide="star" class="h-4 w-4 fill-yellow"></i><i data-lucide="star" class="h-4 w-4 fill-yellow"></i><i data-lucide="star" class="h-4 w-4 fill-yellow"></i>
+          </div>
+          <blockquote class="mt-4 text-navy leading-relaxed flex-1">"Mentorim har kuni audio topshiriqni tekshirib turdi. IELTS'da <b>5.5 dan 7.0 gacha</b> ko'tarildim — o'zim ishonmayman!"</blockquote>
+          <div class="mt-3 inline-flex items-center gap-2 self-start rounded-full bg-teal/10 px-3 py-1 text-xs font-800 text-teal"><i data-lucide="trending-up" class="h-3.5 w-3.5"></i> IELTS 5.5 → 7.0</div>
+          <figcaption class="mt-5 flex items-center gap-3 border-t border-black/5 pt-4"><span class="flex h-11 w-11 items-center justify-center rounded-full bg-teal text-white font-800">M</span><div><p class="font-700 text-navy">Malika Yusupova</p><p class="text-xs text-ink2">Talaba · Toshkent</p></div></figcaption>
+        </figure>
+        <figure class="reveal rounded-2xl border border-black/5 bg-white p-6 shadow-card flex flex-col">
+          <div class="flex items-center gap-1 text-yellow">
+            <i data-lucide="star" class="h-4 w-4 fill-yellow"></i><i data-lucide="star" class="h-4 w-4 fill-yellow"></i><i data-lucide="star" class="h-4 w-4 fill-yellow"></i><i data-lucide="star" class="h-4 w-4 fill-yellow"></i><i data-lucide="star" class="h-4 w-4 fill-yellow"></i>
+          </div>
+          <blockquote class="mt-4 text-navy leading-relaxed flex-1">"Streak uzilganda mentor darhol yozardi. O'sha intizom tufayli 4 oyda erkin gapira boshladim. Ishga ham qabul qilishdi!"</blockquote>
+          <div class="mt-3 inline-flex items-center gap-2 self-start rounded-full bg-bluey/10 px-3 py-1 text-xs font-800 text-bluey"><i data-lucide="briefcase" class="h-3.5 w-3.5"></i> Xalqaro kompaniyaga ish</div>
+          <figcaption class="mt-5 flex items-center gap-3 border-t border-black/5 pt-4"><span class="flex h-11 w-11 items-center justify-center rounded-full bg-bluey text-white font-800">J</span><div><p class="font-700 text-navy">Jasur Karimov</p><p class="text-xs text-ink2">IT mutaxassis · Samarqand</p></div></figcaption>
+        </figure>
+        <figure class="reveal rounded-2xl border border-black/5 bg-white p-6 shadow-card flex flex-col">
+          <div class="flex items-center gap-1 text-yellow">
+            <i data-lucide="star" class="h-4 w-4 fill-yellow"></i><i data-lucide="star" class="h-4 w-4 fill-yellow"></i><i data-lucide="star" class="h-4 w-4 fill-yellow"></i><i data-lucide="star" class="h-4 w-4 fill-yellow"></i><i data-lucide="star" class="h-4 w-4 fill-yellow"></i>
+          </div>
+          <blockquote class="mt-4 text-navy leading-relaxed flex-1">"O'yin kabi qiziqarli — bolam o'zi so'rab o'tiradi. XP va liga tufayli har kuni mashq qiladi. <b>CEFR B2</b> ni oldi."</blockquote>
+          <div class="mt-3 inline-flex items-center gap-2 self-start rounded-full bg-yellow/15 px-3 py-1 text-xs font-800 text-yellow"><i data-lucide="award" class="h-3.5 w-3.5"></i> CEFR A2 → B2</div>
+          <figcaption class="mt-5 flex items-center gap-3 border-t border-black/5 pt-4"><span class="flex h-11 w-11 items-center justify-center rounded-full bg-navy text-white font-800">N</span><div><p class="font-700 text-navy">Nigora Abdullayeva</p><p class="text-xs text-ink2">Ona · Farg'ona</p></div></figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PRICING ============ -->
+  <section id="pricing" class="relative py-20 sm:py-28">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6">
+      <div class="text-center max-w-2xl mx-auto reveal">
+        <span class="inline-flex items-center gap-2 rounded-full border border-teal/25 bg-teal/10 px-3.5 py-1.5 text-xs font-700 text-teal"><i data-lucide="tag" class="h-4 w-4"></i> Tariflar</span>
+        <h2 class="mt-5 text-3xl sm:text-4xl lg:text-5xl font-800 text-navy" style="text-wrap:balance;">O'zingizga mos <span class="text-teal-grad">yo'nalishni tanlang</span></h2>
+        <p class="mt-4 text-lg text-ink2">Bepul boshlang — istalgan vaqt Mentor nazoratiga o'ting.</p>
+      </div>
+
+      <div class="mt-14 grid lg:grid-cols-3 gap-6 items-stretch">
+        <div class="reveal flex flex-col rounded-3xl border border-black/5 bg-white p-7 shadow-card">
+          <h3 class="text-xl font-800 text-navy">Self-Study</h3><p class="mt-1 text-sm text-ink2">Mustaqil boshlaganlar uchun</p>
+          <div class="mt-5 flex items-end gap-1"><span class="text-5xl font-900 text-navy">$0</span><span class="mb-1.5 text-ink2">/ oyiga</span></div>
+          <ul class="mt-6 space-y-3 text-sm text-ink2 flex-1">
+            <li class="flex items-center gap-2.5"><i data-lucide="check" class="h-4 w-4 text-teal"></i> O'yinlashtirilgan darslar</li>
+            <li class="flex items-center gap-2.5"><i data-lucide="check" class="h-4 w-4 text-teal"></i> Kunlik Streak & Lug'at</li>
+            <li class="flex items-center gap-2.5"><i data-lucide="check" class="h-4 w-4 text-teal"></i> AI Speaking Partner (cheklangan)</li>
+            <li class="flex items-center gap-2.5 text-black/25"><i data-lucide="x" class="h-4 w-4"></i> Shaxsiy mentor nazorati</li>
+            <li class="flex items-center gap-2.5 text-black/25"><i data-lucide="x" class="h-4 w-4"></i> Jonli speaking sessiyalar</li>
+          </ul>
+          <a href="#top" class="mt-7 inline-flex items-center justify-center gap-2 rounded-xl border border-black/10 bg-white px-5 py-3.5 font-700 text-navy hover:bg-cream transition"><i data-lucide="smartphone" class="h-4 w-4"></i> Ilovani Yuklab Olish</a>
+        </div>
+
+        <div class="reveal relative flex flex-col rounded-3xl p-[2px] bg-navy shadow-soft lg:-mt-4">
+          <div class="absolute -top-3.5 left-1/2 -translate-x-1/2 z-10 rounded-full bg-yellow px-4 py-1.5 text-xs font-800 text-navy shadow-lg whitespace-nowrap">🔥 ENG MASHHUR</div>
+          <div class="flex flex-col rounded-[calc(1.5rem-2px)] bg-white p-7 h-full">
+            <h3 class="text-xl font-800 text-navy">Mentor Control</h3><p class="mt-1 text-sm text-ink2">Intizom + natija kafolati</p>
+            <div class="mt-5 flex items-end gap-1"><span class="text-5xl font-900 text-navy">$29</span><span class="mb-1.5 text-ink2">/ oyiga</span></div>
+            <ul class="mt-6 space-y-3 text-sm text-navy flex-1">
+              <li class="flex items-center gap-2.5"><i data-lucide="check" class="h-4 w-4 text-teal"></i> Self-Study'dagi hamma narsa</li>
+              <li class="flex items-center gap-2.5"><i data-lucide="check" class="h-4 w-4 text-teal"></i> <b>Shaxsiy mentor</b> — kunlik audit</li>
+              <li class="flex items-center gap-2.5"><i data-lucide="check" class="h-4 w-4 text-teal"></i> Cheksiz AI Speaking Partner</li>
+              <li class="flex items-center gap-2.5"><i data-lucide="check" class="h-4 w-4 text-teal"></i> Streak & intizom nazorati</li>
+              <li class="flex items-center gap-2.5"><i data-lucide="check" class="h-4 w-4 text-teal"></i> Haftalik jonli Speaking Club</li>
+            </ul>
+            <a href="#top" class="mt-7 inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-5 py-3.5 font-800 text-white hover:bg-navy/90 transition"><i data-lucide="rocket" class="h-4 w-4"></i> Boshlash / Onboarding</a>
+          </div>
+        </div>
+
+        <div class="reveal flex flex-col rounded-3xl border border-black/5 bg-white p-7 shadow-card">
+          <h3 class="text-xl font-800 text-navy">VIP 1-on-1</h3><p class="mt-1 text-sm text-ink2">Maksimal tezlik va e'tibor</p>
+          <div class="mt-5 flex items-end gap-1"><span class="text-5xl font-900 text-navy">$99</span><span class="mb-1.5 text-ink2">/ oyiga</span></div>
+          <ul class="mt-6 space-y-3 text-sm text-ink2 flex-1">
+            <li class="flex items-center gap-2.5"><i data-lucide="check" class="h-4 w-4 text-teal"></i> Mentor Control'dagi hamma narsa</li>
+            <li class="flex items-center gap-2.5"><i data-lucide="check" class="h-4 w-4 text-teal"></i> <b class="text-navy">1-on-1</b> individual mentor</li>
+            <li class="flex items-center gap-2.5"><i data-lucide="check" class="h-4 w-4 text-teal"></i> Haftalik shaxsiy video-qo'ng'iroq</li>
+            <li class="flex items-center gap-2.5"><i data-lucide="check" class="h-4 w-4 text-teal"></i> Shaxsiy IELTS/CEFR strategiyasi</li>
+            <li class="flex items-center gap-2.5"><i data-lucide="check" class="h-4 w-4 text-teal"></i> Ustuvor 24/7 qo'llab-quvvatlash</li>
+          </ul>
+          <a href="#top" class="mt-7 inline-flex items-center justify-center gap-2 rounded-xl border border-teal/30 bg-teal/5 px-5 py-3.5 font-700 text-teal hover:bg-teal/10 transition"><i data-lucide="crown" class="h-4 w-4 text-yellow"></i> Ilovani Yuklab Olish</a>
+        </div>
+      </div>
+
+      <p class="mt-8 text-center text-sm text-ink2 flex items-center justify-center gap-2"><i data-lucide="shield-check" class="h-4 w-4 text-teal"></i> 7 kunlik pul qaytarish kafolati · Istalgan vaqt bekor qilish mumkin</p>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="relative border-t border-black/5 bg-cream pt-16 pb-28 lg:pb-14">
+    <div class="mx-auto max-w-7xl px-4 sm:px-6">
+      <div class="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr_1fr]">
+        <div>
+          <a href="#top" class="flex items-center gap-2.5">
+            <span class="relative flex h-9 w-9 items-center justify-center">
+              <span class="absolute left-1 top-1 h-3.5 w-3.5 rounded-full bg-teal"></span>
+              <span class="absolute right-1 top-0.5 h-3 w-3 rounded-full bg-yellow"></span>
+              <span class="absolute left-2 bottom-1 h-3 w-3 rounded-full bg-bluey"></span>
+            </span>
+            <span class="leading-none"><span class="block text-[10px] font-700 tracking-widest text-ink2">MY</span><span class="block -mt-0.5 text-lg font-800 text-navy">Teacher</span></span>
+          </a>
+          <p class="mt-4 max-w-xs text-sm text-ink2 leading-relaxed">O'zbekistonning yetakchi EdTech ilovasi — AI Speaking Partner, o'yinlashtirilgan darslar va shaxsiy mentor nazorati bir joyda.</p>
+          <div class="mt-5 flex gap-2.5">
+            <a href="#" aria-label="Telegram" class="flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 bg-white text-ink2 hover:text-teal hover:border-teal/40 transition"><i data-lucide="send" class="h-4 w-4"></i></a>
+            <a href="#" aria-label="Instagram" class="flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 bg-white text-ink2 hover:text-teal hover:border-teal/40 transition"><i data-lucide="instagram" class="h-4 w-4"></i></a>
+            <a href="#" aria-label="YouTube" class="flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 bg-white text-ink2 hover:text-teal hover:border-teal/40 transition"><i data-lucide="youtube" class="h-4 w-4"></i></a>
+          </div>
+        </div>
+        <div>
+          <h4 class="font-800 text-navy">Platforma</h4>
+          <ul class="mt-4 space-y-2.5 text-sm text-ink2">
+            <li><a href="#mentor" class="hover:text-navy transition">Mentor Tizimi</a></li>
+            <li><a href="#app" class="hover:text-navy transition">Ilova Fitchalari</a></li>
+            <li><a href="#webinar" class="hover:text-navy transition">Vebinar</a></li>
+            <li><a href="#pricing" class="hover:text-navy transition">Tariflar</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-800 text-navy">Kompaniya</h4>
+          <ul class="mt-4 space-y-2.5 text-sm text-ink2">
+            <li><a href="#results" class="hover:text-navy transition">Natijalar</a></li>
+            <li><a href="#" class="hover:text-navy transition">Biz haqimizda</a></li>
+            <li><a href="#" class="hover:text-navy transition">Mentor bo'lish</a></li>
+            <li><a href="#" class="hover:text-navy transition">Blog</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="font-800 text-navy">Ilovani oling</h4>
+          <div class="mt-4 space-y-2.5">
+            <a href="#" class="flex items-center gap-2.5 rounded-xl border border-black/10 bg-white px-4 py-2.5 hover:border-black/20 transition"><i data-lucide="apple" class="h-5 w-5 text-navy"></i><span class="text-sm font-700 text-navy">App Store</span></a>
+            <a href="#" class="flex items-center gap-2.5 rounded-xl border border-black/10 bg-white px-4 py-2.5 hover:border-black/20 transition"><i data-lucide="play" class="h-5 w-5 text-teal"></i><span class="text-sm font-700 text-navy">Google Play</span></a>
+          </div>
+        </div>
+      </div>
+      <div class="mt-12 flex flex-col sm:flex-row items-center justify-between gap-4 border-t border-black/10 pt-6 text-sm text-ink2">
+        <p>© 2026 MyTeacher. Barcha huquqlar himoyalangan.</p>
+        <div class="flex gap-5"><a href="#" class="hover:text-navy transition">Maxfiylik siyosati</a><a href="#" class="hover:text-navy transition">Foydalanish shartlari</a></div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- MOBILE STICKY BAR -->
+  <div class="lg:hidden fixed bottom-0 inset-x-0 z-50 glass border-t border-black/10 px-4 py-3">
+    <a href="#pricing" class="flex items-center justify-center gap-2.5 rounded-xl bg-navy px-5 py-3.5 font-800 text-white shadow-soft"><i data-lucide="smartphone" class="h-5 w-5"></i> Ilovani Yuklab Olish</a>
+  </div>
+
+  <script>
+    lucide.createIcons();
+
+    const headerBar = document.getElementById('header-bar');
+    const onScroll = () => {
+      if (window.scrollY > 20) headerBar.classList.add('glass', 'border-black/10', 'shadow-card');
+      else headerBar.classList.remove('glass', 'border-black/10', 'shadow-card');
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+
+    const menuBtn = document.getElementById('menu-btn');
+    const mobileMenu = document.getElementById('mobile-menu');
+    menuBtn.addEventListener('click', () => mobileMenu.classList.toggle('hidden'));
+    document.querySelectorAll('.mobile-link').forEach(l => l.addEventListener('click', () => mobileMenu.classList.add('hidden')));
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+
+    function nextSunday20() {
+      const now = new Date(); const d = new Date(now);
+      d.setDate(d.getDate() + ((7 - d.getDay()) % 7)); d.setHours(20,0,0,0);
+      if (d <= now) d.setDate(d.getDate() + 7);
+      return d;
+    }
+    let target = nextSunday20();
+    const pad = (n) => String(n).padStart(2,'0');
+    function tick() {
+      const now = new Date(); let diff = Math.max(0, target - now);
+      if (diff === 0) { target = nextSunday20(); diff = target - now; }
+      document.getElementById('cd-days').textContent  = pad(Math.floor(diff/86400000));
+      document.getElementById('cd-hours').textContent = pad(Math.floor((diff%86400000)/3600000));
+      document.getElementById('cd-mins').textContent  = pad(Math.floor((diff%3600000)/60000));
+      document.getElementById('cd-secs').textContent  = pad(Math.floor((diff%60000)/1000));
+    }
+    tick(); setInterval(tick, 1000);
+  </script>
+</body>
+</html>

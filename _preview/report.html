@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>My AI Teacher — Speaking Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+/* ═══ SAME DESIGN TOKENS AS HOME ═══ */
+:root {
+  --yellow:  #F5B700;
+  --yellow2: #FCD34D;
+  --teal:    #0D9488;
+  --teal2:   #2DD4BF;
+  --blue:    #3B82F6;
+  --navy:    #0F172A;
+  --bg:      #ECEAE3;
+  --surface: #FFFFFF;
+  --ink:     #1A1A1A;
+  --ink2:    #6B6860;
+  --radius:  20px;
+  --r-sm:    12px;
+  --r-pill:  100px;
+  --font:    'Plus Jakarta Sans', sans-serif;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body {
+  font-family: var(--font);
+  background: #C8C4BC;
+  display: flex; justify-content: center; align-items: flex-start;
+  min-height: 100vh; padding: 28px 0 48px;
+}
+.phone {
+  width: 375px;
+  background: var(--bg);
+  border-radius: 44px; overflow: hidden;
+  box-shadow:
+    0 50px 120px rgba(0,0,0,0.35),
+    0 20px 40px rgba(0,0,0,0.15),
+    inset 0 0 0 1px rgba(255,255,255,0.2);
+  display: flex; flex-direction: column;
+}
+
+/* ═══ STATUS BAR ═══ */
+.statusbar { display:flex; justify-content:space-between; align-items:center; padding:16px 28px 4px; flex-shrink:0; }
+.sb-time { font-size:15px; font-weight:800; color:var(--ink); letter-spacing:-0.3px; }
+.sb-icons { display:flex; gap:6px; align-items:center; }
+
+/* ═══ TOP NAV ═══ */
+.topnav { display:flex; align-items:center; gap:12px; padding:8px 20px 12px; flex-shrink:0; }
+.back-btn {
+  width:36px; height:36px; border-radius:50%; background:var(--surface);
+  box-shadow:0 2px 10px rgba(0,0,0,0.07),0 0 0 1px rgba(0,0,0,0.04);
+  display:flex; align-items:center; justify-content:center; border:none; cursor:pointer; flex-shrink:0;
+}
+.topnav-title { font-size:16px; font-weight:800; color:var(--ink); letter-spacing:-0.3px; flex:1; }
+.share-btn {
+  width:36px; height:36px; border-radius:50%; background:var(--navy);
+  display:flex; align-items:center; justify-content:center; border:none; cursor:pointer;
+}
+
+/* ═══ SCROLL ═══ */
+.scroll { flex:1; overflow-y:auto; scrollbar-width:none; }
+.scroll::-webkit-scrollbar { display:none; }
+
+/* ═══ HERO CARD ═══ */
+.hero {
+  margin:0 16px 14px;
+  background:var(--navy); border-radius:var(--radius); padding:20px;
+  position:relative; overflow:hidden;
+  box-shadow:0 12px 40px rgba(15,23,42,0.28);
+}
+.hero::before {
+  content:''; position:absolute; top:-60px; right:-40px;
+  width:180px; height:180px; border-radius:50%;
+  background:radial-gradient(circle,rgba(245,183,0,0.15) 0%,transparent 65%);
+}
+.hero::after {
+  content:''; position:absolute; bottom:-50px; left:-30px;
+  width:140px; height:140px; border-radius:50%;
+  background:radial-gradient(circle,rgba(45,212,191,0.12) 0%,transparent 65%);
+}
+.hero-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; position:relative; z-index:1; }
+.hero-badge {
+  background:rgba(245,183,0,0.12); border:1px solid rgba(245,183,0,0.25);
+  border-radius:var(--r-pill); padding:5px 12px;
+  font-size:10px; font-weight:800; color:var(--yellow); letter-spacing:0.6px; text-transform:uppercase;
+}
+.hero-date { font-size:10px; font-weight:600; color:rgba(255,255,255,0.3); }
+.hero-main { display:flex; align-items:center; gap:14px; margin-bottom:16px; position:relative; z-index:1; }
+.hero-ring { width:76px; height:76px; border-radius:50%; flex-shrink:0; position:relative; }
+.hero-ring svg { position:absolute; top:0; left:0; transform:rotate(-90deg); }
+.hero-ring-inner {
+  position:absolute; inset:7px; border-radius:50%; background:var(--navy);
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+}
+.hero-ring-score { font-size:20px; font-weight:900; color:white; line-height:1; }
+.hero-ring-max   { font-size:9px; color:rgba(255,255,255,0.3); font-weight:700; margin-top:1px; }
+.hero-info {}
+.hero-level { font-size:24px; font-weight:900; color:white; letter-spacing:-0.6px; line-height:1.1; }
+.hero-level-sub { font-size:11px; color:rgba(255,255,255,0.4); font-weight:600; margin-top:3px; }
+.hero-next { font-size:11px; color:var(--teal2); font-weight:700; margin-top:6px; display:flex; align-items:center; gap:4px; }
+.hero-stats { display:flex; gap:8px; margin-bottom:14px; position:relative; z-index:1; }
+.hs { flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.07); border-radius:var(--r-sm); padding:9px 6px; text-align:center; }
+.hs-v { font-size:14px; font-weight:900; color:white; }
+.hs-v span { font-size:9px; color:rgba(255,255,255,0.3); font-weight:600; }
+.hs-l { font-size:9px; color:rgba(255,255,255,0.3); font-weight:700; text-transform:uppercase; letter-spacing:0.2px; margin-top:2px; }
+.hero-bar-wrap { position:relative; z-index:1; }
+.hero-bar-labels { display:flex; justify-content:space-between; margin-bottom:5px; }
+.hbl-l { font-size:10px; color:rgba(255,255,255,0.3); font-weight:700; }
+.hbl-v { font-size:10px; color:var(--yellow); font-weight:800; }
+.hero-bar-track { height:5px; background:rgba(255,255,255,0.07); border-radius:3px; overflow:hidden; }
+.hero-bar-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,var(--yellow),var(--yellow2)); transition:width 1.2s ease; }
+
+/* ═══ TABS ═══ */
+.tabs-wrap { padding:0 16px 12px; flex-shrink:0; }
+.tabs {
+  display:flex; gap:4px;
+  background:rgba(0,0,0,0.05); border-radius:14px; padding:4px;
+}
+.tab {
+  flex:1; padding:8px 6px; font-size:11px; font-weight:800; text-align:center;
+  border-radius:10px; cursor:pointer; color:var(--ink2);
+  border:none; background:transparent; font-family:var(--font);
+  transition:all 0.2s; white-space:nowrap;
+}
+.tab.active { background:var(--surface); color:var(--ink); box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+
+/* ═══ TAB PANELS ═══ */
+.panel { display:none; }
+.panel.active { display:block; }
+
+/* ═══ SHARED CARD ═══ */
+.card {
+  margin:0 16px 12px; background:var(--surface);
+  border-radius:var(--radius); padding:16px;
+  box-shadow:0 2px 12px rgba(0,0,0,0.06),0 0 0 1px rgba(0,0,0,0.04);
+}
+.card-dark {
+  margin:0 16px 12px; background:var(--navy);
+  border-radius:var(--radius); padding:16px;
+  box-shadow:0 8px 28px rgba(15,23,42,0.22);
+  position:relative; overflow:hidden;
+}
+.card-dark::before {
+  content:''; position:absolute; top:-30px; right:-30px;
+  width:120px; height:120px; border-radius:50%;
+  background:radial-gradient(circle,rgba(124,58,237,0.18) 0%,transparent 70%);
+}
+.card-label { font-size:10px; font-weight:800; color:var(--ink2); text-transform:uppercase; letter-spacing:0.7px; margin-bottom:12px; }
+.card-title { font-size:14px; font-weight:800; color:var(--ink); margin-bottom:2px; }
+.card-sub   { font-size:11px; color:var(--ink2); font-weight:600; margin-bottom:14px; }
+
+/* ═══ OVERVIEW TAB ═══ */
+
+/* Skills 2x3 Grid */
+.skills-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+.skill-tile {
+  background:#FAF9F6; border:1px solid #EEEBE4; border-radius:var(--r-sm); padding:12px;
+  position:relative; overflow:hidden;
+}
+.st-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:6px; }
+.st-name { font-size:10px; font-weight:800; color:var(--ink2); text-transform:uppercase; letter-spacing:0.5px; }
+.st-score { font-size:20px; font-weight:900; color:var(--ink); letter-spacing:-0.5px; }
+.st-label { font-size:10px; font-weight:700; margin-top:2px; }
+.st-bar-bg { height:3px; background:#E8E5DE; border-radius:2px; overflow:hidden; margin-top:8px; }
+.st-bar-fill { height:100%; border-radius:2px; }
+.st-icon { font-size:18px; line-height:1; }
+
+/* Fluency Metrics */
+.fluency-metrics { display:flex; flex-direction:column; gap:10px; }
+.fm { display:flex; align-items:center; gap:10px; }
+.fm-icon { font-size:14px; width:18px; text-align:center; flex-shrink:0; }
+.fm-name { font-size:11px; font-weight:700; color:var(--ink); flex:1; }
+.fm-bar { flex:2; height:5px; background:#F0EDE6; border-radius:3px; overflow:hidden; }
+.fm-fill { height:100%; border-radius:3px; }
+.fm-val { font-size:10px; font-weight:800; color:var(--ink2); width:34px; text-align:right; font-variant-numeric:tabular-nums; }
+
+/* Radar Row */
+.radar-row { display:flex; align-items:center; gap:14px; }
+.radar-list { flex:1; display:flex; flex-direction:column; gap:6px; }
+.rl-item { display:flex; align-items:center; gap:8px; }
+.rl-dot { width:7px; height:7px; border-radius:50%; flex-shrink:0; }
+.rl-name { font-size:11px; font-weight:700; color:var(--ink); flex:1; }
+.rl-val { font-size:11px; font-weight:800; color:var(--ink); font-variant-numeric:tabular-nums; }
+
+/* ═══ VOCAB TAB ═══ */
+.vocab-big { font-size:54px; font-weight:900; color:white; line-height:1; letter-spacing:-2px; position:relative; z-index:1; }
+.vocab-big span { font-size:18px; color:rgba(255,255,255,0.3); font-weight:600; vertical-align:top; margin-top:8px; display:inline-block; }
+.vocab-sub { font-size:12px; color:rgba(255,255,255,0.35); font-weight:600; margin-top:4px; position:relative; z-index:1; margin-bottom:14px; }
+.vocab-compare { display:flex; gap:8px; position:relative; z-index:1; margin-bottom:14px; }
+.vc { flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.07); border-radius:var(--r-sm); padding:9px 10px; }
+.vc-l { font-size:9px; color:rgba(255,255,255,0.3); font-weight:700; text-transform:uppercase; margin-bottom:3px; }
+.vc-v { font-size:13px; font-weight:800; }
+.vocab-prog-wrap { position:relative; z-index:1; }
+.vp-labels { display:flex; justify-content:space-between; margin-bottom:5px; }
+.vp-l { font-size:10px; color:rgba(255,255,255,0.3); font-weight:700; }
+.vp-v { font-size:10px; color:#C4B5FD; font-weight:800; }
+.vp-track { height:5px; background:rgba(255,255,255,0.06); border-radius:3px; overflow:hidden; }
+.vp-fill { height:100%; border-radius:3px; background:linear-gradient(90deg,#7C3AED,#C084FC); transition:width 1s ease; }
+
+/* Words Cloud */
+.words-cloud { display:flex; flex-wrap:wrap; gap:6px; }
+.wchip {
+  background:#FAF9F6; border:1px solid #EEEBE4; border-radius:var(--r-pill);
+  padding:4px 10px; font-size:10px; font-weight:700; color:var(--ink2); cursor:pointer;
+  transition:all 0.15s;
+}
+.wchip:active { transform:scale(0.95); }
+.wchip.hot  { background:rgba(245,183,0,0.1); border-color:rgba(245,183,0,0.25); color:#92400E; }
+.wchip.key  { background:rgba(59,130,246,0.08); border-color:rgba(59,130,246,0.2); color:#1E40AF; }
+.words-cta {
+  display:flex; align-items:center; justify-content:space-between;
+  background:var(--navy); border-radius:var(--r-sm); padding:13px 16px; cursor:pointer; margin-top:4px;
+}
+.wcta-txt { font-size:12px; font-weight:800; color:white; }
+.wcta-arr { width:28px; height:28px; border-radius:9px; background:rgba(255,255,255,0.08); display:flex; align-items:center; justify-content:center; }
+
+/* ═══ GRAMMAR TAB ═══ */
+.grammar-items { display:flex; flex-direction:column; gap:8px; }
+.gi {
+  display:flex; align-items:center; gap:12px;
+  background:#FAF9F6; border:1px solid #EEEBE4;
+  border-radius:var(--r-sm); padding:11px 14px;
+}
+.gi-name { font-size:12px; font-weight:700; color:var(--ink); flex:1; }
+.gi-bar-bg { flex:2; height:5px; background:#E8E5DE; border-radius:3px; overflow:hidden; }
+.gi-bar-fill { height:100%; border-radius:3px; }
+.gi-errors { font-size:11px; font-weight:800; width:36px; text-align:right; font-variant-numeric:tabular-nums; }
+.gi-chip { font-size:9px; font-weight:800; padding:3px 8px; border-radius:6px; flex-shrink:0; display:flex; align-items:center; gap:3px; }
+.chip-g { background:rgba(13,148,136,0.1); color:#065F46; }
+.chip-w { background:rgba(245,183,0,0.12); color:#92400E; }
+.chip-b { background:rgba(239,68,68,0.08); color:#991B1B; }
+
+/* Pronunciation */
+.pronun-detail { display:flex; flex-direction:column; gap:8px; margin-bottom:12px; }
+.pd { display:flex; align-items:center; justify-content:space-between; }
+.pd-name { font-size:12px; font-weight:700; color:var(--ink); }
+.pd-chip { font-size:10px; font-weight:800; padding:3px 10px; border-radius:7px; display:flex; align-items:center; gap:4px; }
+
+/* Response Bar Chart */
+.resp-chart { display:flex; align-items:flex-end; gap:5px; height:80px; }
+.rc-col { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.rc-bar { width:100%; border-radius:5px 5px 0 0; min-height:4px; }
+.rc-lbl { font-size:8px; font-weight:700; color:var(--ink2); }
+
+/* ═══ ROADMAP TAB ═══ */
+.roadmap-steps { display:flex; flex-direction:column; position:relative; }
+.roadmap-steps::before {
+  content:''; position:absolute; left:19px; top:28px; bottom:28px; width:2px;
+  background:linear-gradient(to bottom, var(--teal), var(--blue), #7C3AED); border-radius:2px;
+}
+.rm-step { display:flex; gap:16px; padding:10px 0; }
+.rm-dot {
+  width:38px; height:38px; border-radius:50%; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  position:relative; z-index:1;
+}
+.rm-dot.done    { background:var(--teal); box-shadow:0 0 0 3px rgba(13,148,136,0.12); }
+.rm-dot.current { background:var(--yellow); box-shadow:0 0 0 4px rgba(245,183,0,0.15); animation:nowping 2s ease-in-out infinite; }
+@keyframes nowping { 0%,100%{box-shadow:0 0 0 4px rgba(245,183,0,0.15);} 50%{box-shadow:0 0 0 8px rgba(245,183,0,0.07);} }
+.rm-dot.next    { background:var(--surface); border:2px solid #DDD9D1; }
+.rm-dot.future  { background:#F5F3EE; border:2px dashed #DDD9D1; }
+.rm-body { padding-top:6px; flex:1; }
+.rm-level { font-size:14px; font-weight:800; color:var(--ink); }
+.rm-desc  { font-size:11px; color:var(--ink2); font-weight:600; margin-top:2px; line-height:1.4; }
+.rm-tag   { display:inline-flex; align-items:center; gap:4px; margin-top:5px; border-radius:8px; padding:3px 9px; font-size:10px; font-weight:800; }
+.tag-done { background:rgba(13,148,136,0.1); color:#065F46; }
+.tag-now  { background:rgba(245,183,0,0.1); color:#92400E; }
+.tag-next { background:rgba(59,130,246,0.08); color:#1E40AF; }
+
+/* Plan Timeline */
+.plan-items { display:flex; flex-direction:column; gap:8px; }
+.plan-item {
+  display:flex; align-items:center; gap:12px;
+  background:#FAF9F6; border:1px solid #EEEBE4;
+  border-radius:var(--r-sm); padding:12px 14px;
+}
+.plan-week { font-size:9px; font-weight:800; color:var(--ink2); text-transform:uppercase; letter-spacing:0.5px; width:44px; flex-shrink:0; }
+.plan-body { flex:1; }
+.plan-title { font-size:12px; font-weight:700; color:var(--ink); margin-bottom:1px; }
+.plan-focus { font-size:10px; font-weight:600; color:var(--ink2); }
+.plan-bar { flex:1; height:4px; background:#E8E5DE; border-radius:2px; overflow:hidden; }
+.plan-fill { height:100%; border-radius:2px; }
+
+/* Coach Card */
+.coach-card {
+  margin:0 16px 12px;
+  background:linear-gradient(135deg,#FEFCE8,#FFF7ED);
+  border:1px solid rgba(245,183,0,0.2);
+  border-radius:var(--radius); padding:16px;
+  box-shadow:0 4px 16px rgba(245,183,0,0.1);
+}
+.coach-top { display:flex; gap:12px; align-items:center; margin-bottom:14px; }
+.coach-av {
+  width:44px; height:44px; border-radius:50%;
+  background:linear-gradient(135deg,var(--yellow),#F59E0B);
+  display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0;
+}
+.coach-name { font-size:13px; font-weight:800; color:var(--ink); }
+.coach-role { font-size:10px; font-weight:600; color:var(--ink2); margin-top:1px; }
+.coach-tips { display:flex; flex-direction:column; gap:8px; }
+.ctip {
+  display:flex; gap:10px; align-items:flex-start;
+  background:white; border-radius:var(--r-sm); padding:11px 13px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.04);
+}
+.ctip-num {
+  width:22px; height:22px; border-radius:50%; background:var(--yellow);
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:900; color:var(--navy); flex-shrink:0; margin-top:1px;
+}
+.ctip-txt { font-size:11px; font-weight:600; color:#333; line-height:1.55; }
+.ctip-txt b { color:var(--ink); font-weight:800; }
+
+/* Next Session CTA */
+.next-cta {
+  margin:0 16px 20px;
+  background:linear-gradient(135deg,var(--teal),#0F766E);
+  border-radius:var(--radius); padding:18px;
+  box-shadow:0 8px 28px rgba(13,148,136,0.3);
+  position:relative; overflow:hidden;
+}
+.next-cta::before {
+  content:''; position:absolute; top:-30px; right:-20px;
+  width:120px; height:120px; border-radius:50%;
+  background:rgba(255,255,255,0.07);
+}
+.nc-title { font-size:15px; font-weight:800; color:white; margin-bottom:4px; position:relative; z-index:1; }
+.nc-sub   { font-size:11px; color:rgba(255,255,255,0.55); font-weight:600; margin-bottom:16px; position:relative; z-index:1; }
+.nc-btn {
+  background:white; border:none; border-radius:var(--r-sm); padding:13px;
+  font-family:var(--font); font-size:13px; font-weight:800; color:var(--teal);
+  cursor:pointer; width:100%; position:relative; z-index:1;
+  box-shadow:0 4px 16px rgba(0,0,0,0.12); transition:transform 0.15s;
+}
+.nc-btn:active { transform:scale(0.98); }
+
+/* ═══ BOTTOM NAV ═══ */
+.bottom-nav { background:var(--surface); border-top:1px solid rgba(0,0,0,0.06); display:flex; justify-content:space-around; align-items:center; padding:8px 4px 18px; flex-shrink:0; }
+.nav-item { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; flex:1; padding:4px 0; }
+.nav-icon-wrap { width:40px; height:40px; border-radius:14px; display:flex; align-items:center; justify-content:center; background:transparent; }
+.nav-item.center .nav-icon-wrap { width:48px; height:48px; border-radius:16px; background:var(--navy); box-shadow:0 6px 20px rgba(15,23,42,0.3); margin-top:-12px; }
+.nav-lbl { font-size:9px; font-weight:700; color:#C0BCB5; }
+.nav-item.center .nav-lbl { color:var(--ink); }
+</style>
+</head>
+<body>
+<div class="phone">
+
+  <!-- Status Bar -->
+  <div class="statusbar">
+    <span class="sb-time">9:41</span>
+    <div class="sb-icons">
+      <svg width="16" height="11" viewBox="0 0 16 11" fill="none"><rect x="0" y="3" width="3" height="8" rx="1" fill="#1a1a1a"/><rect x="4.5" y="2" width="3" height="9" rx="1" fill="#1a1a1a"/><rect x="9" y="0" width="3" height="11" rx="1" fill="#1a1a1a"/><rect x="13.5" y="0" width="2.5" height="11" rx="1" fill="#e0ddd7"/></svg>
+      <svg width="15" height="11" viewBox="0 0 24 18" fill="none"><path d="M1 5C5.5.5 10.5-.5 12-.5S18.5.5 23 5" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/><path d="M4.5 9C7.5 6.5 10.2 5.2 12 5.2s4.5 1.3 7.5 3.8" stroke="#1a1a1a" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="16.5" r="1.8" fill="#1a1a1a"/></svg>
+      <svg width="24" height="11" viewBox="0 0 26 12" fill="none"><rect x=".5" y=".5" width="21" height="11" rx="3.5" stroke="#1a1a1a" stroke-opacity="0.3"/><rect x="2" y="2" width="16" height="8" rx="2" fill="#1a1a1a"/><path d="M23 4.5V7.5C23.9 7.2 24.5 6.7 24.5 6S23.9 4.8 23 4.5Z" fill="#1a1a1a" fill-opacity="0.35"/></svg>
+    </div>
+  </div>
+
+  <!-- Top Nav -->
+  <div class="topnav">
+    <button class="back-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M19 12H5M5 12L12 19M5 12L12 5" stroke="#1a1a1a" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <span class="topnav-title">Speaking Report</span>
+    <button class="share-btn">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M8.59 13.51L15.42 17.49M15.41 6.51L8.59 10.49M21 5C21 6.66 19.66 8 18 8C16.34 8 15 6.66 15 5C15 3.34 16.34 2 18 2C19.66 2 21 3.34 21 5ZM9 12C9 13.66 7.66 15 6 15C4.34 15 3 13.66 3 12C3 10.34 4.34 9 6 9C7.66 9 9 10.34 9 12ZM21 19C21 20.66 19.66 22 18 22C16.34 22 15 20.66 15 19C15 17.34 16.34 16 18 16C19.66 16 21 17.34 21 19Z" stroke="white" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+  </div>
+
+  <div class="scroll">
+
+    <!-- Hero -->
+    <div class="hero">
+      <div class="hero-top">
+        <div class="hero-badge">✦ Tahlil tugadi</div>
+        <span class="hero-date">31 Mart 2025 • 9:15 daqiqa</span>
+      </div>
+      <div class="hero-main">
+        <div class="hero-ring">
+          <svg width="76" height="76" viewBox="0 0 76 76">
+            <circle cx="38" cy="38" r="33" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="6.5"/>
+            <circle cx="38" cy="38" r="33" fill="none" stroke="#F5B700" stroke-width="6.5"
+              stroke-dasharray="207.3" stroke-dashoffset="78.8" stroke-linecap="round"/>
+          </svg>
+          <div class="hero-ring-inner">
+            <span class="hero-ring-score">62</span>
+            <span class="hero-ring-max">/ 100</span>
+          </div>
+        </div>
+        <div class="hero-info">
+          <div class="hero-level">B1 — Intermediate</div>
+          <div class="hero-level-sub">CEFR Threshold Level</div>
+          <div class="hero-next">▲ B2 ga 38% qoldi</div>
+        </div>
+      </div>
+      <div class="hero-stats">
+        <div class="hs"><div class="hs-v">9<span>:15</span></div><div class="hs-l">Suhbat</div></div>
+        <div class="hs"><div class="hs-v">47<span>ta</span></div><div class="hs-l">Javob</div></div>
+        <div class="hs"><div class="hs-v">127<span>wpm</span></div><div class="hs-l">Tezlik</div></div>
+        <div class="hs"><div class="hs-v">74<span>%</span></div><div class="hs-l">Talaffuz</div></div>
+      </div>
+      <div class="hero-bar-wrap">
+        <div class="hero-bar-labels">
+          <span class="hbl-l">B1 → B2 progress</span>
+          <span class="hbl-v">62 / 100 ball</span>
+        </div>
+        <div class="hero-bar-track"><div class="hero-bar-fill" style="width:62%;"></div></div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="tabs-wrap">
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('overview',this)">Ko'rish</button>
+        <button class="tab" onclick="switchTab('vocab',this)">Lug'at</button>
+        <button class="tab" onclick="switchTab('grammar',this)">Grammatika</button>
+        <button class="tab" onclick="switchTab('roadmap',this)">Yo'l xarita</button>
+      </div>
+    </div>
+
+    <!-- ══════ TAB: OVERVIEW ══════ -->
+    <div id="tab-overview" class="panel active">
+
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-label">Ko'nikmalar tahlili</div>
+        <div class="radar-row">
+          <canvas id="radarChart" width="130" height="130" style="flex-shrink:0;"></canvas>
+          <div class="radar-list">
+            <div class="rl-item"><div class="rl-dot" style="background:#F5B700;"></div><span class="rl-name">Speaking</span><span class="rl-val" style="color:#92400E;">68%</span></div>
+            <div class="rl-item"><div class="rl-dot" style="background:#3B82F6;"></div><span class="rl-name">Vocabulary</span><span class="rl-val" style="color:#1E40AF;">54%</span></div>
+            <div class="rl-item"><div class="rl-dot" style="background:#0D9488;"></div><span class="rl-name">Grammar</span><span class="rl-val" style="color:#065F46;">71%</span></div>
+            <div class="rl-item"><div class="rl-dot" style="background:#EC4899;"></div><span class="rl-name">Listening</span><span class="rl-val" style="color:#831843;">60%</span></div>
+            <div class="rl-item"><div class="rl-dot" style="background:#7C3AED;"></div><span class="rl-name">Reading</span><span class="rl-val" style="color:#4C1D95;">78%</span></div>
+            <div class="rl-item"><div class="rl-dot" style="background:#F97316;"></div><span class="rl-name">Writing</span><span class="rl-val" style="color:#9A3412;">45%</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Ball kartochkalari</div>
+        <div class="skills-grid">
+          <div class="skill-tile">
+            <div class="st-top"><span class="st-icon">🗣️</span><span class="st-name">Speaking</span></div>
+            <div class="st-score" style="color:#92400E;">68</div>
+            <div class="st-label" style="color:#B45309;">Intermediate+</div>
+            <div class="st-bar-bg"><div class="st-bar-fill" style="width:68%;background:#F5B700;"></div></div>
+          </div>
+          <div class="skill-tile">
+            <div class="st-top"><span class="st-icon">📚</span><span class="st-name">Vocabulary</span></div>
+            <div class="st-score" style="color:#1E40AF;">54</div>
+            <div class="st-label" style="color:#1D4ED8;">Kuchayish kerak</div>
+            <div class="st-bar-bg"><div class="st-bar-fill" style="width:54%;background:#3B82F6;"></div></div>
+          </div>
+          <div class="skill-tile">
+            <div class="st-top"><span class="st-icon">📝</span><span class="st-name">Grammar</span></div>
+            <div class="st-score" style="color:#065F46;">71</div>
+            <div class="st-label" style="color:#0F766E;">Yaxshi</div>
+            <div class="st-bar-bg"><div class="st-bar-fill" style="width:71%;background:#0D9488;"></div></div>
+          </div>
+          <div class="skill-tile">
+            <div class="st-top"><span class="st-icon">👂</span><span class="st-name">Listening</span></div>
+            <div class="st-score" style="color:#831843;">60</div>
+            <div class="st-label" style="color:#BE185D;">O'rta</div>
+            <div class="st-bar-bg"><div class="st-bar-fill" style="width:60%;background:#EC4899;"></div></div>
+          </div>
+          <div class="skill-tile">
+            <div class="st-top"><span class="st-icon">📖</span><span class="st-name">Reading</span></div>
+            <div class="st-score" style="color:#4C1D95;">78</div>
+            <div class="st-label" style="color:#6D28D9;">Kuchli</div>
+            <div class="st-bar-bg"><div class="st-bar-fill" style="width:78%;background:#7C3AED;"></div></div>
+          </div>
+          <div class="skill-tile">
+            <div class="st-top"><span class="st-icon">✍️</span><span class="st-name">Writing</span></div>
+            <div class="st-score" style="color:#9A3412;">45</div>
+            <div class="st-label" style="color:#C2410C;">Zaif tomon</div>
+            <div class="st-bar-bg"><div class="st-bar-fill" style="width:45%;background:#F97316;"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-label">Ravonlik (Fluency)</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+          <span style="font-size:13px;font-weight:800;color:var(--ink);">Umumiy ball</span>
+          <span style="font-size:22px;font-weight:900;color:var(--teal);">68<span style="font-size:12px;color:var(--ink2);font-weight:600;">/100</span></span>
+        </div>
+        <div class="fluency-metrics">
+          <div class="fm"><span class="fm-icon">⚡</span><span class="fm-name">Nutq tezligi</span><div class="fm-bar"><div class="fm-fill" style="width:76%;background:#F5B700;"></div></div><span class="fm-val">127wpm</span></div>
+          <div class="fm"><span class="fm-icon">⏸</span><span class="fm-name">Kamroq pauza</span><div class="fm-bar"><div class="fm-fill" style="width:62%;background:#3B82F6;"></div></div><span class="fm-val">62%</span></div>
+          <div class="fm"><span class="fm-icon">🎯</span><span class="fm-name">Aniq ifoda</span><div class="fm-bar"><div class="fm-fill" style="width:71%;background:#0D9488;"></div></div><span class="fm-val">71%</span></div>
+          <div class="fm"><span class="fm-icon">🌊</span><span class="fm-name">Intonatsiya</span><div class="fm-bar"><div class="fm-fill" style="width:58%;background:#7C3AED;"></div></div><span class="fm-val">58%</span></div>
+          <div class="fm"><span class="fm-icon">🔄</span><span class="fm-name">So'z xilma-xilligi</span><div class="fm-bar"><div class="fm-fill" style="width:55%;background:#EC4899;"></div></div><span class="fm-val">55%</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-label" style="margin-bottom:10px;">Javob sifati — 10 ta savol</div>
+        <div class="resp-chart" id="respChart"></div>
+      </div>
+    </div>
+
+    <!-- ══════ TAB: VOCABULARY ══════ -->
+    <div id="tab-vocab" class="panel">
+
+      <div class="card-dark" style="margin-bottom:12px;">
+        <div class="card-label" style="color:rgba(255,255,255,0.3);">Lug'at hajmi</div>
+        <div class="vocab-big">3,400<span> so'z</span></div>
+        <div class="vocab-sub">Faol lug'at hajmingiz (taxminiy)</div>
+        <div class="vocab-compare">
+          <div class="vc"><div class="vc-l">A2 daraja</div><div class="vc-v" style="color:#4ADE80;">1,500 ✓</div></div>
+          <div class="vc"><div class="vc-l">B1 daraja</div><div class="vc-v" style="color:#F5B700;">3,000 ✓</div></div>
+          <div class="vc"><div class="vc-l">B2 maqsad</div><div class="vc-v" style="color:#93C5FD;">6,000 ↑</div></div>
+        </div>
+        <div class="vocab-prog-wrap">
+          <div class="vp-labels">
+            <span class="vp-l">B2 ga: 3,400 / 6,000 so'z</span>
+            <span class="vp-v">54%</span>
+          </div>
+          <div class="vp-track"><div class="vp-fill" style="width:54%;"></div></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-label" style="margin-bottom:10px;">B2 uchun zarur priority so'zlar</div>
+        <div class="words-cloud">
+          <span class="wchip hot">acquire</span><span class="wchip key">analyze</span><span class="wchip">benefit</span>
+          <span class="wchip hot">challenge</span><span class="wchip key">colleague</span><span class="wchip">commit</span>
+          <span class="wchip">consistent</span><span class="wchip key">contrast</span><span class="wchip hot">dedicate</span>
+          <span class="wchip">despite</span><span class="wchip">efficient</span><span class="wchip key">emphasize</span>
+          <span class="wchip hot">evaluate</span><span class="wchip">evidence</span><span class="wchip">generate</span>
+          <span class="wchip hot">impact</span><span class="wchip key">implement</span><span class="wchip">indicate</span>
+          <span class="wchip">negotiate</span><span class="wchip key">perspective</span>
+        </div>
+        <div class="words-cta" style="margin-top:12px;">
+          <span class="wcta-txt">📋 To'liq 500 so'z ro'yxatini ko'rish</span>
+          <div class="wcta-arr"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-label" style="margin-bottom:12px;">Daraja bo'yicha lug'at taqqoslamasi</div>
+        <canvas id="vocabBarChart" width="300" height="120" style="width:100%;"></canvas>
+      </div>
+
+      <div class="coach-card">
+        <div class="coach-top">
+          <div class="coach-av">🧑‍🏫</div>
+          <div><div class="coach-name">AI Coach maslahat</div><div class="coach-role">Vocabulary bo'yicha</div></div>
+        </div>
+        <div class="coach-tips">
+          <div class="ctip"><div class="ctip-num">1</div><div class="ctip-txt"><b>Spaced repetition:</b> 500 priority so'zni kuniga 15 ta o'rganing. Anki yoki ilovaning o'z flash card tizimi orqali 35 kun ichida B2 lug'atiga yetasiz.</div></div>
+          <div class="ctip"><div class="ctip-num">2</div><div class="ctip-txt"><b>Kontekstda o'rganing:</b> Yangi so'zni alohida emas, 3 ta real jumla ichida yodlang. Bu esda saqlashni 4 baravar oshiradi.</div></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px;"></div>
+    </div>
+
+    <!-- ══════ TAB: GRAMMAR ══════ -->
+    <div id="tab-grammar" class="panel">
+
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-label" style="margin-bottom:12px;">Grammatika xatolari kategoriya bo'yicha</div>
+        <div class="grammar-items">
+          <div class="gi"><span style="font-size:14px;width:20px;text-align:center;">⏰</span><span class="gi-name">Tenses</span><div class="gi-bar-bg"><div class="gi-bar-fill" style="width:30%;background:#EF4444;"></div></div><span class="gi-errors" style="color:#EF4444;">8 ta</span><span class="gi-chip chip-b">✗ Zaif</span></div>
+          <div class="gi"><span style="font-size:14px;width:20px;text-align:center;">📌</span><span class="gi-name">Conditionals</span><div class="gi-bar-bg"><div class="gi-bar-fill" style="width:25%;background:#EF4444;"></div></div><span class="gi-errors" style="color:#EF4444;">7 ta</span><span class="gi-chip chip-b">✗ Zaif</span></div>
+          <div class="gi"><span style="font-size:14px;width:20px;text-align:center;">🔗</span><span class="gi-name">Prepositions</span><div class="gi-bar-bg"><div class="gi-bar-fill" style="width:40%;background:#F59E0B;"></div></div><span class="gi-errors" style="color:#F59E0B;">6 ta</span><span class="gi-chip chip-w">~ O'rta</span></div>
+          <div class="gi"><span style="font-size:14px;width:20px;text-align:center;">📄</span><span class="gi-name">Articles</span><div class="gi-bar-bg"><div class="gi-bar-fill" style="width:50%;background:#F59E0B;"></div></div><span class="gi-errors" style="color:#F59E0B;">5 ta</span><span class="gi-chip chip-w">~ O'rta</span></div>
+          <div class="gi"><span style="font-size:14px;width:20px;text-align:center;">🔀</span><span class="gi-name">Conjunctions</span><div class="gi-bar-bg"><div class="gi-bar-fill" style="width:70%;background:#0D9488;"></div></div><span class="gi-errors" style="color:#0D9488;">3 ta</span><span class="gi-chip chip-g">✓ Yaxshi</span></div>
+          <div class="gi"><span style="font-size:14px;width:20px;text-align:center;">🔤</span><span class="gi-name">Word Order</span><div class="gi-bar-bg"><div class="gi-bar-fill" style="width:80%;background:#0D9488;"></div></div><span class="gi-errors" style="color:#0D9488;">2 ta</span><span class="gi-chip chip-g">✓ Yaxshi</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-label" style="margin-bottom:12px;">Talaffuz tahlili</div>
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;">
+          <div style="position:relative;width:80px;height:80px;flex-shrink:0;">
+            <canvas id="pronunDoughnut" width="80" height="80"></canvas>
+            <div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+              <div style="font-size:18px;font-weight:900;color:#16A34A;line-height:1;">74%</div>
+              <div style="font-size:8px;color:var(--ink2);font-weight:700;">BALL</div>
+            </div>
+          </div>
+          <div class="pronun-detail">
+            <div class="pd"><span class="pd-name">Unli tovushlar</span><span class="pd-chip chip-g">✓ Yaxshi</span></div>
+            <div class="pd"><span class="pd-name">Undosh tovushlar</span><span class="pd-chip chip-w">~ O'rta</span></div>
+            <div class="pd"><span class="pd-name">Urg'u (stress)</span><span class="pd-chip chip-w">~ O'rta</span></div>
+            <div class="pd"><span class="pd-name">Intonatsiya</span><span class="pd-chip chip-b">✗ Zaif</span></div>
+          </div>
+        </div>
+        <div style="font-size:10px;font-weight:800;color:var(--ink);margin-bottom:8px;">Mashq qilish kerak bo'lgan tovushlar</div>
+        <div style="display:flex;flex-wrap:wrap;gap:6px;">
+          <span style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.15);border-radius:var(--r-pill);padding:4px 10px;font-size:10px;font-weight:700;color:#DC2626;">/θ/ th</span>
+          <span style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.15);border-radius:var(--r-pill);padding:4px 10px;font-size:10px;font-weight:700;color:#DC2626;">/v/ vs /w/</span>
+          <span style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.15);border-radius:var(--r-pill);padding:4px 10px;font-size:10px;font-weight:700;color:#DC2626;">/æ/ cat</span>
+          <span style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.15);border-radius:var(--r-pill);padding:4px 10px;font-size:10px;font-weight:700;color:#DC2626;">-ed endings</span>
+          <span style="background:rgba(239,68,68,0.07);border:1px solid rgba(239,68,68,0.15);border-radius:var(--r-pill);padding:4px 10px;font-size:10px;font-weight:700;color:#DC2626;">/r/ sound</span>
+        </div>
+      </div>
+
+      <div class="coach-card">
+        <div class="coach-top">
+          <div class="coach-av">🧑‍🏫</div>
+          <div><div class="coach-name">AI Coach maslahat</div><div class="coach-role">Grammar bo'yicha</div></div>
+        </div>
+        <div class="coach-tips">
+          <div class="ctip"><div class="ctip-num">1</div><div class="ctip-txt"><b>Conditionals:</b> "If I had known..." va "I would have..." konstruktsiyalarini 20 ta misol bilan yodlang. Bu suhbatda 7 marta xato qilgan joyingiz.</div></div>
+          <div class="ctip"><div class="ctip-num">2</div><div class="ctip-txt"><b>/θ/ tovushi:</b> Ko'zguda tish va til pozitsiyasini kuzatib "think, three, through" so'zlarini mashq qiling. Kuniga 5 daqiqa yetarli.</div></div>
+        </div>
+      </div>
+
+      <div style="margin-bottom:20px;"></div>
+    </div>
+
+    <!-- ══════ TAB: ROADMAP ══════ -->
+    <div id="tab-roadmap" class="panel">
+
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-title">B2 ga chiqish yo'l xaritasi</div>
+        <div class="card-sub">Taxminan 4–6 oy (kuniga 30 daqiqa)</div>
+        <div class="roadmap-steps">
+          <div class="rm-step"><div class="rm-dot done"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div class="rm-body"><div class="rm-level">A1 — Beginner</div><div class="rm-desc">Asosiy so'zlar, 500 lug'at</div><span class="rm-tag tag-done">✓ Bajarildi</span></div></div>
+          <div class="rm-step"><div class="rm-dot done"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div><div class="rm-body"><div class="rm-level">A2 — Elementary</div><div class="rm-desc">Oddiy suhbat, 1,500 so'z</div><span class="rm-tag tag-done">✓ Bajarildi</span></div></div>
+          <div class="rm-step"><div class="rm-dot current">📍</div><div class="rm-body"><div class="rm-level">B1 — Intermediate</div><div class="rm-desc">Kundalik mavzular, 3,400 so'z — siz hozir shu yerdasisiz</div><span class="rm-tag tag-now">● Hozirgi daraja</span></div></div>
+          <div class="rm-step"><div class="rm-dot next" style="font-size:14px;">→</div><div class="rm-body"><div class="rm-level">B2 — Upper Intermediate</div><div class="rm-desc">Murakkab mavzular, 6,000 so'z, ish va ta'limda</div><span class="rm-tag tag-next">▲ Keyingi maqsad</span></div></div>
+          <div class="rm-step"><div class="rm-dot future" style="font-size:12px;color:#C0BCB5;">○</div><div class="rm-body"><div class="rm-level" style="color:var(--ink2);">C1 — Advanced</div><div class="rm-desc">Akademik, professional daraja</div></div></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:12px;">
+        <div class="card-title">Oylik o'qish rejasi</div>
+        <div class="card-sub" style="margin-bottom:12px;">B1 → B2 uchun 4 oylik plan</div>
+        <div class="plan-items">
+          <div class="plan-item"><span class="plan-week">Oy 1</span><div class="plan-body"><div class="plan-title">Vocab + Conditionals</div><div class="plan-focus">500 so'z · If 1,2,3 · Writing</div></div><div class="plan-bar"><div class="plan-fill" style="width:100%;background:var(--teal);"></div></div></div>
+          <div class="plan-item"><span class="plan-week">Oy 2</span><div class="plan-body"><div class="plan-title">Speaking + Listening</div><div class="plan-focus">AI sessiya · TED talks · Pronun</div></div><div class="plan-bar"><div class="plan-fill" style="width:75%;background:#3B82F6;"></div></div></div>
+          <div class="plan-item"><span class="plan-week">Oy 3</span><div class="plan-body"><div class="plan-title">Writing + Reading</div><div class="plan-focus">Journal · Academic texts · IELTS prep</div></div><div class="plan-bar"><div class="plan-fill" style="width:50%;background:#7C3AED;"></div></div></div>
+          <div class="plan-item"><span class="plan-week">Oy 4</span><div class="plan-body"><div class="plan-title">Mock test + Review</div><div class="plan-focus">B2 sertifikat sinovi</div></div><div class="plan-bar"><div class="plan-fill" style="width:25%;background:#F5B700;"></div></div></div>
+        </div>
+      </div>
+
+      <div class="coach-card">
+        <div class="coach-top">
+          <div class="coach-av">🧑‍🏫</div>
+          <div><div class="coach-name">AI Coach maslahat</div><div class="coach-role">5 ta ustuvor tavsiya</div></div>
+        </div>
+        <div class="coach-tips">
+          <div class="ctip"><div class="ctip-num">1</div><div class="ctip-txt"><b>Writing zaifligini hal qiling:</b> Kuniga 10 daqiqa journal yozing. Bu ham grammar, ham vocabulary'ni bir vaqtda kuchaytiradi.</div></div>
+          <div class="ctip"><div class="ctip-num">2</div><div class="ctip-txt"><b>Listening kunlik:</b> TED Talks'ni avval subtitle bilan, keyin subsiz tomosha qiling. 1 oyda 60% → 80% bo'ladi.</div></div>
+          <div class="ctip"><div class="ctip-num">3</div><div class="ctip-txt"><b>AI Speaking — haftalik 3 marta:</b> Har sessiyadan keyin report o'qing va eng ko'p xato qilgan 1 ta grammatik hodisani mashq qiling.</div></div>
+        </div>
+      </div>
+
+      <div class="next-cta">
+        <div class="nc-title">Keyingi sessiya tayyor 🚀</div>
+        <div class="nc-sub">Writing va Vocabulary ustida ishlash rejalashtirilgan</div>
+        <button class="nc-btn">✦ Yangi suhbat boshlash</button>
+      </div>
+    </div>
+
+  </div><!-- /scroll -->
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item"><div class="nav-icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 4H16C17.1 4 18 4.9 18 6V12C18 13.1 17.1 14 16 14H10L7 17V14H4C2.9 14 2 13.1 2 12V6C2 4.9 2.9 4 4 4Z" fill="#C0BCB5"/></svg></div><span class="nav-lbl">Chat</span></div>
+    <div class="nav-item"><div class="nav-icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 19V6C4 4.9 4.9 4 6 4H19C19.6 4 20 4.4 20 5V17" stroke="#C0BCB5" stroke-width="2" stroke-linecap="round"/><path d="M4 19C4 20.1 4.9 21 6 21H20" stroke="#C0BCB5" stroke-width="2" stroke-linecap="round"/><path d="M10 9L15 12L10 15V9Z" fill="#C0BCB5"/></svg></div><span class="nav-lbl">Darslar</span></div>
+    <div class="nav-item center"><div class="nav-icon-wrap"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M3 12L12 4L21 12V20C21 20.6 20.6 21 20 21H15V16H9V21H4C3.4 21 3 20.6 3 20V12Z" fill="white"/></svg></div><span class="nav-lbl">Home</span></div>
+    <div class="nav-item"><div class="nav-icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M3 3H10.5V10.5H3V3Z" fill="#C0BCB5"/><path d="M13.5 3H21V10.5H13.5V3Z" fill="#C0BCB5" opacity="0.5"/><path d="M3 13.5H10.5V21H3V13.5Z" fill="#C0BCB5" opacity="0.5"/><path d="M13.5 13.5H21V21H13.5V13.5Z" fill="#C0BCB5" opacity="0.75"/></svg></div><span class="nav-lbl">Progress</span></div>
+    <div class="nav-item"><div class="nav-icon-wrap"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="#C0BCB5"/><path d="M4 20C4 16.7 7.6 14 12 14C16.4 14 20 16.7 20 20" stroke="#C0BCB5" stroke-width="2" stroke-linecap="round"/></svg></div><span class="nav-lbl">Profil</span></div>
+  </div>
+
+</div>
+
+<script>
+// Tab switching
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'vocab' && !window.vocabBuilt) { buildVocabChart(); window.vocabBuilt = true; }
+}
+
+// Skills Radar
+const rCtx = document.getElementById('radarChart').getContext('2d');
+new Chart(rCtx, {
+  type:'radar',
+  data:{
+    labels:['Speaking','Vocab','Grammar','Listening','Reading','Writing'],
+    datasets:[{
+      data:[68,54,71,60,78,45],
+      backgroundColor:'rgba(245,183,0,0.08)',
+      borderColor:'rgba(245,183,0,0.5)',
+      borderWidth:2,
+      pointBackgroundColor:['#F5B700','#3B82F6','#0D9488','#EC4899','#7C3AED','#F97316'],
+      pointRadius:4, pointBorderWidth:0,
+    }]
+  },
+  options:{
+    responsive:false,
+    scales:{r:{min:0,max:100,ticks:{display:false},grid:{color:'rgba(0,0,0,0.06)'},pointLabels:{display:false},angleLines:{color:'rgba(0,0,0,0.06)'}}},
+    plugins:{legend:{display:false}},
+    animation:{duration:1200,easing:'easeOutQuart'}
+  }
+});
+
+// Pronunciation Doughnut
+const pCtx = document.getElementById('pronunDoughnut').getContext('2d');
+new Chart(pCtx, {
+  type:'doughnut',
+  data:{datasets:[{data:[74,26],backgroundColor:['#22C55E','#F0EDE6'],borderWidth:0,borderRadius:4}]},
+  options:{responsive:false,cutout:'72%',plugins:{legend:{display:false},tooltip:{enabled:false}},animation:{duration:1200}}
+});
+
+// Response Quality Bar Chart
+const scores = [80,55,70,90,45,75,60,85,50,72];
+const respContainer = document.getElementById('respChart');
+const maxS = Math.max(...scores);
+scores.forEach((s,i) => {
+  const col = document.createElement('div');
+  col.className = 'rc-col';
+  const h = Math.round((s/maxS)*100);
+  const c = s>=80?'#22C55E':s>=60?'#F5B700':'#EF4444';
+  col.innerHTML = `<div class="rc-bar" style="height:${h}%;background:${c};"></div><span class="rc-lbl">S${i+1}</span>`;
+  respContainer.appendChild(col);
+});
+
+// Vocab Bar Chart (built lazily)
+function buildVocabChart() {
+  const ctx = document.getElementById('vocabBarChart');
+  if (!ctx) return;
+  new Chart(ctx, {
+    type:'bar',
+    data:{
+      labels:['A1','A2','B1\n(Siz)','B2\n(Maqsad)','C1','C2'],
+      datasets:[{
+        data:[500,1500,3400,6000,10000,16000],
+        backgroundColor:['#22C55E','#22C55E','#F5B700','rgba(59,130,246,0.3)','rgba(59,130,246,0.15)','rgba(59,130,246,0.08)'],
+        borderRadius:6, borderSkipped:false,
+      }]
+    },
+    options:{
+      responsive:true,
+      maintainAspectRatio:false,
+      scales:{
+        y:{display:false,beginAtZero:true},
+        x:{grid:{display:false},ticks:{font:{size:9,family:'Plus Jakarta Sans'},color:'#888'}}
+      },
+      plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw.toLocaleString()} so'z`}}},
+      animation:{duration:1000,easing:'easeOutQuart'}
+    }
+  });
+}
+</script>
+</body>
+</html>

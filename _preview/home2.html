@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>My AI Teacher — Home</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --yellow: #F5B700;
+  --teal: #0D9488;
+  --teal2: #2DD4BF;
+  --blue: #3B82F6;
+  --blue2: #2563EB;
+  --dark: #1a1a1a;
+  --navy: #0F172A;
+  --bg: #EDEAE4;
+  --radius: 16px;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+body {
+  font-family:'Inter',sans-serif;
+  background:#d4d0ca;
+  display:flex; justify-content:center; align-items:flex-start;
+  min-height:100vh; padding:24px 0;
+}
+.phone-frame {
+  width:375px; height:812px;
+  background:var(--bg);
+  border-radius:36px; overflow:hidden;
+  box-shadow:0 40px 100px rgba(0,0,0,0.3), inset 0 0 0 1px rgba(255,255,255,0.15);
+  display:flex; flex-direction:column;
+}
+
+/* STATUS BAR */
+.status-bar {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:14px 28px 6px; background:var(--bg); flex-shrink:0;
+}
+.status-time { font-weight:700; font-size:15px; font-family:'Plus Jakarta Sans',sans-serif; color:#1a1a1a; }
+.status-icons { display:flex; gap:5px; align-items:center; }
+
+/* HEADER */
+.header {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:10px 20px 8px; flex-shrink:0;
+}
+.header-actions { display:flex; gap:8px; align-items:center; }
+.header-btn {
+  width:38px; height:38px; border-radius:50%; background:white;
+  box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  display:flex; align-items:center; justify-content:center;
+  cursor:pointer; border:none; position:relative;
+}
+.notif-dot {
+  position:absolute; top:7px; right:7px; width:7px; height:7px;
+  background:var(--yellow); border-radius:50%; border:1.5px solid var(--bg);
+}
+.avatar-btn {
+  width:38px; height:38px; border-radius:50%;
+  background:linear-gradient(135deg,#c084fc,#7c3aed);
+  display:flex; align-items:center; justify-content:center;
+  font-weight:900; color:white; font-size:15px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  box-shadow:0 2px 8px rgba(124,58,237,0.35);
+  border:2.5px solid white; cursor:pointer;
+}
+
+/* GREETING */
+.greeting {
+  padding:2px 20px 14px;
+  font-size:24px; font-weight:900; letter-spacing:-0.3px; color:#1a1a1a;
+  font-family:'Plus Jakarta Sans',sans-serif;
+}
+
+/* SCROLL */
+.scroll-content {
+  flex:1; overflow-y:auto; scrollbar-width:none;
+  padding-bottom:0;
+}
+.scroll-content::-webkit-scrollbar { display:none; }
+
+/* ═══════════════════════════════
+   DAILY PLAN
+═══════════════════════════════ */
+.daily-plan {
+  margin:0 16px 18px;
+  background:var(--navy);
+  border-radius:20px; padding:18px;
+  position:relative; overflow:hidden;
+  box-shadow:0 8px 32px rgba(0,0,0,0.18);
+}
+.daily-plan::before {
+  content:''; position:absolute; top:-50px; right:-30px;
+  width:160px; height:160px; border-radius:50%;
+  background:radial-gradient(circle,rgba(245,183,0,0.18) 0%,transparent 70%);
+}
+.daily-plan::after {
+  content:''; position:absolute; bottom:-40px; left:-20px;
+  width:120px; height:120px; border-radius:50%;
+  background:radial-gradient(circle,rgba(13,148,136,0.2) 0%,transparent 70%);
+}
+.dp-header { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:14px; position:relative; z-index:1; }
+.dp-label { font-size:10px; font-weight:800; letter-spacing:1px; color:rgba(255,255,255,0.35); text-transform:uppercase; margin-bottom:4px; }
+.dp-title { font-family:'Plus Jakarta Sans',sans-serif; font-size:17px; font-weight:900; color:white; line-height:1.2; }
+.dp-date { background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:6px 10px; text-align:center; }
+.dp-date-day { font-size:18px; font-weight:900; color:var(--yellow); font-family:'Plus Jakarta Sans',sans-serif; line-height:1; }
+.dp-date-month { font-size:9px; font-weight:700; color:rgba(255,255,255,0.4); text-transform:uppercase; margin-top:2px; }
+
+.dp-summary { display:flex; gap:8px; margin-bottom:14px; position:relative; z-index:1; }
+.dp-stat { flex:1; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.07); border-radius:12px; padding:9px 8px; display:flex; flex-direction:column; align-items:center; gap:2px; }
+.dp-stat-val { font-family:'Plus Jakarta Sans',sans-serif; font-size:15px; font-weight:900; color:white; }
+.dp-stat-val span { font-size:10px; font-weight:600; color:rgba(255,255,255,0.35); }
+.dp-stat-lbl { font-size:9px; font-weight:700; color:rgba(255,255,255,0.3); text-transform:uppercase; letter-spacing:0.3px; }
+
+.dp-tasks { display:flex; flex-direction:column; gap:7px; position:relative; z-index:1; }
+.dp-task { display:flex; align-items:center; gap:10px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.07); border-radius:13px; padding:9px 12px; cursor:pointer; }
+.dp-task.done { border-color:rgba(34,197,94,0.25); }
+.dp-task.active-now { border-color:rgba(245,183,0,0.35); background:rgba(245,183,0,0.06); }
+.dp-task-icon { width:32px; height:32px; border-radius:10px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:15px; }
+.dp-task-body { flex:1; min-width:0; }
+.dp-task-name { font-size:12px; font-weight:700; color:white; font-family:'Plus Jakarta Sans',sans-serif; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-bottom:1px; }
+.dp-task.done .dp-task-name { color:rgba(255,255,255,0.4); text-decoration:line-through; }
+.dp-task-meta { font-size:10px; color:rgba(255,255,255,0.35); font-weight:500; }
+.dp-task.active-now .dp-task-meta { color:var(--yellow); font-weight:700; }
+.dp-check { width:22px; height:22px; border-radius:7px; background:rgba(34,197,94,0.2); border:1px solid rgba(34,197,94,0.4); display:flex; align-items:center; justify-content:center; }
+.dp-pending { width:22px; height:22px; border-radius:7px; border:1.5px solid rgba(255,255,255,0.15); }
+.dp-now-dot { width:8px; height:8px; border-radius:50%; background:var(--yellow); box-shadow:0 0 6px rgba(245,183,0,0.6); animation:nowPulse 1.5s ease-in-out infinite; }
+@keyframes nowPulse { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.3);opacity:0.7;} }
+
+.dp-footer { margin-top:12px; position:relative; z-index:1; display:flex; align-items:center; justify-content:space-between; }
+.dp-progress-wrap { flex:1; margin-right:14px; }
+.dp-prog-label { display:flex; justify-content:space-between; margin-bottom:5px; }
+.dp-prog-txt { font-size:10px; font-weight:700; color:rgba(255,255,255,0.3); }
+.dp-prog-val { font-size:10px; font-weight:800; color:var(--yellow); }
+.dp-prog-track { height:4px; background:rgba(255,255,255,0.08); border-radius:2px; overflow:hidden; }
+.dp-prog-fill { height:100%; border-radius:2px; width:33%; background:linear-gradient(90deg,var(--yellow),#fcd34d); }
+.dp-start-btn { background:linear-gradient(135deg,var(--yellow),#f59e0b); border:none; border-radius:12px; padding:10px 16px; font-size:12px; font-weight:800; color:var(--dark); font-family:'Plus Jakarta Sans',sans-serif; cursor:pointer; flex-shrink:0; box-shadow:0 4px 14px rgba(245,183,0,0.35); }
+
+/* SECTION HEADER */
+.section-header { display:flex; justify-content:space-between; align-items:center; padding:0 20px 10px; }
+.section-title { font-family:'Plus Jakarta Sans',sans-serif; font-size:14px; font-weight:800; color:#1a1a1a; }
+.section-link { font-size:12px; font-weight:700; color:var(--teal); }
+
+/* STREAK */
+.streak-card { margin:0 16px 18px; background:white; border-radius:var(--radius); padding:16px; box-shadow:0 2px 10px rgba(0,0,0,0.07); }
+.streak-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.streak-meta { font-size:13px; font-weight:700; color:#1a1a1a; font-family:'Plus Jakarta Sans',sans-serif; }
+.streak-count { font-size:12px; font-weight:600; color:#aaa; }
+.streak-days { display:flex; justify-content:space-between; }
+.streak-day { display:flex; flex-direction:column; align-items:center; gap:6px; }
+.fire-wrap { width:36px; height:36px; border-radius:12px; background:#FEF3C7; display:flex; align-items:center; justify-content:center; }
+.fire-icon { font-size:18px; }
+.fire-empty { width:36px; height:36px; border-radius:12px; background:#f5f5f5; display:flex; align-items:center; justify-content:center; }
+.fire-empty-inner { width:16px; height:16px; border-radius:50%; border:2px solid #e0e0e0; }
+.streak-day.today .fire-wrap { background:#FDE68A; box-shadow:0 3px 10px rgba(245,183,0,0.25); }
+.day-label { font-size:10px; font-weight:700; color:#bbb; }
+.streak-day.today .day-label { color:var(--yellow); font-weight:800; }
+
+/* LIVE CARD */
+.live-card { margin:0 16px 18px; background:linear-gradient(135deg,#0D9488,#0a7c72); border-radius:20px; padding:20px; display:flex; align-items:center; gap:12px; position:relative; overflow:hidden; box-shadow:0 8px 24px rgba(13,148,136,0.3); }
+.live-card::before { content:''; position:absolute; top:-40px; right:-40px; width:140px; height:140px; background:rgba(255,255,255,0.07); border-radius:50%; }
+.live-card-left { flex:1; position:relative; z-index:1; }
+.live-badge { display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,0.15); border-radius:20px; padding:4px 10px; margin-bottom:8px; }
+.live-dot { width:6px; height:6px; border-radius:50%; background:#fff; animation:livePulse 1.5s ease-in-out infinite; }
+@keyframes livePulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+.live-badge-text { font-size:10px; font-weight:800; color:white; letter-spacing:0.5px; }
+.live-card h3 { font-family:'Plus Jakarta Sans',sans-serif; font-size:18px; font-weight:900; color:white; margin-bottom:12px; }
+.go-btn { display:inline-flex; align-items:center; gap:8px; background:white; border:none; border-radius:10px; padding:9px 16px; font-size:13px; font-weight:800; color:var(--teal); cursor:pointer; font-family:'Plus Jakarta Sans',sans-serif; }
+.go-arrow { width:22px; height:22px; border-radius:7px; background:var(--teal); display:flex; align-items:center; justify-content:center; }
+.robot-placeholder { width:100px; height:100px; flex-shrink:0; position:relative; z-index:1; display:flex; align-items:center; justify-content:center; }
+
+/* MINI CARDS */
+.mini-cards { display:flex; gap:12px; margin:0 16px 18px; }
+.mini-card { flex:1; border-radius:16px; padding:16px; position:relative; overflow:hidden; cursor:pointer; }
+.mini-card.blue { background:var(--blue); box-shadow:0 6px 18px rgba(59,130,246,0.28); }
+.mini-card.red { background:#059669; box-shadow:0 6px 18px rgba(5,150,105,0.3); }
+.mini-card::before { content:''; position:absolute; top:-20px; right:-20px; width:75px; height:75px; background:rgba(255,255,255,0.1); border-radius:50%; }
+.mini-card-icon { width:40px; height:40px; background:rgba(255,255,255,0.2); border-radius:12px; display:flex; align-items:center; justify-content:center; margin-bottom:24px; }
+.mini-card-label { font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:800; color:white; line-height:1.3; }
+.mini-card-link { position:absolute; top:14px; right:14px; width:28px; height:28px; background:rgba(255,255,255,0.2); border-radius:8px; display:flex; align-items:center; justify-content:center; }
+
+/* CASHBACK */
+.cashback-card { margin:0 16px 18px; background:var(--dark); border-radius:var(--radius); padding:18px; }
+.cashback-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:12px; }
+.cashback-label { font-size:11px; color:rgba(255,255,255,0.4); font-weight:600; margin-bottom:4px; }
+.cashback-amount { font-family:'Plus Jakarta Sans',sans-serif; font-size:24px; font-weight:900; color:white; }
+.cashback-percent { display:flex; align-items:center; gap:4px; background:rgba(245,183,0,0.15); border-radius:8px; padding:6px 10px; font-size:13px; font-weight:800; color:var(--yellow); }
+.cashback-progress-bar { height:5px; background:rgba(255,255,255,0.1); border-radius:3px; overflow:hidden; margin-bottom:8px; }
+.cashback-progress-fill { height:100%; width:87%; background:linear-gradient(90deg,var(--yellow),#fcd34d); border-radius:3px; }
+.cashback-progress-meta { display:flex; justify-content:space-between; }
+.cashback-progress-label { font-size:11px; color:rgba(255,255,255,0.35); font-weight:500; }
+
+/* STATS SCROLL */
+.stats-scroll-wrap { display:flex; gap:12px; overflow-x:auto; padding:0 16px 4px; scrollbar-width:none; scroll-snap-type:x mandatory; }
+.stats-scroll-wrap::-webkit-scrollbar { display:none; }
+.stat-card { min-width:260px; background:white; border-radius:var(--radius); padding:16px; box-shadow:0 2px 10px rgba(0,0,0,0.07); flex-shrink:0; scroll-snap-align:start; }
+.stat-card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; }
+.stat-card-title-wrap { display:flex; align-items:center; gap:8px; }
+.stat-card-icon { width:30px; height:30px; border-radius:9px; display:flex; align-items:center; justify-content:center; }
+.stat-card-title { font-family:'Plus Jakarta Sans',sans-serif; font-size:13px; font-weight:800; color:#1a1a1a; }
+.stat-card-total { font-size:12px; }
+.stat-motivation { font-size:13px; font-weight:700; color:#1a1a1a; margin-bottom:10px; font-family:'Plus Jakarta Sans',sans-serif; }
+.stat-days { display:flex; gap:5px; }
+.stat-day { flex:1; display:flex; flex-direction:column; align-items:center; gap:4px; }
+.stat-bar-wrap { width:100%; height:50px; display:flex; align-items:flex-end; }
+.stat-bar { width:100%; border-radius:4px 4px 0 0; min-height:4px; }
+.stat-day-label { font-size:9px; font-weight:700; color:#bbb; }
+
+/* RADAR STAT CARD */
+.radar-stat-wrap { display:flex; align-items:center; gap:12px; margin-top:4px; }
+.radar-stat-labels { display:flex; flex-direction:column; gap:6px; flex:1; }
+.rsl-item { display:flex; align-items:center; gap:6px; }
+.rsl-dot { width:6px; height:6px; border-radius:50%; flex-shrink:0; }
+.rsl-name { font-size:11px; color:#888; font-weight:500; flex:1; }
+.rsl-val { font-size:12px; font-weight:800; color:var(--dark); font-family:'Plus Jakarta Sans',sans-serif; }
+
+/* DOTS */
+.stats-dots { display:flex; justify-content:center; gap:5px; padding:10px 0 16px; }
+.stats-dot { width:6px; height:6px; border-radius:50%; background:#ddd; transition:all 0.2s; }
+.stats-dot.active { width:18px; border-radius:3px; background:var(--teal); }
+
+/* BOTTOM NAV */
+.bottom-nav { background:white; border-top:1px solid rgba(0,0,0,0.07); display:flex; justify-content:space-around; align-items:center; padding:8px 4px 20px; flex-shrink:0; border-radius:0 0 36px 36px; box-shadow:0 -2px 16px rgba(0,0,0,0.06); }
+.nav-item { display:flex; flex-direction:column; align-items:center; gap:4px; cursor:pointer; padding:4px 6px; flex:1; }
+.nav-icon-box { width:42px; height:42px; border-radius:14px; display:flex; align-items:center; justify-content:center; }
+.nav-label { font-size:10px; font-weight:600; color:#bbb; }
+.nav-item.active .nav-label { color:var(--teal); font-weight:700; }
+.nav-item.center .nav-icon-box { width:52px; height:52px; border-radius:18px; background:linear-gradient(135deg,#0D9488,#2DD4BF); box-shadow:0 6px 20px rgba(13,148,136,0.4); margin-top:-14px; }
+.nav-item.center .nav-label { color:var(--teal); font-weight:700; }
+</style>
+</head>
+<body>
+<div class="phone-frame">
+
+  <!-- Status Bar -->
+  <div class="status-bar">
+    <span class="status-time">9:41</span>
+    <div class="status-icons">
+      <svg width="17" height="12" viewBox="0 0 17 12" fill="none"><rect x="0" y="4" width="3" height="8" rx="1" fill="#333"/><rect x="4.5" y="2.5" width="3" height="9.5" rx="1" fill="#333"/><rect x="9" y="1" width="3" height="11" rx="1" fill="#333"/><rect x="13.5" y="0" width="3" height="12" rx="1" fill="rgba(0,0,0,0.2)"/></svg>
+      <svg width="16" height="13" viewBox="0 0 24 18" fill="none"><path d="M1 5C5.5.5 10.5-.5 12-.5S18.5.5 23 5" stroke="#333" stroke-width="2.2" stroke-linecap="round"/><path d="M4.5 9C7.5 6.5 10.2 5.2 12 5.2s4.5 1.3 7.5 3.8" stroke="#333" stroke-width="2.2" stroke-linecap="round"/><path d="M8 13c1.5-1.5 3-2.2 4-2.2s2.5.7 4 2.2" stroke="#333" stroke-width="2.2" stroke-linecap="round"/><circle cx="12" cy="16.5" r="1.8" fill="#333"/></svg>
+      <svg width="27" height="13" viewBox="0 0 27 13" fill="none"><rect x=".75" y=".75" width="22.5" height="11.5" rx="3" stroke="#333" stroke-width="1.5"/><rect x="2.5" y="2.5" width="18" height="8" rx="1.5" fill="#333"/><path d="M24.5 4.5V8.5C25.6 8.1 26.5 7.1 26.5 6.5c-1-1.6-2-.5-2-.5Z" fill="#333"/></svg>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="header">
+    <svg width="120" height="32" viewBox="0 0 120 32" fill="none">
+      <circle cx="10" cy="10" r="5" fill="#0D9488"/><circle cx="20" cy="10" r="5" fill="#F5B700"/><circle cx="15" cy="19" r="5" fill="#3B82F6"/>
+      <text x="34" y="13" font-family="Plus Jakarta Sans,sans-serif" font-weight="700" font-size="11" fill="#888">MY</text>
+      <text x="34" y="28" font-family="Plus Jakarta Sans,sans-serif" font-weight="900" font-size="15" fill="#111">Teacher</text>
+    </svg>
+    <div class="header-actions">
+      <button class="header-btn">
+        <div class="notif-dot"></div>
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" stroke="#444" stroke-width="2" stroke-linecap="round"/><path d="M13.73 21a2 2 0 01-3.46 0" stroke="#444" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <div class="avatar-btn">S</div>
+    </div>
+  </div>
+
+  <!-- Scroll -->
+  <div class="scroll-content">
+
+    <!-- Greeting -->
+    <div class="greeting">Salom, Sardor 👋</div>
+
+    <!-- Streak -->
+    <div class="section-header"><span class="section-title">Streak</span><span class="section-link">Batafsil →</span></div>
+    <div class="streak-card">
+      <div class="streak-header"><span class="streak-meta">🔥 3 kunlik seria!</span><span class="streak-count">4 kun qoldi</span></div>
+      <div class="streak-days">
+        <div class="streak-day"><div class="fire-wrap"><span class="fire-icon">🔥</span></div><span class="day-label">Du</span></div>
+        <div class="streak-day"><div class="fire-wrap"><span class="fire-icon">🔥</span></div><span class="day-label">Se</span></div>
+        <div class="streak-day today"><div class="fire-wrap"><span class="fire-icon">🔥</span></div><span class="day-label">Cho</span></div>
+        <div class="streak-day"><div class="fire-empty"><div class="fire-empty-inner"></div></div><span class="day-label">Pa</span></div>
+        <div class="streak-day"><div class="fire-empty"><div class="fire-empty-inner"></div></div><span class="day-label">Ju</span></div>
+        <div class="streak-day"><div class="fire-empty"><div class="fire-empty-inner"></div></div><span class="day-label">Sha</span></div>
+        <div class="streak-day"><div class="fire-empty"><div class="fire-empty-inner"></div></div><span class="day-label">Ya</span></div>
+      </div>
+    </div>
+
+    <!-- AI bilan suhbat -->
+    <div class="section-header"><span class="section-title">AI bilan suhbat</span></div>
+    <div class="live-card">
+      <div class="live-card-left">
+        <div class="live-badge"><div class="live-dot"></div><span class="live-badge-text">JONLI</span></div>
+        <h3>AI Speaking Partner</h3>
+        <button class="go-btn">Boshlash <div class="go-arrow"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M5 12H19M19 12L12 5M19 12L12 19" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></div></button>
+      </div>
+      <div class="robot-placeholder">
+        <svg width="90" height="90" viewBox="0 0 90 90" fill="none">
+          <rect x="25" y="28" width="40" height="34" rx="10" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+          <rect x="33" y="38" width="8" height="8" rx="4" fill="white"/>
+          <rect x="49" y="38" width="8" height="8" rx="4" fill="white"/>
+          <rect x="35" y="52" width="20" height="4" rx="2" fill="rgba(255,255,255,0.5)"/>
+          <rect x="38" y="20" width="14" height="8" rx="4" fill="rgba(255,255,255,0.25)" stroke="rgba(255,255,255,0.4)" stroke-width="1.5"/>
+          <circle cx="45" cy="20" r="2" fill="rgba(255,255,255,0.6)"/>
+          <rect x="15" y="34" width="10" height="18" rx="5" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+          <rect x="65" y="34" width="10" height="18" rx="5" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+          <rect x="31" y="62" width="12" height="16" rx="4" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+          <rect x="47" y="62" width="12" height="16" rx="4" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="1.5"/>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Mini cards -->
+    <div class="mini-cards">
+      <div class="mini-card blue">
+        <div class="mini-card-link"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="mini-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 10h10M4 14h12M4 18h8" stroke="white" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="mini-card-label">Kundalik<br>lug'atlar</div>
+      </div>
+      <div class="mini-card red">
+        <div class="mini-card-link"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M18 13v6a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2h6M15 3h6v6M10 14L21 3" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+        <div class="mini-card-icon"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="white" stroke-width="2"/><path d="M12 8v4l3 3" stroke="white" stroke-width="2" stroke-linecap="round"/></svg></div>
+        <div class="mini-card-label">Online<br>testlar</div>
+      </div>
+    </div>
+
+    <!-- Cashback -->
+    <div class="section-header"><span class="section-title">Cashback</span><span class="section-link">Shartlar →</span></div>
+    <div class="cashback-card">
+      <div class="cashback-top">
+        <div><div class="cashback-label">Mavjud balans</div><div class="cashback-amount">51 760 so'm</div></div>
+        <div class="cashback-percent"><svg width="10" height="10" viewBox="0 0 24 24" fill="none"><path d="M12 19V5M5 12l7-7 7 7" stroke="#B98900" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>87%</div>
+      </div>
+      <div class="cashback-progress-bar"><div class="cashback-progress-fill"></div></div>
+      <div class="cashback-progress-meta"><span class="cashback-progress-label">Oy oxirigacha: 13 kun</span><span class="cashback-progress-label">87 / 100%</span></div>
+    </div>
+
+    <!-- Mening o'sishim -->
+    <div class="section-header"><span class="section-title">Mening o'sishim raqamlarda</span></div>
+    <div class="stats-scroll-wrap" id="statsScroll">
+
+      <!-- 1. So'zlar -->
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-card-title-wrap">
+            <div class="stat-card-icon" style="background:#EFF6FF"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M4 6h16M4 10h10M4 14h12M4 18h8" stroke="#3B82F6" stroke-width="2" stroke-linecap="round"/></svg></div>
+            <span class="stat-card-title">Yangi so'zlar</span>
+          </div>
+          <span class="stat-card-total" style="color:#3B82F6;font-weight:700;">Jami: 312</span>
+        </div>
+        <div class="stat-motivation" id="wordsMotivation"></div>
+        <div class="stat-days" id="wordsDays"></div>
+      </div>
+
+      <!-- 2. Speaking -->
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-card-title-wrap">
+            <div class="stat-card-icon" style="background:#F0FDFA"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><rect x="9" y="2" width="6" height="11" rx="3" stroke="#0D9488" stroke-width="2"/><path d="M5 10.5C5 15 8.1 18.5 12 18.5S19 15 19 10.5" stroke="#0D9488" stroke-width="2" stroke-linecap="round"/><line x1="12" y1="18.5" x2="12" y2="22" stroke="#0D9488" stroke-width="2" stroke-linecap="round"/></svg></div>
+            <span class="stat-card-title">Speaking mashqi</span>
+          </div>
+          <span class="stat-card-total" style="color:#0D9488;font-weight:700;">Jami: 4.2 soat</span>
+        </div>
+        <div class="stat-motivation" id="speakingMotivation"></div>
+        <div class="stat-days" id="speakingDays"></div>
+      </div>
+
+      <!-- 3. Vaqt -->
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-card-title-wrap">
+            <div class="stat-card-icon" style="background:#EFF6FF"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="#2563EB" stroke-width="2"/><path d="M12 7v5l3 3" stroke="#2563EB" stroke-width="2" stroke-linecap="round"/></svg></div>
+            <span class="stat-card-title">Ilova vaqti</span>
+          </div>
+          <span class="stat-card-total" style="color:#2563EB;font-weight:700;">Jami: 3.8 soat</span>
+        </div>
+        <div class="stat-motivation" id="timeMotivation"></div>
+        <div class="stat-days" id="timeDays"></div>
+      </div>
+
+      <!-- 4. Bilim xaritasi -->
+      <div class="stat-card">
+        <div class="stat-card-header">
+          <div class="stat-card-title-wrap">
+            <div class="stat-card-icon" style="background:#F5F3FF"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><polygon points="12,2 22,8.5 22,15.5 12,22 2,15.5 2,8.5" stroke="#7C3AED" stroke-width="2" fill="none"/><polygon points="12,6 18,9.5 18,14.5 12,18 6,14.5 6,9.5" stroke="#7C3AED" stroke-width="1" fill="rgba(124,58,237,0.08)"/></svg></div>
+            <span class="stat-card-title">Bilim xaritam</span>
+          </div>
+          <span class="stat-card-total" style="color:#7C3AED;font-weight:700;">B2 daraja</span>
+        </div>
+        <div class="radar-stat-wrap">
+          <canvas id="radarChart" width="120" height="120"></canvas>
+          <div class="radar-stat-labels">
+            <div class="rsl-item"><span class="rsl-dot" style="background:#3B82F6"></span><span class="rsl-name">Vocab</span><span class="rsl-val">72%</span></div>
+            <div class="rsl-item"><span class="rsl-dot" style="background:#0D9488"></span><span class="rsl-name">Speaking</span><span class="rsl-val">58%</span></div>
+            <div class="rsl-item"><span class="rsl-dot" style="background:#F59E0B"></span><span class="rsl-name">Writing</span><span class="rsl-val">65%</span></div>
+            <div class="rsl-item"><span class="rsl-dot" style="background:#EC4899"></span><span class="rsl-name">Reading</span><span class="rsl-val">80%</span></div>
+            <div class="rsl-item"><span class="rsl-dot" style="background:#8B5CF6"></span><span class="rsl-name">Listening</span><span class="rsl-val">61%</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="stats-dots">
+      <div class="stats-dot active" id="dot0"></div>
+      <div class="stats-dot" id="dot1"></div>
+      <div class="stats-dot" id="dot2"></div>
+      <div class="stats-dot" id="dot3"></div>
+    </div>
+
+  </div><!-- /scroll -->
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item">
+      <div class="nav-icon-box" style="background:#F0FDFA;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 4H16C17.1 4 18 4.9 18 6V12C18 13.1 17.1 14 16 14H10L7 17V14H4C2.9 14 2 13.1 2 12V6C2 4.9 2.9 4 4 4Z" fill="#0D9488"/><path d="M13 11H20C21.1 11 22 11.9 22 13V17C22 18.1 21.1 19 20 19H17.5V21L15 19H13C11.9 19 11 18.1 11 17V13C11 11.9 11.9 11 13 11Z" fill="rgba(13,148,136,0.35)" stroke="#0D9488" stroke-width="1.2"/></svg></div>
+      <span class="nav-label">Chat</span>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon-box" style="background:#F0FDF4;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 19V6C4 4.9 4.9 4 6 4H19C19.6 4 20 4.4 20 5V17" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/><path d="M4 19C4 20.1 4.9 21 6 21H20" stroke="#22C55E" stroke-width="2" stroke-linecap="round"/><path d="M10 9L15 12L10 15V9Z" fill="#22C55E"/></svg></div>
+      <span class="nav-label">Dars</span>
+    </div>
+    <div class="nav-item center active">
+      <div class="nav-icon-box"><svg width="24" height="24" viewBox="0 0 24 24" fill="none"><path d="M3 12L12 4L21 12V20C21 20.6 20.6 21 20 21H15V16H9V21H4C3.4 21 3 20.6 3 20V12Z" fill="white"/></svg></div>
+      <span class="nav-label">Home</span>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon-box" style="background:#FFF7ED;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="13" height="17" rx="2" fill="#FB923C"/><line x1="6" y1="7.5" x2="13" y2="7.5" stroke="white" stroke-width="1.8" stroke-linecap="round"/><line x1="6" y1="11" x2="13" y2="11" stroke="rgba(255,255,255,0.7)" stroke-width="1.4" stroke-linecap="round"/><line x1="6" y1="13.5" x2="11" y2="13.5" stroke="rgba(255,255,255,0.7)" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+      <span class="nav-label">Blog</span>
+    </div>
+    <div class="nav-item">
+      <div class="nav-icon-box" style="background:#FDF4FF;"><svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="8" r="4" fill="#A855F7"/><path d="M4 20C4 16.7 7.6 14 12 14C16.4 14 20 16.7 20 20" stroke="#A855F7" stroke-width="2" stroke-linecap="round"/></svg></div>
+      <span class="nav-label">Profil</span>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// Bar chart data
+const days = ['Du','Se','Ch','Pa','Ju','Sh','Ya'];
+const wordsData  = [12,18,8,22,15,25,20];
+const speakData  = [20,35,15,40,30,45,28];
+const timeData   = [18,30,12,35,25,40,22];
+const colors = { words:'#3B82F6', speak:'#0D9488', time:'#2563EB' };
+
+function buildBars(containerId, motivId, data, color) {
+  const max = Math.max(...data);
+  const cont = document.getElementById(containerId);
+  const motiv = document.getElementById(motivId);
+  if (!cont) return;
+  const today = new Date().getDay();
+  const todayIdx = today === 0 ? 6 : today - 1;
+  const msgs = ["Ajoyib hafta!", "Zo'r natija!", "Davom eting!"];
+  if (motiv) motiv.textContent = msgs[Math.floor(Math.random()*msgs.length)];
+  cont.innerHTML = '';
+  data.forEach((val,i) => {
+    const day = document.createElement('div');
+    day.className = 'stat-day';
+    const pct = Math.round((val/max)*100);
+    const isToday = i === todayIdx;
+    day.innerHTML = `
+      <div class="stat-bar-wrap">
+        <div class="stat-bar" style="height:${pct}%;background:${isToday ? color : color+'33'};transition:height 0.6s ease ${i*0.07}s;"></div>
+      </div>
+      <span class="stat-day-label" style="color:${isToday ? color : ''};font-weight:${isToday?'800':'700'}">${days[i]}</span>`;
+    cont.appendChild(day);
+  });
+}
+buildBars('wordsDays','wordsMotivation', wordsData, colors.words);
+buildBars('speakingDays','speakingMotivation', speakData, colors.speak);
+buildBars('timeDays','timeMotivation', timeData, colors.time);
+
+// Radar chart
+const ctx = document.getElementById('radarChart').getContext('2d');
+new Chart(ctx, {
+  type: 'radar',
+  data: {
+    labels: ['Vocab','Speaking','Writing','Reading','Listening'],
+    datasets: [{
+      data: [72,58,65,80,61],
+      backgroundColor: 'rgba(124,58,237,0.1)',
+      borderColor: '#7C3AED',
+      borderWidth: 2,
+      pointBackgroundColor: ['#3B82F6','#0D9488','#F59E0B','#EC4899','#8B5CF6'],
+      pointRadius: 3,
+    }]
+  },
+  options: {
+    responsive: false,
+    scales: { r: {
+      min:0, max:100,
+      ticks: { display:false },
+      grid: { color:'rgba(0,0,0,0.07)' },
+      pointLabels: { display:false },
+      angleLines: { color:'rgba(0,0,0,0.07)' }
+    }},
+    plugins: { legend:{ display:false } },
+    animation: { duration:1000, easing:'easeOutQuart' }
+  }
+});
+
+// Dots scroll
+const statsScroll = document.getElementById('statsScroll');
+const dots = [document.getElementById('dot0'),document.getElementById('dot1'),document.getElementById('dot2'),document.getElementById('dot3')];
+const cardW = 260 + 12;
+statsScroll.addEventListener('scroll', () => {
+  const idx = Math.round(statsScroll.scrollLeft / cardW);
+  dots.forEach((d,i) => d && d.classList.toggle('active', i===idx));
+});
+</script>
+</body>
+</html>
