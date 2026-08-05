@@ -1,4 +1,4 @@
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { PasswordService } from '../../../common/crypto/password.service';
@@ -19,6 +19,20 @@ const BULK_BLOCKED_STAGE_IDS = [AGREED_STAGE_ID, PARTIAL_STAGE_ID, WON_STAGE_ID]
 const OPERATOR_QUAL_STAGE_ID = 'op_malakali';
 const VALID_PAYMENT_TYPES = ['naqd', 'karta', 'otkazma'];
 const OPERATOR_STAGE_IDS = ['op_yangi', 'op_qayta', 'op_malakali', 'op_yutqazilgan'];
+const STAGE_LABELS: Record<string, string> = {
+  yangi: 'Yangi',
+  malakali: 'Malakali',
+  taklif: 'Taklif berilgan',
+  muzokaralar: 'Muzokaralar',
+  sotib_olishga_rozi: 'Sotib olishga rozi',
+  qisman: 'Qisman to‘langan',
+  yutgan: 'Muvaffaqiyatli',
+  yutqazilgan: 'Yutqazilgan',
+  op_yangi: 'Operator · Yangi',
+  op_qayta: 'Operator · Qayta aloqa',
+  op_malakali: 'Operator · Malakali',
+  op_yutqazilgan: 'Operator · Yutqazilgan'
+};
 
 @Injectable()
 export class DealsService {
@@ -97,6 +111,17 @@ export class DealsService {
     const customerName = String(body.customerName || '').trim();
     if (!customerName) throw new BadRequestException('Mijoz nomi kerak');
     const phones = this.normalizePhones(body);
+    // Bir xil telefonli lid ikkinchi marta kiritilmasin. Admin ataylab qo'shmoqchi bo'lsa
+    // (allowDuplicate) ruxsat beramiz — qolganlar uchun bu qat'iy to'siq.
+    if (!(body.allowDuplicate === true && user.role === UserRole.Admin)) {
+      const existing = await this.findDuplicateByPhone(phones);
+      if (existing) {
+        throw new ConflictException({
+          message: await this.duplicateMessage(existing),
+          duplicateDealId: existing.id
+        });
+      }
+    }
     // Operator yaratgan/import qilgan lid (stageId ko'rsatilmagan bo'lsa) operator voronkasining
     // "Yangi" bosqichiga (op_yangi) tushishi kerak, menejer voronkasining 'yangi'siga emas —
     // aks holda lid hech qaysi kanbanda to'g'ri ko'rinmaydi va "Bosqich" deb noaniq belgilanadi.
@@ -629,6 +654,48 @@ export class DealsService {
   private phoneKey(deal: { phone?: string; phones?: string[] }): string {
     const raw = deal.phone || (Array.isArray(deal.phones) ? deal.phones[0] : '') || '';
     return String(raw).replace(/\D/g, '');
+  }
+
+  // Dublikat qidirish uchun: "+998 94 913-75-70", "998949137570" va "949137570" bir xil
+  // mijoz ekanini bilish kerak, shuning uchun oxirgi 9 raqam bo'yicha taqqoslaymiz.
+  private phoneTail(value: string): string {
+    return String(value || '').replace(/\D/g, '').slice(-9);
+  }
+
+  // Shu telefon raqami bilan allaqachon mavjud lidni topadi (barcha voronkalar bo'ylab).
+  async findDuplicateByPhone(phones: string[], excludeId?: number): Promise<DealEntity | null> {
+    const tails = [...new Set(phones.map(p => this.phoneTail(p)).filter(t => t.length === 9))];
+    if (!tails.length) return null;
+    // phones ustuni jsonb massiv — har bir raqamni yoyib, faqat raqamlarga keltirib solishtiramiz.
+    const phonesText = `jsonb_array_elements_text(CASE WHEN jsonb_typeof(deal.phones) = 'array' THEN deal.phones ELSE '[]'::jsonb END)`;
+    const params: Record<string, string> = {};
+    const conditions = tails.map((tail, index) => {
+      params[`tail${index}`] = `%${tail}`;
+      return `(
+        regexp_replace(COALESCE(deal.phone, ''), '\\D', '', 'g') LIKE :tail${index}
+        OR EXISTS (
+          SELECT 1 FROM ${phonesText} AS p
+          WHERE regexp_replace(p, '\\D', '', 'g') LIKE :tail${index}
+        )
+      )`;
+    });
+    const query = this.deals.createQueryBuilder('deal')
+      .where(`(${conditions.join(' OR ')})`, params)
+      .orderBy('deal.id', 'ASC');
+    if (excludeId) query.andWhere('deal.id != :excludeId', { excludeId });
+    return (await query.getOne()) || null;
+  }
+
+  // Dublikat topilsa, foydalanuvchiga tushunarli xabar tayyorlaydi: mijoz kimda va qaysi bosqichda.
+  private async duplicateMessage(existing: DealEntity): Promise<string> {
+    const parts: string[] = [];
+    const owner = existing.ownerId ? await this.users.findById(existing.ownerId) : null;
+    const operator = !owner && existing.operatorId ? await this.users.findById(existing.operatorId) : null;
+    const holder = owner || operator;
+    if (holder) parts.push(holder.name);
+    else parts.push('biriktirilmagan');
+    parts.push(STAGE_LABELS[existing.stageId] || existing.stageId);
+    return `Bu mijoz allaqachon mavjud: "${existing.customerName}" (${parts.join(' · ')})`;
   }
 
   // Dublikat yozuvlar birlashtirilganda FAQAT izoh emas, balki mijoz bilan bog'liq barcha

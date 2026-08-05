@@ -2151,6 +2151,13 @@ function daysSinceUpdate(d){
 }
 function dealTitle(d){ return d.dealName || d.name || 'Shartnoma nomi yo‘q'; }
 function dealPhones(d){ return [...new Set([...(Array.isArray(d.phones)?d.phones:[]), d.phone].map(v=>String(v||'').trim()).filter(Boolean))]; }
+// Formatdan qat'i nazar taqqoslash uchun oxirgi 9 raqam (+998 94 913-75-70 === 949137570)
+function phoneTail(v){ return String(v||'').replace(/\D/g,'').slice(-9); }
+function findLocalDuplicate(phones,excludeId){
+  const tails=new Set(phones.map(phoneTail).filter(t=>t.length===9));
+  if(!tails.size)return null;
+  return deals.find(d=>d.id!==excludeId && dealPhones(d).some(p=>tails.has(phoneTail(p)))) || null;
+}
 // +998949137570 -> "+998 94 913-75-70" ko'rinishida, o'qishga oson formatlaydi
 function formatPhoneUz(phone){
   const digits=String(phone||'').replace(/\D/g,'');
@@ -3723,6 +3730,12 @@ async function saveDeal(){
   // lidni o'sha menejerga topshirish — handoff). Menejer roli uchun har doim o'zi egasi bo'ladi.
   const ownerId=isOperator()?(ownerSelect?.value || null):isAdmin()?(ownerSelect?.value || null):currentManagerId;
   const operatorId=isOperator()?currentManagerId:(existing?.operatorId||null);
+  // Backendsiz (demo) rejimda dublikat tekshiruvini shu yerda qilamiz — ulangan rejimda
+  // buni server bajaradi, chunki u barcha menejerlarning lidlarini ko'radi.
+  if(!apiToken && !editId){
+    const dup=findLocalDuplicate([phone,...phones]);
+    if(dup){showToast(`Bu mijoz allaqachon mavjud: "${customerTitle(dup)}"`);return;}
+  }
   const prepared=await prepareStageTransition(existing || {price,col:null},col,priceInput);
   if(!prepared)return;
   const payload={customerName,phone,phones,dealName,price:prepared.price,col,note,adSource,registeredAt,age,learningGoal,leadChannel,ownerId,operatorId,comments:existing?.comments||[],closePassword:prepared.closePassword,courseDuration:prepared.courseDuration,paymentType:prepared.paymentType};
@@ -3733,7 +3746,16 @@ async function saveDeal(){
         const i=deals.findIndex(x=>x.id===editId);
         if(i>=0)deals[i]=dealFromApi(data.deal);
       }else{
-        const data=await api('/api/deals',{method:'POST',body:dealToApiPayload(payload)});
+        let data;
+        try{
+          data=await api('/api/deals',{method:'POST',body:dealToApiPayload(payload)});
+        }catch(err){
+          // 409 = bir xil telefonli lid allaqachon bor. Admin ataylab qo'shishi mumkin.
+          if(err.status!==409)throw err;
+          if(!isAdmin()){showToast(err.message);return;}
+          if(!confirm(`${err.message}\n\nBaribir yangi shartnoma sifatida qo'shilsinmi?`))return;
+          data=await api('/api/deals',{method:'POST',body:{...dealToApiPayload(payload),allowDuplicate:true}});
+        }
         deals.push(dealFromApi(data.deal));
       }
       showToast('Saqlandi ✓');

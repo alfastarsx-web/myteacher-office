@@ -17,6 +17,15 @@ export class IntegrationsController {
     const admin = await this.users.findFirstAdmin();
     if (!admin) throw new UnauthorizedException('Admin topilmadi');
 
+    // Reklama kanallaridan bir xil lid bir necha marta kelishi odatiy hol. Webhook uchun
+    // xato qaytarish n8n'da qayta urinishlarga sabab bo'ladi, shuning uchun mavjud lidni
+    // shunchaki qaytaramiz — yangi dublikat yaratilmaydi.
+    const phones = [...(Array.isArray(body.phones) ? body.phones : []), body.phone || body.telefon]
+      .map((item: any) => String(item || '').trim())
+      .filter(Boolean);
+    const duplicate = await this.deals.findDuplicateByPhone(phones);
+    if (duplicate) return { ok: true, duplicate: true, deal: duplicate };
+
     let deal = await this.deals.create({
       customerName: body.customerName || body.name || body.mijoz || body.ism,
       dealName: body.dealName || body.contract || body.shartnoma || body.kurs,
