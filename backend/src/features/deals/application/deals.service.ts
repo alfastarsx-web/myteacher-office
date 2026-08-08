@@ -68,6 +68,55 @@ export class DealsService {
     return this.deals.save(deal);
   }
 
+  // Tashqi (public) sayt formasidan kelgan lid: menejer voronkasining "Yangi" ustuniga EGASIZ
+  // (pool) lid bo'lib tushadi va BARCHA menejerlarga ko'rinadi (sentToManager bayrog'i orqali).
+  // Birinchi ishlagan menejer uni o'ziga oladi. Bir xil telefonli lid takror yaratilmaydi.
+  async createPublicWebLead(body: any): Promise<{ ok: true; deal: DealEntity; duplicate?: boolean }> {
+    const admin = await this.users.findFirstAdmin();
+    if (!admin) throw new BadRequestException('Admin topilmadi');
+    const phones = this.normalizePhones({ phone: body.phone || body.telefon, phones: body.phones });
+    if (phones.length) {
+      const duplicate = await this.findDuplicateByPhone(phones);
+      if (duplicate) return { ok: true, duplicate: true, deal: duplicate };
+    }
+    const customerName = String(body.customerName || body.name || body.ism || body.fullName || '').trim()
+      || phones[0] || 'Sayt lidi';
+    const deal = await this.create({
+      customerName,
+      dealName: body.dealName || body.kurs || body.course || '',
+      phone: body.phone || body.telefon || '',
+      phones: body.phones,
+      stageId: 'yangi',
+      sentToManager: true,
+      price: body.price || body.summa || 0,
+      note: body.note || body.izoh || body.message || body.comment || '',
+      adSource: body.adSource || body.source || 'web',
+      leadChannel: body.leadChannel || body.channel || 'web',
+      registeredAt: body.registeredAt || new Date().toISOString(),
+      age: body.age || body.yosh || '',
+      learningGoal: body.learningGoal || body.maqsad || ''
+    }, admin);
+    await this.notifyManagersNewWebLead(deal);
+    return { ok: true, deal };
+  }
+
+  private async notifyManagersNewWebLead(deal: DealEntity) {
+    try {
+      const managers = await this.users.findManagers();
+      managers.forEach(m => {
+        // Tur 'qual_lead' — frontend shu turda lidlar ro'yxatini avtomatik yangilaydi
+        this.notifications.sendToUser(m.id, {
+          type: 'qual_lead',
+          title: 'Yangi lid — sayt formasi',
+          body: `"${deal.customerName}" — sayt formasidan yangi lid keldi (Yangi ustunida)`,
+          dealId: deal.id,
+          fromUserId: null,
+          userId: m.id
+        }).catch(() => {});
+      });
+    } catch {}
+  }
+
   canSee(user: UserEntity, deal: DealEntity) {
     return (
       user.role === UserRole.Admin ||
@@ -78,7 +127,10 @@ export class DealsService {
       // "Malakali" bosqichidagi egasiz lid yoki op_malakali + sentToManager. Oddiy egasiz "yangi"
       // (admin import) lidlarni menejer ko'rmaydi. list() ham shu qoida bilan qaytaradi.
       (user.role === UserRole.Manager && deal.ownerId == null &&
-        (deal.stageId === 'malakali' || (deal.stageId === OPERATOR_QUAL_STAGE_ID && deal.sentToManager === true)))
+        (deal.stageId === 'malakali' ||
+          // Tashqi sayt formasidan kelgan lid: menejer "Yangi" ustunida ko'radi (sentToManager)
+          (deal.stageId === 'yangi' && deal.sentToManager === true) ||
+          (deal.stageId === OPERATOR_QUAL_STAGE_ID && deal.sentToManager === true)))
     );
   }
 
@@ -96,9 +148,10 @@ export class DealsService {
     // bo'lsagina ko'rinadi. Oddiy egasiz "yangi" (admin import) lidlar hamma menejerga chiqmaydi —
     // ular faqat adminda ko'rinadi, admin operator/menejerga taqsimlaydi.
     return this.deals.createQueryBuilder('deal')
-      .where('(deal.ownerId = :id OR (deal.ownerId IS NULL AND (deal.stageId = :malakali OR (deal.stageId = :qual AND deal.sentToManager = true))))', {
+      .where('(deal.ownerId = :id OR (deal.ownerId IS NULL AND (deal.stageId = :malakali OR (deal.stageId = :yangi AND deal.sentToManager = true) OR (deal.stageId = :qual AND deal.sentToManager = true))))', {
         id: user.id,
         malakali: 'malakali',
+        yangi: 'yangi',
         qual: OPERATOR_QUAL_STAGE_ID,
       })
       .orderBy('deal.id', 'ASC')

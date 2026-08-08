@@ -2179,7 +2179,7 @@ function currentUserDeals(){
   // Menejer: o'ziga biriktirilganlar + hali biriktirilmagan, LEKIN operator TOPSHIRGAN lidlar —
   // faqat "Malakali" (handoff) yoki op_malakali+sentToManager. Oddiy egasiz "yangi" (admin import)
   // lidlar menejerga chiqmaydi. backend list()/canSee bilan bir xil qoida.
-  const managerSees=d=>d.ownerId===u.id || (d.ownerId==null && (d.col==='malakali' || (d.col==='op_malakali' && (d._sentToManager||d.sentToManager))));
+  const managerSees=d=>d.ownerId===u.id || (d.ownerId==null && (d.col==='malakali' || (d.col==='yangi' && (d._sentToManager||d.sentToManager)) || (d.col==='op_malakali' && (d._sentToManager||d.sentToManager))));
   return hasPerm('all',u)?deals:deals.filter(managerSees);
 }
 function managerById(id){ return managers.find(m=>String(m.id)===String(id)); }

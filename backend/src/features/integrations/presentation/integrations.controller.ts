@@ -46,4 +46,14 @@ export class IntegrationsController {
 
     return { ok: true, deal };
   }
+
+  // Tashqi sayt formasidan lid qabul qilish (public, KALITSIZ). Forma to'ldirilganda lid
+  // menejerning "Yangi" ustuniga tushadi. Spam himoyasi: honeypot + telefon bo'yicha dedupe.
+  @Post('web/leads')
+  async createWebLead(@Body() body: any) {
+    // Honeypot: odam ko'rmaydigan (CSS bilan yashirilgan) maydonni faqat botlar to'ldiradi —
+    // to'ldirilgan bo'lsa lidni yaratmaymiz, lekin xato ham qaytarmaymiz (bot bilmasin).
+    if (String(body.website || body._gotcha || body.hp || '').trim()) return { ok: true, skipped: true };
+    return this.deals.createPublicWebLead(body);
+  }
 }
