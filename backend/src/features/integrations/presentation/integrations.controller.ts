@@ -46,4 +46,17 @@ export class IntegrationsController {
 
     return { ok: true, deal };
   }
+
+  // Tashqi sayt formasidan lid qabul qilish (public). Forma to'ldirilganda lid menejerning
+  // "Yangi" ustuniga tushadi. Himoya: API kalit (PUBLIC_LEAD_API_KEY) + honeypot.
+  @Post('web/leads')
+  async createWebLead(@Body() body: any, @Headers('x-api-key') apiKey: string) {
+    const expected = process.env.PUBLIC_LEAD_API_KEY || '';
+    const provided = apiKey || body.apiKey || '';
+    if (!expected || provided !== expected) throw new UnauthorizedException('API kalit noto‘g‘ri');
+    // Honeypot: odam ko'rmaydigan (CSS bilan yashirilgan) maydonni faqat botlar to'ldiradi —
+    // to'ldirilgan bo'lsa lidni yaratmaymiz, lekin xato ham qaytarmaymiz (bot bilmasin).
+    if (String(body.website || body._gotcha || body.hp || '').trim()) return { ok: true, skipped: true };
+    return this.deals.createPublicWebLead(body);
+  }
 }
