@@ -213,12 +213,25 @@ export class DealsService {
     this.assertCrmAccess(user);
     const rows = Array.isArray(body.rows) ? body.rows : [];
     if (!rows.length) throw new BadRequestException('Import uchun qatorlar topilmadi');
+    // Dublikatni aniqlash uchun mavjud lidlarning telefon "dumlari" (oxirgi 9 raqam) BIR marta
+    // yuklanib xotirada Set qilinadi. Aks holda har qator uchun create() ichida indekssiz,
+    // butun bazani regex bilan skanlaydigan findDuplicateByPhone chaqirilib, katta bazada 200
+    // qatorli import juda sekinlashib timeout bo'lardi (import "ishlamay qolgan" sabab shu).
+    const existing = await this.deals.find({ select: ['id', 'phone', 'phones'] });
+    const seenTails = new Set<string>();
+    for (const d of existing) for (const t of this.dealPhoneTails(d)) seenTails.add(t);
     const imported: DealEntity[] = [];
     let skipped = 0;
     for (const row of rows) {
       try {
         const customerName = String(row.customerName || row.name || row.mijoz || '').trim();
         if (!customerName) {
+          skipped++;
+          continue;
+        }
+        // Xotiradagi dublikat tekshiruvi (baza + shu import ichidagi takrorlar)
+        const tails = this.dealPhoneTails({ phone: row.phone || row.telefon, phones: row.phones });
+        if (tails.some(t => seenTails.has(t))) {
           skipped++;
           continue;
         }
@@ -235,13 +248,23 @@ export class DealsService {
           age: row.age || row.yosh || row.yoshi || '',
           learningGoal: row.learningGoal || row.maqsad || row['o‘rganishdan maqsadi'] || row['organishdan maqsadi'] || '',
           leadChannel: row.leadChannel || row.channel || row.kanal || row['qayerdan keldi'] || '',
-          ownerId: row.ownerId || null
+          ownerId: row.ownerId || null,
+          // Dublikat tekshiruvi shu yerda XOTIRADA qilindi — create ichida qayta (sekin) tekshirmaymiz
+          allowDuplicate: true
         }, user));
+        tails.forEach(t => seenTails.add(t));
       } catch {
         skipped++;
       }
     }
     return { deals: imported, imported: imported.length, skipped };
+  }
+
+  // Lidning barcha telefonlaridan "dum" (oxirgi 9 raqam) ro'yxati — dublikatni formatdan qat'i
+  // nazar aniqlash uchun (+998 94 913-75-70 === 998949137570 === 949137570).
+  private dealPhoneTails(deal: { phone?: string; phones?: string[] }): string[] {
+    const all = [deal.phone, ...(Array.isArray(deal.phones) ? deal.phones : [])];
+    return [...new Set(all.map(p => this.phoneTail(p || '')).filter(t => t.length === 9))];
   }
 
   async update(id: number, body: any, user: UserEntity) {
