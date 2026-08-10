@@ -164,9 +164,10 @@ export class DealsService {
     const customerName = String(body.customerName || '').trim();
     if (!customerName) throw new BadRequestException('Mijoz nomi kerak');
     const phones = this.normalizePhones(body);
-    // Bir xil telefonli lid ikkinchi marta kiritilmasin. Admin ataylab qo'shmoqchi bo'lsa
-    // (allowDuplicate) ruxsat beramiz — qolganlar uchun bu qat'iy to'siq.
-    if (!(body.allowDuplicate === true && user.role === UserRole.Admin)) {
+    // Bir xil telefonli lid ikkinchi marta kiritilmasin. Har qanday xodim (menejer/operator/admin)
+    // ataylab qo'shmoqchi bo'lsa (allowDuplicate=true, frontendda tasdiqdan keyin) ruxsat beramiz —
+    // aks holda bu to'siq: shubhali dublikat haqida xabar beriladi.
+    if (body.allowDuplicate !== true) {
       const existing = await this.findDuplicateByPhone(phones);
       if (existing) {
         throw new ConflictException({
