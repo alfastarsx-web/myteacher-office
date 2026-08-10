@@ -743,8 +743,11 @@ export class DealsService {
   async findDuplicateByPhone(phones: string[], excludeId?: number): Promise<DealEntity | null> {
     const tails = [...new Set(phones.map(p => this.phoneTail(p)).filter(t => t.length === 9))];
     if (!tails.length) return null;
-    // phones ustuni jsonb massiv — har bir raqamni yoyib, faqat raqamlarga keltirib solishtiramiz.
-    const phonesText = `jsonb_array_elements_text(CASE WHEN jsonb_typeof(deal.phones) = 'array' THEN deal.phones ELSE '[]'::jsonb END)`;
+    // phones ustuni Postgres TEXT[] massivi (jsonb EMAS) — shuning uchun unnest bilan yoyamiz.
+    // Ilgari jsonb_typeof/jsonb_array_elements_text ishlatilgan edi: bu text[] ustunda
+    // "function jsonb_typeof(text[]) does not exist" xatosini berib, har shartnoma yaratishni
+    // (create -> findDuplicateByPhone) yiqitardi.
+    const phonesText = `unnest(COALESCE(deal.phones, '{}'::text[]))`;
     const params: Record<string, string> = {};
     const conditions = tails.map((tail, index) => {
       params[`tail${index}`] = `%${tail}`;
