@@ -3734,7 +3734,7 @@ async function saveDeal(){
   // buni server bajaradi, chunki u barcha menejerlarning lidlarini ko'radi.
   if(!apiToken && !editId){
     const dup=findLocalDuplicate([phone,...phones]);
-    if(dup){showToast(`Bu mijoz allaqachon mavjud: "${customerTitle(dup)}"`);return;}
+    if(dup && !confirm(`Bu mijoz allaqachon mavjud: "${customerTitle(dup)}"\n\nBaribir yangi shartnoma sifatida qo'shilsinmi?`))return;
   }
   const prepared=await prepareStageTransition(existing || {price,col:null},col,priceInput);
   if(!prepared)return;
@@ -3750,9 +3750,9 @@ async function saveDeal(){
         try{
           data=await api('/api/deals',{method:'POST',body:dealToApiPayload(payload)});
         }catch(err){
-          // 409 = bir xil telefonli lid allaqachon bor. Admin ataylab qo'shishi mumkin.
+          // 409 = bir xil telefonli lid allaqachon bor. Har qanday xodim (menejer/operator/admin)
+          // tasdiqdan keyin baribir qo'sha oladi (masalan boshqa kurs uchun yangi shartnoma).
           if(err.status!==409)throw err;
-          if(!isAdmin()){showToast(err.message);return;}
           if(!confirm(`${err.message}\n\nBaribir yangi shartnoma sifatida qo'shilsinmi?`))return;
           data=await api('/api/deals',{method:'POST',body:{...dealToApiPayload(payload),allowDuplicate:true}});
         }
