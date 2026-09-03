@@ -82,6 +82,9 @@ jobs:
           chk "sitemap.xml"       https://mydrone.uz/sitemap.xml            200
           chk "robots.txt"        https://mydrone.uz/robots.txt             200
           chk "admin (parolsiz)"  https://mydrone.uz/admin.html             401
+          chk "API"               https://mydrone.uz/api/settings           200
+          echo -n "  katalog API: "
+          curl -s -m 20 "https://mydrone.uz/api/products?limit=1" | head -c 60; echo
           echo -n "  gzip: "
           if curl -sI -H 'Accept-Encoding: gzip' -m 20 https://mydrone.uz/assets/js/app.js | grep -i content-encoding; then
             :
