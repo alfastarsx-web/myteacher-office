@@ -29,6 +29,8 @@ jobs:
 
       - name: Serverda deploy
         run: |
+          # Deploy mantig'i mydrone repo'sining o'zida (deploy/remote-deploy.sh).
+          # Shu sababli bu workflow'ni o'zgartirmasdan turib ham tuzatish mumkin.
           cat > /tmp/remote.sh <<'REMOTE'
           set -euo pipefail
           REPO=https://github.com/alfastarsx-web/mydrone.git
@@ -44,32 +46,8 @@ jobs:
           fi
           echo "  commit: $(git -C "$SRC" rev-parse --short HEAD)"
 
-          echo "== Sayt papkasi aniqlanmoqda =="
-          CONF=$(grep -rlE 'server_name[^;]*\bmydrone\.uz\b' /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null | head -1 || true)
-          if [ -z "$CONF" ]; then echo "XATO: mydrone.uz uchun nginx bloki topilmadi"; exit 1; fi
-          DIR=$(awk '/server_name[^;]*mydrone\.uz/{f=1} f && $1=="root" {gsub(/;/,"",$2); print $2; exit}' "$CONF")
-          if [ -z "$DIR" ] || [ ! -d "$DIR" ]; then echo "XATO: root papka topilmadi ($CONF)"; exit 1; fi
-          echo "  konfig: $CONF"
-          echo "  papka:  $DIR"
-
-          echo "== Nginx sozlanmoqda (gzip, try_files, kesh) =="
-          # admin.html serverga chiqarilmaydi, shuning uchun parol ekranga chiqmasin
-          ADMIN_PASS="$(openssl rand -hex 16)"
-          export ADMIN_PASS
           cd "$SRC"
-          bash deploy/setup-server.sh
-
-          echo "== Fayllar ko'chirilmoqda =="
-          cd "$SRC"
-          tar --exclude='./.git' --exclude='./.github' --exclude='./.claude' \
-              --exclude='./deploy' --exclude='./README.md' --exclude='./.gitignore' \
-              --exclude='./admin.html' --exclude='./assets/js/admin.js' \
-              --exclude='./assets/css/admin.css' \
-              -cf - . | tar -xf - -C "$DIR"
-          # oldin yuklangan admin fayllari qolgan bo'lsa - olib tashlanadi
-          rm -f "$DIR/admin.html" "$DIR/assets/js/admin.js" "$DIR/assets/css/admin.css"
-          chown -R www-data:www-data "$DIR" 2>/dev/null || true
-          echo "  tayyor"
+          bash deploy/remote-deploy.sh
           REMOTE
 
           ssh -o BatchMode=yes -o ConnectTimeout=30 -o StrictHostKeyChecking=accept-new \
