@@ -28,6 +28,8 @@ jobs:
           ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
 
       - name: Serverda deploy
+        env:
+          MYDRONE_ADMIN_PASS: ${{ secrets.MYDRONE_ADMIN_PASS }}
         run: |
           # Deploy mantig'i mydrone repo'sining o'zida (deploy/remote-deploy.sh).
           # Shu sababli bu workflow'ni o'zgartirmasdan turib ham tuzatish mumkin.
@@ -50,8 +52,17 @@ jobs:
           bash deploy/remote-deploy.sh
           REMOTE
 
+          # Admin paroli secret'dan olinadi va skriptning boshiga qo'shiladi.
+          # GitHub uni logda avtomatik *** qilib yashiradi.
+          if [ -n "${MYDRONE_ADMIN_PASS:-}" ]; then
+            printf 'export ADMIN_PASS=%q\n' "$MYDRONE_ADMIN_PASS" > /tmp/remote-full.sh
+          else
+            : > /tmp/remote-full.sh
+          fi
+          cat /tmp/remote.sh >> /tmp/remote-full.sh
+
           ssh -o BatchMode=yes -o ConnectTimeout=30 -o StrictHostKeyChecking=accept-new \
-            root@"${{ secrets.SSH_HOST }}" 'bash -s' < /tmp/remote.sh
+            root@"${{ secrets.SSH_HOST }}" 'bash -s' < /tmp/remote-full.sh
 
       - name: Tekshirish
         run: |
@@ -70,7 +81,7 @@ jobs:
           chk "katalog"           https://mydrone.uz/katalog                200
           chk "sitemap.xml"       https://mydrone.uz/sitemap.xml            200
           chk "robots.txt"        https://mydrone.uz/robots.txt             200
-          chk "admin.js yo'qmi"   https://mydrone.uz/assets/js/admin.js     404
+          chk "admin (parolsiz)"  https://mydrone.uz/admin.html             401
           echo -n "  gzip: "
           if curl -sI -H 'Accept-Encoding: gzip' -m 20 https://mydrone.uz/assets/js/app.js | grep -i content-encoding; then
             :
