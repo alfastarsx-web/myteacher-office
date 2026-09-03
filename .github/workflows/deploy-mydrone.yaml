@@ -1,0 +1,103 @@
+# mydrone.uz saytini serverga chiqaradi.
+#
+# Nega bu workflow shu repoda turibdi: serverga kiruvchi deploy kaliti
+# (SSH_PRIVATE_KEY) shu repo secret'larida saqlanadi. mydrone repo'si ochiq,
+# shuning uchun kod serverga to'g'ridan-to'g'ri GitHub'dan klonlanadi.
+#
+# Faqat qo'lda ishga tushiriladi: Actions -> "Deploy mydrone.uz" -> Run workflow
+# (yoki: gh workflow run deploy-mydrone.yaml -R alfastarsx-web/myteacher-office)
+
+name: Deploy mydrone.uz
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-mydrone
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH kalitini tayyorlash
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Serverda deploy
+        run: |
+          cat > /tmp/remote.sh <<'REMOTE'
+          set -euo pipefail
+          REPO=https://github.com/alfastarsx-web/mydrone.git
+          SRC=/opt/mydrone-src
+
+          echo "== Kod yuklanmoqda =="
+          if [ -d "$SRC/.git" ]; then
+            git -C "$SRC" fetch --depth 1 origin main
+            git -C "$SRC" reset --hard origin/main
+          else
+            rm -rf "$SRC"
+            git clone --depth 1 "$REPO" "$SRC"
+          fi
+          echo "  commit: $(git -C "$SRC" rev-parse --short HEAD)"
+
+          echo "== Sayt papkasi aniqlanmoqda =="
+          CONF=$(grep -rlE 'server_name[^;]*\bmydrone\.uz\b' /etc/nginx/sites-enabled /etc/nginx/conf.d 2>/dev/null | head -1 || true)
+          if [ -z "$CONF" ]; then echo "XATO: mydrone.uz uchun nginx bloki topilmadi"; exit 1; fi
+          DIR=$(awk '/server_name[^;]*mydrone\.uz/{f=1} f && $1=="root" {gsub(/;/,"",$2); print $2; exit}' "$CONF")
+          if [ -z "$DIR" ] || [ ! -d "$DIR" ]; then echo "XATO: root papka topilmadi ($CONF)"; exit 1; fi
+          echo "  konfig: $CONF"
+          echo "  papka:  $DIR"
+
+          echo "== Nginx sozlanmoqda (gzip, try_files, kesh) =="
+          # admin.html serverga chiqarilmaydi, shuning uchun parol ekranga chiqmasin
+          ADMIN_PASS="$(openssl rand -hex 16)"
+          export ADMIN_PASS
+          cd "$SRC"
+          bash deploy/setup-server.sh
+
+          echo "== Fayllar ko'chirilmoqda =="
+          cd "$SRC"
+          tar --exclude='./.git' --exclude='./.github' --exclude='./.claude' \
+              --exclude='./deploy' --exclude='./README.md' --exclude='./.gitignore' \
+              --exclude='./admin.html' --exclude='./assets/js/admin.js' \
+              --exclude='./assets/css/admin.css' \
+              -cf - . | tar -xf - -C "$DIR"
+          # oldin yuklangan admin fayllari qolgan bo'lsa - olib tashlanadi
+          rm -f "$DIR/admin.html" "$DIR/assets/js/admin.js" "$DIR/assets/css/admin.css"
+          chown -R www-data:www-data "$DIR" 2>/dev/null || true
+          echo "  tayyor"
+          REMOTE
+
+          ssh -o BatchMode=yes -o ConnectTimeout=30 -o StrictHostKeyChecking=accept-new \
+            root@"${{ secrets.SSH_HOST }}" 'bash -s' < /tmp/remote.sh
+
+      - name: Tekshirish
+        run: |
+          fail=0
+          chk() {
+            code=$(curl -so /dev/null -w '%{http_code}' -m 20 "$2")
+            if [ "$code" = "$3" ]; then
+              echo "  OK  $1 -> $code"
+            else
+              echo "  XATO $1 -> $code (kutilgan $3)"
+              fail=1
+            fi
+          }
+          chk "bosh sahifa"       https://mydrone.uz/                       200
+          chk "ichki manzil"      https://mydrone.uz/mahsulot/dji-avata-2   200
+          chk "katalog"           https://mydrone.uz/katalog                200
+          chk "sitemap.xml"       https://mydrone.uz/sitemap.xml            200
+          chk "robots.txt"        https://mydrone.uz/robots.txt             200
+          chk "admin.js yo'qmi"   https://mydrone.uz/assets/js/admin.js     404
+          echo -n "  gzip: "
+          if curl -sI -H 'Accept-Encoding: gzip' -m 20 https://mydrone.uz/assets/js/app.js | grep -i content-encoding; then
+            :
+          else
+            echo "yo'q"
+            fail=1
+          fi
+          exit $fail
