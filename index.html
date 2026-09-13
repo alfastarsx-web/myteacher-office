@@ -554,7 +554,7 @@ table.crm-t{width:100%;border-collapse:collapse}
 ══════════════════════════════════════ */
 .analytics-wrap{flex:1;overflow-y:auto;padding:26px 34px;background:linear-gradient(180deg,#F8FAFC 0,#F2F6FC 100%)}
 .analytics-hero{background:linear-gradient(135deg,#1D4ED8,#0F766E);border-radius:16px;padding:24px 28px;color:#fff;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:20px;position:relative;overflow:hidden}
-.analytics-hero::after{content:'';position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.08)}
+.analytics-hero::after{content:'';position:absolute;right:-60px;top:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.08);pointer-events:none}
 .analytics-hero-text h2{font-size:24px;font-weight:800;margin-bottom:6px}
 .analytics-hero-text p{font-size:13px;opacity:.85;line-height:1.5}
 .analytics-period-tabs{display:flex;gap:6px;background:rgba(255,255,255,.15);border-radius:10px;padding:4px}
@@ -759,6 +759,18 @@ table.crm-t{width:100%;border-collapse:collapse}
 .pay-income{color:#16A34A;font-weight:800}
 .pay-side{display:flex;flex-direction:column;gap:12px}
 .pay-card{background:#fff;border:1px solid var(--br);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm)}
+.db-md{font-size:13px;line-height:1.55}
+.db-md p{margin:0 0 8px}
+.db-md p:last-child{margin-bottom:0}
+.db-md strong{font-weight:700}
+.db-md ul,.db-md ol{margin:4px 0 8px;padding-left:20px}
+.db-md li{margin-bottom:2px}
+.db-md code{background:rgba(0,0,0,.06);padding:1px 5px;border-radius:4px;font-family:monospace;font-size:12px}
+.db-md pre{background:#0F172A;color:#E2E8F0;padding:8px 10px;border-radius:8px;overflow-x:auto;margin:4px 0 8px}
+.db-md pre code{background:none;padding:0;color:inherit}
+.db-md table{border-collapse:collapse;width:100%;margin:4px 0 8px;font-size:12.5px}
+.db-md th,.db-md td{border:1px solid var(--br);padding:5px 8px;text-align:left}
+.db-md th{background:#F8FAFC;font-weight:700}
 .pay-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--brl);font-size:13px;color:var(--tm)}
 .pay-row:last-child{border-bottom:0}
 .pay-row strong{color:var(--td)}
@@ -1171,6 +1183,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 </style>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/marked@11.1.1/marked.min.js"></script>
 </head>
 <body>
 
@@ -1246,6 +1259,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <div class="si" id="sbCareer" title="MTC Career" onclick="goPage('career')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.7 5.47 6.03.88-4.36 4.25 1.03 6-5.4-2.84-5.4 2.84 1.03-6-4.36-4.25 6.03-.88L12 3z"/></svg></div>
   <div class="si" id="sbAnalytics" title="Analitika" onclick="goPage('analytics')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></div>
   <div class="si" id="sbAiInsights" title="AI tahlil" onclick="goPage('aiinsights')" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a7 7 0 00-7 7c0 2.4 1.2 4.5 3 5.7V17a1 1 0 001 1h6a1 1 0 001-1v-2.3c1.8-1.2 3-3.3 3-5.7a7 7 0 00-7-7z"/><line x1="9" y1="21" x2="15" y2="21"/><line x1="10" y1="18" x2="14" y2="18"/></svg></div>
+  <div class="si" id="sbDbAssistant" title="Ma'lumotlar bazasi yordamchisi" onclick="goPage('dbassistant')" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2"><path d="M12 4v3"/><circle cx="12" cy="2.5" r="1" fill="#000"/><rect x="4" y="7" width="16" height="13" rx="3"/><circle cx="9" cy="13.5" r="1.4" fill="#000" stroke="none"/><circle cx="15" cy="13.5" r="1.4" fill="#000" stroke="none"/><path d="M9 17h6"/><path d="M2 12v3M22 12v3"/></svg></div>
   <div class="si" id="sbDocs" title="Dokumentatsiya" onclick="goPage('docs')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="8" y1="13" x2="16" y2="13"/><line x1="8" y1="17" x2="14" y2="17"/></svg></div>
   <div class="sp"></div>
   <div class="si" id="sbNotif" title="Bildirishnomalar" onclick="toggleNotifPanel()" style="position:relative">
@@ -1600,6 +1614,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
   <!-- ═══ PAGE: AI TAHLIL (faqat Admin) ═══ -->
   <div class="page" id="page-aiinsights">
     <div class="analytics-wrap" id="aiInsightsWrap"></div>
+  </div>
+
+  <!-- ═══ PAGE: MA'LUMOTLAR BAZASI YORDAMCHISI (faqat Admin) ═══ -->
+  <div class="page" id="page-dbassistant">
+    <div class="analytics-wrap" id="dbAssistantWrap"></div>
   </div>
 
   <!-- ═══ PAGE: DOKUMENTATSIYA ═══ -->
@@ -2618,6 +2637,7 @@ function isMobile(){ return window.innerWidth <= 760; }
 function goPage(p){
   if(!document.getElementById('page-'+p))p='shartnomalar';
   if(p==='aiinsights' && !isAdmin())p='shartnomalar';
+  if(p==='dbassistant' && !isAdmin())p='shartnomalar';
   curPage = p;
   localStorage.setItem('mtcrm_page',p);
   // Mobileda sahifa o'tganda yuqoriga scroll
@@ -2645,6 +2665,7 @@ function goPage(p){
   if(p==='payments') renderPaymentsPage();
   if(p==='analytics') renderAnalyticsPage();
   if(p==='aiinsights') renderAiInsightsPage();
+  if(p==='dbassistant') renderDbAssistantPage();
   if(p==='settings') renderSetContent('crmsoz');
 }
 
@@ -2659,10 +2680,13 @@ function renderSidebarState(p){
   if(p==='docs')document.getElementById('sbDocs')?.classList.add('on');
   if(p==='analytics')document.getElementById('sbAnalytics')?.classList.add('on');
   if(p==='aiinsights')document.getElementById('sbAiInsights')?.classList.add('on');
+  if(p==='dbassistant')document.getElementById('sbDbAssistant')?.classList.add('on');
   if(p==='settings')document.getElementById('sbSettings')?.classList.add('on');
   if(p==='dashboard')document.getElementById('sbDash')?.classList.add('on');
   const aiIcon=document.getElementById('sbAiInsights');
   if(aiIcon)aiIcon.style.display=isAdmin()?'flex':'none';
+  const dbIcon=document.getElementById('sbDbAssistant');
+  if(dbIcon)dbIcon.style.display=isAdmin()?'flex':'none';
 }
 
 function renderHdrRight(p){
@@ -5184,6 +5208,185 @@ async function generateAiInsightNow(){
   }finally{
     aiInsightsLoading=false;
     renderAiInsightsPage();
+  }
+}
+
+// ═══ DB ASSISTANT (AI chat ulangan ma'lumotlar bazasiga, faqat Admin) ═══
+let dbAssistantSessions=[];
+let dbAssistantSessionsLoaded=false;
+let dbAssistantActiveId=null;
+let dbAssistantMessages=[];
+let dbAssistantMessagesLoading=false;
+let dbAssistantSending=false;
+
+async function renderDbAssistantPage(){
+  const wrap = document.getElementById('dbAssistantWrap');
+  if(!wrap || !isAdmin()) return;
+  if(!dbAssistantSessionsLoaded){
+    dbAssistantSessionsLoaded = true;
+    try{
+      const data = await api('/api/db-assistant/sessions');
+      dbAssistantSessions = data.sessions || [];
+      if(dbAssistantSessions.length && dbAssistantActiveId==null){
+        dbAssistantActiveId = dbAssistantSessions[0].id;
+        await loadDbAssistantMessages(dbAssistantActiveId);
+      }
+    }catch(err){
+      showToast(err.message || "Suhbatlar ro'yxatini yuklab bo'lmadi");
+    }
+  }
+
+  const sessionListHtml = dbAssistantSessions.length ? dbAssistantSessions.map(s=>`
+    <div onclick="selectDbAssistantSession(${s.id})" style="padding:12px 14px;cursor:pointer;border-bottom:1px solid var(--br);display:flex;align-items:center;justify-content:space-between;gap:6px;${s.id===dbAssistantActiveId?'background:#EFF6FF':''}">
+      <div style="min-width:0">
+        <div style="font-weight:700;font-size:13px;color:var(--tm);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(s.title || 'Suhbat #'+s.id)}</div>
+        <div style="font-size:11px;color:var(--mu);margin-top:2px">${new Date(s.createdAt).toLocaleString('uz-UZ')}</div>
+      </div>
+      <div class="ddw" style="flex-shrink:0" onclick="event.stopPropagation()">
+        <div onclick="toggleDD('ddSession${s.id}')" style="cursor:pointer;padding:4px 6px;color:var(--mu);font-size:15px;line-height:1;font-weight:700">⋮</div>
+        <div class="ddm" id="ddSession${s.id}" style="left:auto;right:0;min-width:140px">
+          <div class="ddi" onclick="renameDbAssistantSession(${s.id})">✏️ Nomini o'zgartirish</div>
+          <div class="ddi" style="color:#EF4444" onclick="deleteDbAssistantSession(${s.id})">🗑️ O'chirish</div>
+        </div>
+      </div>
+    </div>
+  `).join('') : `<div style="padding:20px;color:var(--mu);font-size:13px">Hali suhbat yo'q</div>`;
+
+  const threadHtml = dbAssistantActiveId==null
+    ? `<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--mu);font-size:13px">Suhbatni tanlang yoki yangisini boshlang</div>`
+    : `
+      <div style="flex:1;overflow-y:auto;padding:18px;display:flex;flex-direction:column;gap:12px" id="dbAssistantThread">
+        ${dbAssistantMessagesLoading ? `<div style="color:var(--mu);font-size:13px">Yuklanmoqda…</div>` : renderDbAssistantMessages()}
+      </div>
+      <div style="padding:12px;border-top:1px solid var(--br);display:flex;gap:8px;flex-shrink:0">
+        <input id="dbAssistantInput" placeholder="Bazadagi ma'lumotlar haqida savol bering..." style="flex:1;padding:10px 14px;border:1px solid var(--br);border-radius:10px;font-family:var(--f);font-size:13px"
+          onkeydown="if(event.key==='Enter'){event.preventDefault();sendDbAssistantMessage();}" ${dbAssistantSending?'disabled':''}>
+        <button class="btn-ico btn-primary" onclick="sendDbAssistantMessage()" ${dbAssistantSending?'disabled':''}>${dbAssistantSending?'…':'Yuborish'}</button>
+      </div>
+    `;
+
+  wrap.innerHTML = `
+    <div class="analytics-hero">
+      <div class="analytics-hero-text">
+        <h2>🗄️ Ma'lumotlar bazasi yordamchisi</h2>
+        <p>Savolingizni oddiy tilda yozing — AI o'zi SQL so'rov yozib, bazadan haqiqiy javob topib beradi.</p>
+      </div>
+      <button class="apt active" onclick="createDbAssistantSession()">+ Yangi suhbat</button>
+    </div>
+    <div style="display:flex;gap:16px;height:calc(100vh - 260px);min-height:420px">
+      <div style="width:220px;flex-shrink:0;background:#fff;border:1px solid var(--br);border-radius:14px;overflow-y:auto">${sessionListHtml}</div>
+      <div style="flex:1;display:flex;flex-direction:column;background:#fff;border:1px solid var(--br);border-radius:14px;overflow:hidden;min-width:0">${threadHtml}</div>
+    </div>
+  `;
+  const thread = document.getElementById('dbAssistantThread');
+  if(thread) thread.scrollTop = thread.scrollHeight;
+}
+
+function renderDbAssistantMessages(){
+  if(!dbAssistantMessages.length) return `<div style="color:var(--mu);font-size:13px">Hali xabar yo'q. Savolingizni yozing.</div>`;
+  return dbAssistantMessages.map(m=>{
+    const isUser = m.role==='user';
+    const sqlHtml = m.sql ? `
+      <details style="margin-top:5px">
+        <summary style="font-size:11px;color:var(--mu);cursor:pointer">SQL so'rovni ko'rish</summary>
+        <pre style="font-size:11px;background:#0F172A;color:#E2E8F0;padding:8px 10px;border-radius:8px;overflow-x:auto;margin-top:4px;white-space:pre-wrap">${esc(m.sql)}</pre>
+      </details>` : '';
+    const bodyHtml = isUser
+      ? `<div style="white-space:pre-wrap;word-break:break-word">${esc(m.content)}</div>`
+      : `<div class="db-md" style="word-break:break-word">${window.marked ? marked.parse(m.content) : esc(m.content)}</div>`;
+    return `
+      <div style="display:flex;justify-content:${isUser?'flex-end':'flex-start'}">
+        <div style="max-width:74%">
+          <div style="padding:10px 14px;border-radius:14px;
+            background:${isUser?'#1D4ED8':'#F1F5F9'};color:${isUser?'#fff':'var(--tm)'}">${bodyHtml}</div>
+          ${sqlHtml}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+async function createDbAssistantSession(){
+  try{
+    const data = await api('/api/db-assistant/sessions',{method:'POST'});
+    dbAssistantSessions.unshift(data.session);
+    dbAssistantActiveId = data.session.id;
+    dbAssistantMessages = [];
+    await renderDbAssistantPage();
+  }catch(err){
+    showToast(err.message || "Suhbat yaratib bo'lmadi");
+  }
+}
+
+async function renameDbAssistantSession(id){
+  const current = dbAssistantSessions.find(s=>s.id===id);
+  const title = (prompt("Suhbat nomi:", current?.title || `Suhbat #${id}`) || '').trim();
+  if(!title || title===current?.title) return;
+  try{
+    const data = await api(`/api/db-assistant/sessions/${id}`,{method:'PATCH',body:{title}});
+    const idx = dbAssistantSessions.findIndex(s=>s.id===id);
+    if(idx>=0) dbAssistantSessions[idx] = data.session;
+    await renderDbAssistantPage();
+  }catch(err){
+    showToast(err.message || "Nomini o'zgartirib bo'lmadi");
+  }
+}
+
+async function deleteDbAssistantSession(id){
+  if(!confirm("Bu suhbat butunlay o'chirilsinmi? Bu amalni qaytarib bo'lmaydi."))return;
+  try{
+    await api(`/api/db-assistant/sessions/${id}`,{method:'DELETE'});
+    dbAssistantSessions = dbAssistantSessions.filter(s=>s.id!==id);
+    if(dbAssistantActiveId===id){
+      dbAssistantActiveId = dbAssistantSessions[0]?.id ?? null;
+      dbAssistantMessages = [];
+      if(dbAssistantActiveId!=null) await loadDbAssistantMessages(dbAssistantActiveId);
+    }
+    await renderDbAssistantPage();
+  }catch(err){
+    showToast(err.message || "Suhbatni o'chirib bo'lmadi");
+  }
+}
+
+async function selectDbAssistantSession(id){
+  if(id===dbAssistantActiveId) return;
+  dbAssistantActiveId = id;
+  await loadDbAssistantMessages(id);
+  await renderDbAssistantPage();
+}
+
+async function loadDbAssistantMessages(id){
+  dbAssistantMessagesLoading = true;
+  try{
+    const data = await api(`/api/db-assistant/sessions/${id}/messages`);
+    dbAssistantMessages = data.messages || [];
+  }catch(err){
+    showToast(err.message || "Xabarlarni yuklab bo'lmadi");
+    dbAssistantMessages = [];
+  }finally{
+    dbAssistantMessagesLoading = false;
+  }
+}
+
+async function sendDbAssistantMessage(){
+  if(dbAssistantSending || dbAssistantActiveId==null) return;
+  const input = document.getElementById('dbAssistantInput');
+  const content = (input?.value || '').trim();
+  if(!content) return;
+  dbAssistantSending = true;
+  if(input) input.value='';
+  dbAssistantMessages.push({id:'tmp-'+Date.now(), role:'user', content, sql:null});
+  await renderDbAssistantPage();
+  try{
+    const data = await api(`/api/db-assistant/sessions/${dbAssistantActiveId}/messages`,{method:'POST',body:{content}});
+    dbAssistantMessages.pop();
+    dbAssistantMessages.push(data.userMessage, data.reply);
+  }catch(err){
+    showToast(err.message || "AI javob berolmadi");
+    dbAssistantMessages.pop();
+  }finally{
+    dbAssistantSending = false;
+    await renderDbAssistantPage();
   }
 }
 
