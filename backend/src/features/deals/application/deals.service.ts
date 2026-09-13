@@ -836,11 +836,20 @@ export class DealsService {
   // o'zgarishini bekor qilardi va vazifasini boshqa yozuvga ko'chirib "yo'qotardi".
   private async mergeDuplicateManagerLeads(phoneKey: string, preferId?: number): Promise<number | null> {
     if (!phoneKey) return null;
-    const owned = await this.deals.createQueryBuilder('deal')
+    // FAQAT shu telefonli (raqamlari bir xil) egali menejer lidlarini so'raymiz — ilgari butun
+    // menejer bazasi (barcha jsonb ustunlari bilan) xotiraga yuklanib, har bosqich o'zgarishida
+    // katta bazada CRMni qotirar edi. Endi baza faqat mos yozuvlarni qaytaradi.
+    const group = await this.deals.createQueryBuilder('deal')
       .where('deal.ownerId IS NOT NULL')
       .andWhere('deal.stageId NOT IN (:...op)', { op: OPERATOR_STAGE_IDS })
+      .andWhere(`(
+        regexp_replace(COALESCE(deal.phone, ''), '\\D', '', 'g') = :digits
+        OR EXISTS (
+          SELECT 1 FROM unnest(COALESCE(deal.phones, '{}'::text[])) AS p
+          WHERE regexp_replace(p, '\\D', '', 'g') = :digits
+        )
+      )`, { digits: phoneKey })
       .getMany();
-    const group = owned.filter(d => this.phoneKey(d) === phoneKey);
     if (group.length < 2) return group[0]?.id ?? null;
     // Ikki yoki undan ortiq yakunlangan (sotilgan/to'langan) yozuvni birlashtirmaymiz — pulni yo'qotmaslik uchun
     if (group.filter(d => this.isAdvancedDeal(d)).length >= 2) return group[0].id;

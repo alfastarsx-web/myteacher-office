@@ -1,7 +1,15 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 
+// Indekslar: list(), merge, bulk, echo, dashboard va boshqa so'rovlar ownerId/operatorId/stageId
+// bo'yicha filtrlaydi. Indekssiz har so'rov butun jadvalni skanlab, katta bazada CRMni
+// sekinlashtiradi (ayniqsa qidiruv va bosqichdan bosqichga o'tkazish). TYPEORM_SYNC ularni
+// deploy paytida avtomatik yaratadi.
 @Entity('deals')
+@Index(['ownerId'])
+@Index(['operatorId'])
+@Index(['stageId'])
+@Index(['createdBy'])
 export class DealEntity {
   @PrimaryGeneratedColumn()
   id: number;
