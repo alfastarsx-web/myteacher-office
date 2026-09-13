@@ -1,7 +1,11 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, Index, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 import { UserEntity } from '../../users/infrastructure/user.entity';
 
+// dealId — hasOpenTaskForDeal/reassignDealTasks (har bosqich o'zgarishда), ownerId — list()
+// bo'yicha so'raladi. Indekssiz butun tasks jadvali skanlanadi.
 @Entity('tasks')
+@Index(['dealId'])
+@Index(['ownerId'])
 export class TaskEntity {
   @PrimaryGeneratedColumn()
   id: number;

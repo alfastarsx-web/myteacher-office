@@ -1281,7 +1281,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
       </div>
       <div class="deal-search">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input id="dealSearch" placeholder="Shartnoma qidirish..." oninput="renderCurrentDeals()">
+        <input id="dealSearch" placeholder="Shartnoma qidirish..." oninput="scheduleDealSearch()">
       </div>
       <div class="ddw">
         <div class="ddbtn" onclick="toggleDD('ddSort')">
@@ -1933,6 +1933,11 @@ const COLS = [
   {id:'yutqazilgan', label:'Yutqazilgan',      color:'#EF4444'},
   {id:'yutgan',      label:'Muvaffaqiyatli',   color:'#10B981'},
 ];
+// Intl.DateTimeFormat qurish QIMMAT. Ilgari sana kaliti kerak bo'lgan har joyда (har lid uchun
+// bir necha marta) qayta yaratilardi — 3000 lidда o'n minglab konstruksiya = dashboard/render
+// juda sekin bo'lardi. Shu ikki formatterni bir marta keshlab, hamma joyда qayta ishlatamiz.
+const _TK_DAY_FMT = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tashkent' });
+const _TK_MONTH_FMT = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Tashkent', year: 'numeric', month: '2-digit' });
 // Operator pipeline
 const OPERATOR_COLS = [
   {id:'op_yangi',      label:'Yangi',       color:'#2563EB'},
@@ -2588,6 +2593,13 @@ function modalStages(){
   return isOperator()?OPERATOR_COLS:COLS;
 }
 function renderCurrentDeals(){ curView==='list'?renderList():renderKanban(); }
+// Qidiruvni debounce qilamiz: har harf bosilganda emas, yozish to'xtagach (220ms) qayta chizamiz.
+// Aks holda katta bazada har harfda butun Kanban/List qayta chizilib, qidiruv qotib qolardi.
+let _dealSearchTimer=null;
+function scheduleDealSearch(){
+  clearTimeout(_dealSearchTimer);
+  _dealSearchTimer=setTimeout(renderCurrentDeals, 220);
+}
 function esc(v){return String(v ?? '').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
 function ensureDealActivity(d){
   if(!d.messages)d.messages=[];
@@ -2894,8 +2906,8 @@ function renderKpiChips(cards){
 // (hodisalar jurnali, type='stage') dan olinadi. Ilgari ko'chirishlar shu brauzerning
 // localStorage hisoblagichidan olinardi — shuning uchun ikki kompyuterda har xil son chiqardi.
 function managerActionsToday(user){
-  const todayKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date());
-  const tk=iso=>iso?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)):'';
+  const todayKey=_TK_DAY_FMT.format(new Date());
+  const tk=iso=>iso?_TK_DAY_FMT.format(new Date(iso)):'';
   const myDeals=deals.filter(d=>String(d.ownerId)===String(user.id));
   let comments=0,tasks=0;
   myDeals.forEach(d=>{
@@ -2977,9 +2989,11 @@ async function refreshDashboardSummary(){
 // ════════════════════════════════════════
 //  RENDER LIST
 // ════════════════════════════════════════
+const LIST_RENDER_CAP=500;   // List ko'rinishida bir vaqtda chiziladigan maksimal qator
+const KANBAN_COL_CAP=150;     // Kanban har ustunda bir vaqtda chiziladigan maksimal karta
 function renderList(){
   renderDealStats();
-  const rows=visibleDeals().slice().sort((a,b)=>{
+  const allRows=visibleDeals().slice().sort((a,b)=>{
     if(isAdmin()){
       const au=a.ownerId?1:0;
       const bu=b.ownerId?1:0;
@@ -2987,11 +3001,15 @@ function renderList(){
     }
     return Number(b.id||0)-Number(a.id||0);
   });
-  document.getElementById('dealCount').textContent=rows.length;
-  const unassignedCount=rows.filter(d=>!d.ownerId).length;
+  document.getElementById('dealCount').textContent=allRows.length;
+  const unassignedCount=allRows.filter(d=>!d.ownerId).length;
   const unassignedEl=document.getElementById('unassignedDealCount');
   if(unassignedEl)unassignedEl.textContent=unassignedCount;
   [...selectedDealIds].forEach(id=>{ if(!deals.some(d=>Number(d.id)===id))selectedDealIds.delete(id); });
+  // Katta bazada minglab <tr> chizish brauzerni qotiradi — ko'pi bilan LIST_RENDER_CAP chizamiz.
+  // Aniq lidni topish uchun qidiruv/filtr ishlatiladi (ular natijani kichraytiradi).
+  const rows=allRows.slice(0,LIST_RENDER_CAP);
+  const truncated=allRows.length-rows.length;
   document.getElementById('sListBody').innerHTML=rows.map(d=>{
     const col=[...COLS,...OPERATOR_COLS].find(c=>c.id===d.col) || {label:'Bosqich',color:'#6B7280'};
     const owner=managerById(d.ownerId);
@@ -3007,8 +3025,8 @@ function renderList(){
       <td><span class="vlink"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 13h4"/></svg>Vazifa yo'q</span></td>
       <td>${d.date}</td>
     </tr>`;
-  }).join('');
-  renderBulkDealActions(rows);
+  }).join('') + (truncated>0?`<tr><td colspan="8" style="text-align:center;padding:14px;color:var(--mu);font-size:12px">Yana ${truncated.toLocaleString('uz-UZ')} ta yozuv ko'rsatilmadi — qidiruv yoki filtrdan foydalaning</td></tr>`:'');
+  renderBulkDealActions(allRows);
 }
 
 function toggleDealSelection(id,checked){
@@ -3196,7 +3214,7 @@ function toggleStageHidden(id){
 // oyda ochiq qolgan ishni ko'rsatadi — menejerning shu oygi real yuki.
 const MONTH_NAMES_UZ=['Yanvar','Fevral','Mart','Aprel','May','Iyun','Iyul','Avgust','Sentabr','Oktabr','Noyabr','Dekabr'];
 function monthKeyFrom(ms){
-  return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit'}).format(new Date(ms)).slice(0,7);
+  return _TK_MONTH_FMT.format(new Date(ms)).slice(0,7);
 }
 function monthLabelFrom(mk){
   const [y,m]=mk.split('-').map(Number);
@@ -3298,7 +3316,8 @@ function renderKanban(){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
           Shartnoma yaratish
         </button>
-        ${current.map(kanbanCardHtml).join('')}
+        ${current.slice(0,KANBAN_COL_CAP).map(kanbanCardHtml).join('')}
+        ${current.length>KANBAN_COL_CAP?`<div style="text-align:center;padding:10px;color:var(--mu);font-size:11px">Yana ${(current.length-KANBAN_COL_CAP).toLocaleString('uz-UZ')} ta — qidiruv/filtrdan foydalaning</div>`:''}
         ${[...futureByMonth.keys()].sort().map(mk=>{
           const list=futureByMonth.get(mk);
           const sum=list.reduce((s,d)=>s+d.price,0);
@@ -4274,7 +4293,7 @@ function setDashPeriod(p,el){
   el?.classList.add('active');
   renderDashLeaderboard();
 }
-const DASH_TK=iso=>iso?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)):'';
+const DASH_TK=iso=>iso?_TK_DAY_FMT.format(new Date(iso)):'';
 const dashSoldDate=d=>d.wonAt||d.updatedAt||d.createdAt;
 // Davr ichida REAL tushgan pul (kassa): to'lovlar tarixi bor bitimlarda har bir to'lov
 // (qisman to'lovlar ham!) o'z sanasida, tarixsiz eski yutgan bitimlarda esa butun summa
@@ -4520,9 +4539,9 @@ function managerPosition(user,salesList,totalRevenue){
 // kuzatish texnik imkoni hali yo'q (faqat "full call bo'ldi/bo'lmadi" belgisi mavjud).
 function managerKpiCounts(user,salesList){
   const myDeals=deals.filter(d=>String(d.ownerId)===String(user.id));
-  const todayKey=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date());
+  const todayKey=_TK_DAY_FMT.format(new Date());
   const weekRange=analyticsDateRange('week');
-  const tashkentDateKey=iso=>iso?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)):'';
+  const tashkentDateKey=iso=>iso?_TK_DAY_FMT.format(new Date(iso)):'';
   // Full call — hodisa asosida (har qo'ng'iroq alohida, dublikat yozuvlar sanalmaydi)
   const fcEvents=managerFullCallEvents(user);
   const dailyFullCalls=fcEvents.filter(e=>e.day===todayKey).length;
@@ -4583,7 +4602,7 @@ function leadDedupeKey(d){
   return phone ? 'p:' + phone : 'id:' + d.id;
 }
 function fullCallEventsFrom(dealsList){
-  const tk = iso => iso ? new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)) : '';
+  const tk = iso => iso ? _TK_DAY_FMT.format(new Date(iso)) : '';
   const idKey = leadDedupeKey;
   const events = [];
   const seen = new Set();
@@ -4633,8 +4652,8 @@ function managerInstallList(user, range){
 // ════════════════════════════════════════
 function calculateManagerOverview(user){
   const myDeals = deals.filter(d => String(d.ownerId) === String(user.id));
-  const todayKey = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date());
-  const tashkentDateKey = iso => iso ? new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)) : '';
+  const todayKey = _TK_DAY_FMT.format(new Date());
+  const tashkentDateKey = iso => iso ? _TK_DAY_FMT.format(new Date(iso)) : '';
 
   // Olingan Qual lid — operator tomonidan ushbu menejerga bugun yuborilgan (qualAt handoff paytida belgilanadi)
   const todayQualReceived = myDeals.filter(d => d.qualAt && tashkentDateKey(d.qualAt) === todayKey).length;
@@ -4680,9 +4699,9 @@ function calculateManagerOverview(user){
 // ════════════════════════════════════════
 function calculateAdminOverview(){
   const all = deals; // Admin /api/deals orqali barcha shartnomalarni ko'radi
-  const todayKey = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date());
-  const monthKey = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit'}).format(new Date()).slice(0,7);
-  const tashkentDateKey = iso => iso ? new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)) : '';
+  const todayKey = _TK_DAY_FMT.format(new Date());
+  const monthKey = _TK_MONTH_FMT.format(new Date()).slice(0,7);
+  const tashkentDateKey = iso => iso ? _TK_DAY_FMT.format(new Date(iso)) : '';
 
   // Ishga olingan — bugun lid ustida (operator yoki menejer tomonidan) har qanday harakat bajarilgan bo'lsa
   const isProcessedToday = d => {
@@ -4739,8 +4758,8 @@ function calculateOperatorBonus(user){
   const myDeals = deals.filter(d => String(d.operatorId) === uid);
 
   // Toshkent vaqtida bugungi sana
-  const todayKey = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date());
-  const tashkentDateKey = iso => iso ? new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)) : '';
+  const todayKey = _TK_DAY_FMT.format(new Date());
+  const tashkentDateKey = iso => iso ? _TK_DAY_FMT.format(new Date(iso)) : '';
 
   // Sana tekshirish yordamchi funksiya — faqat createdAt ishlatamiz (updatedAt ishonchsiz)
   const isToday = d => (d.createdAt ? tashkentDateKey(d.createdAt) : String(d.date || '').slice(0,10)) === todayKey;
@@ -4816,7 +4835,7 @@ function calculateOperatorBonus(user){
   const todayBonus = qualBonus + saleBonus + appBonus;
 
   // Shu oydagi jami bonus
-  const monthKey = new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent',year:'numeric',month:'2-digit'}).format(new Date()).slice(0,7);
+  const monthKey = _TK_MONTH_FMT.format(new Date()).slice(0,7);
   const isThisMonth = d => String(d.createdAt||d.date||'').slice(0,7) === monthKey;
   const isQualThisMonth = d => (d.qualAt ? String(d.qualAt) : String(d.createdAt||d.date||'')).slice(0,7) === monthKey;
 
@@ -4848,7 +4867,7 @@ let analyticsPeriod = 'today'; // today | week | month
 
 function analyticsDateRange(period){
   const now = new Date();
-  const tashkent = dt => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(dt);
+  const tashkent = dt => _TK_DAY_FMT.format(dt);
   const today = tashkent(now);
   if(period==='today') return {from:today, to:today};
   if(period==='week'){
@@ -4985,7 +5004,7 @@ function calcOperatorAnalytics(user, range){
   // Qual bonusining bosqichli stavkasi KUNLIK rag'bat — shu sababli hafta/oy uchun
   // butun davr yig'indisiga emas, har bir kunga alohida qo'llab, keyin yig'indilaymiz. Aks holda
   // (masalan) 7 kunlik 35 ta qual — barchasi yuqori stavkada hisoblanib, bonus sun'iy oshib ketardi.
-  const tashkentDateKey = iso => iso ? new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)) : '';
+  const tashkentDateKey = iso => iso ? _TK_DAY_FMT.format(new Date(iso)) : '';
   const oc = compSettings.operator;
   const qualByDay = {};
   qualMatchesDeduped.forEach(d => {
@@ -5012,7 +5031,7 @@ function calcOperatorAnalytics(user, range){
 function operatorQualReport(user, range){
   const myDeals=deals.filter(d=>d.operatorId===user.id);
   const qualStages=new Set(['op_malakali','yangi','malakali','taklif','muzokaralar','sotib_olishga_rozi','qisman','yutgan']);
-  const tk=iso=>iso?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)):'';
+  const tk=iso=>iso?_TK_DAY_FMT.format(new Date(iso)):'';
   const oc=compSettings.operator;
   const seen=new Set();
   const deduped=myDeals.filter(d=>qualStages.has(d.col) && inRange(d.qualAt||d.createdAt, range))
@@ -5043,7 +5062,7 @@ function shortDateUz(dayKey){
   const mn=['yanvar','fevral','mart','aprel','may','iyun','iyul','avgust','sentabr','oktabr','noyabr','dekabr'];
   const [y,m,d]=String(dayKey).split('-').map(Number);
   if(!m||!d)return dayKey;
-  const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date());
+  const today=_TK_DAY_FMT.format(new Date());
   return dayKey===today?'Bugun':`${d} ${mn[m-1]}`;
 }
 function recentDealActions(user, limit=8){
@@ -5681,7 +5700,7 @@ function renderOperatorPayments(){
   const u=currentUser();
   const op=calculateOperatorBonus(u);
   const oc=compSettings.operator;
-  const tk=iso=>iso?new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Tashkent'}).format(new Date(iso)):'';
+  const tk=iso=>iso?_TK_DAY_FMT.format(new Date(iso)):'';
   const monthKey=tk(new Date().toISOString()).slice(0,7);
   // Joriy oyda malakali qilingan lidlar (telefon bo'yicha dedupe)
   const seen=new Set();
