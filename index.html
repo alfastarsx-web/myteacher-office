@@ -4310,6 +4310,19 @@ function cashReceivedInPeriod(list,inPeriod){
   });
   return total;
 }
+// Kassani oy (YYYY-MM) kaliti bo'yicha BIR o'tishда guruhlaydi. Line chart 12 oyni ko'rsatish
+// uchun cashReceivedInPeriodни 12 marta (har biri butun bazani skanlab) chaqirar edi — endi
+// bir marta hisoblab, har oyni Map'dan O(1) o'qiymiz. Katta bazada sezilarli tez.
+function cashByMonth(list){
+  const map=new Map();
+  const add=(iso,amt)=>{ const k=DASH_TK(iso).slice(0,7); if(k) map.set(k,(map.get(k)||0)+amt); };
+  for(const d of list){
+    const pays=Array.isArray(d.payments)?d.payments:[];
+    if(pays.length){ for(const p of pays) add(p.at, Number(p.amount||0)); }
+    else if(d.col===STAGE_WON){ add(dashSoldDate(d), Number(d.price||0)); }
+  }
+  return map;
+}
 // Har bir menejer bo'yicha davr ko'rsatkichlari (davr: 'day' — bugun, 'month' — joriy oy)
 function dashManagerStats(period){
   const todayKey=DASH_TK(new Date().toISOString());
@@ -4317,8 +4330,12 @@ function dashManagerStats(period){
   const inPeriod=iso=>period==='day'?DASH_TK(iso)===todayKey:DASH_TK(iso).slice(0,7)===monthKey;
   // Menejer faqat o'z bitimlarini ko'radi (API cheklovi) — boshqalar 0 bo'lib chiqmasligi uchun faqat o'zini ko'rsatamiz
   const sellers=managers.filter(m=>m.role==='manager' && (isAdmin() || String(m.id)===String(currentUser().id)));
+  // Lidlarni egasi bo'yicha BIR marta guruhlaymiz — har menejer uchun alohida deals.filter
+  // (O(menejer×lid)) o'rniga Map'dan O(1) olamiz.
+  const byOwner=new Map();
+  for(const d of deals){ const k=String(d.ownerId); (byOwner.get(k)||byOwner.set(k,[]).get(k)).push(d); }
   return sellers.map(m=>{
-    const owned=deals.filter(d=>String(d.ownerId)===String(m.id));
+    const owned=byOwner.get(String(m.id))||[];
     const wonInPeriod=owned.filter(d=>d.col===STAGE_WON && inPeriod(dashSoldDate(d)));
     const revenue=wonInPeriod.reduce((s,d)=>s+Number(d.price||0),0);
     const cash=wonInPeriod.filter(isCashSale).reduce((s,d)=>s+Number(d.price||0),0);
@@ -4492,7 +4509,8 @@ function renderDashLineChart(){
     const dt=new Date(now.getFullYear(),now.getMonth()-i,1);
     months.push({key:DASH_TK(dt.toISOString()).slice(0,7),label:MONTH_UZ[dt.getMonth()]});
   }
-  const totals=months.map(mo=>cashReceivedInPeriod(deals,iso=>DASH_TK(iso).slice(0,7)===mo.key));
+  const byMonth=cashByMonth(deals);
+  const totals=months.map(mo=>byMonth.get(mo.key)||0);
   const max=Math.max(1,...totals);
   const W=520,H=210,PAD=8;
   const pts=totals.map((v,i)=>[Math.round(i*(W/(totals.length-1))),Math.round(H-PAD-(v/max)*(H-PAD*3))]);
