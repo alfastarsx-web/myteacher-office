@@ -12,7 +12,7 @@ import {
 import { DbAssistantMessageEntity, DbAssistantRole } from '../infrastructure/db-assistant-message.entity';
 import { DbAssistantSessionEntity } from '../infrastructure/db-assistant-session.entity';
 
-const DEFAULT_MODEL = 'gemini-2.0-flash';
+const DEFAULT_MODEL = 'gemini-3.6-flash';
 const SCHEMA_CACHE_TTL_MS = 5 * 60 * 1000;
 const MAX_TOOL_CALLS = 4;
 const MAX_RESULT_ROWS = 200;
@@ -123,6 +123,23 @@ export class DbAssistantService {
 
   listSessions(userId: number): Promise<DbAssistantSessionEntity[]> {
     return this.sessionRepository.find({ where: { userId }, order: { createdAt: 'DESC' } });
+  }
+
+  async renameSession(sessionId: number, userId: number, title: string): Promise<DbAssistantSessionEntity> {
+    const session = await this.sessionRepository.findOne({ where: { id: sessionId, userId } });
+    if (!session) throw new NotFoundException('Sessiya topilmadi');
+
+    session.title = title.trim().slice(0, 100) || null;
+    return this.sessionRepository.save(session);
+  }
+
+  async deleteSession(sessionId: number, userId: number): Promise<void> {
+    const session = await this.sessionRepository.findOne({ where: { id: sessionId, userId } });
+    if (!session) throw new NotFoundException('Sessiya topilmadi');
+
+    // No FK/cascade set up between sessions and messages here, so clear messages first.
+    await this.messageRepository.delete({ sessionId });
+    await this.sessionRepository.delete({ id: sessionId });
   }
 
   // ─── Messages ────────────────────────────────────────────────────────────────

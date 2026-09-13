@@ -8,6 +8,9 @@ export class DbAssistantSessionEntity {
   @Column()
   userId: number;
 
+  @Column({ type: 'varchar', length: 100, nullable: true })
+  title: string | null;
+
   @CreateDateColumn()
   createdAt: Date;
 

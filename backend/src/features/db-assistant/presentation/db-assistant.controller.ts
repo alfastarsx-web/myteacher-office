@@ -1,4 +1,4 @@
-import { BadRequestException, Body, Controller, Get, Param, Post, Req, UseGuards } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, Get, Param, Patch, Post, Req, UseGuards } from '@nestjs/common';
 import { AdminGuard } from '../../auth/presentation/admin.guard';
 import type { AuthedRequest } from '../../../types';
 import { DbAssistantService } from '../application/db-assistant.service';
@@ -16,6 +16,19 @@ export class DbAssistantController {
   @Get('sessions')
   async listSessions(@Req() req: AuthedRequest) {
     return { sessions: await this.dbAssistant.listSessions(req.user!.id) };
+  }
+
+  @Patch('sessions/:id')
+  async renameSession(@Param('id') id: string, @Body() body: any, @Req() req: AuthedRequest) {
+    const title = String(body?.title || '').trim();
+    if (!title) throw new BadRequestException('Nom kerak');
+    return { session: await this.dbAssistant.renameSession(Number(id), req.user!.id, title) };
+  }
+
+  @Delete('sessions/:id')
+  async deleteSession(@Param('id') id: string, @Req() req: AuthedRequest) {
+    await this.dbAssistant.deleteSession(Number(id), req.user!.id);
+    return { success: true };
   }
 
   @Post('sessions/:id/messages')
