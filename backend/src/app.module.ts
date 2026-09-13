@@ -5,6 +5,7 @@ import { typeOrmConfig } from './common/database/typeorm.config';
 import { AiInsightsModule } from './features/ai-insights/ai-insights.module';
 import { AuthModule } from './features/auth/auth.module';
 import { DashboardModule } from './features/dashboard/dashboard.module';
+import { DbAssistantModule } from './features/db-assistant/db-assistant.module';
 import { DealsModule } from './features/deals/deals.module';
 import { DocsModule } from './features/docs/docs.module';
 import { IntegrationsModule } from './features/integrations/integrations.module';
@@ -33,6 +34,7 @@ import { SettingsModule } from './features/settings/settings.module';
     PaymentAdjustmentsModule,
     AiInsightsModule,
     SettingsModule,
+    DbAssistantModule,
     SeedModule
   ],
   controllers: [RootController]

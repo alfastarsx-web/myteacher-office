@@ -9,6 +9,8 @@ import { UserEntity } from '../../features/users/infrastructure/user.entity';
 import { NotificationEntity } from '../../features/notifications/notification.entity';
 import { PaymentAdjustmentEntity } from '../../features/payment-adjustments/infrastructure/payment-adjustment.entity';
 import { SettingEntity } from '../../features/settings/infrastructure/setting.entity';
+import { DbAssistantSessionEntity } from '../../features/db-assistant/infrastructure/db-assistant-session.entity';
+import { DbAssistantMessageEntity } from '../../features/db-assistant/infrastructure/db-assistant-message.entity';
 
 export function typeOrmConfig(): TypeOrmModuleOptions {
   return {
@@ -18,7 +20,20 @@ export function typeOrmConfig(): TypeOrmModuleOptions {
     username: process.env.DB_USERNAME || 'postgres',
     password: process.env.DB_PASSWORD ?? '',
     database: process.env.DB_NAME || 'mycrm',
-    entities: [UserEntity, RefreshTokenEntity, StageEntity, DealEntity, TaskEntity, DocEntity, NotificationEntity, PaymentAdjustmentEntity, AiInsightEntity, SettingEntity],
+    entities: [
+      UserEntity,
+      RefreshTokenEntity,
+      StageEntity,
+      DealEntity,
+      TaskEntity,
+      DocEntity,
+      NotificationEntity,
+      PaymentAdjustmentEntity,
+      AiInsightEntity,
+      SettingEntity,
+      DbAssistantSessionEntity,
+      DbAssistantMessageEntity
+    ],
     synchronize: process.env.TYPEORM_SYNC !== 'false',
     logging: process.env.TYPEORM_LOGGING === 'true'
   };
