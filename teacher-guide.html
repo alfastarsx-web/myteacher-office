@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ustozlar yo'riqnomasi — MyTeacher</title>
+<link rel="icon" type="image/svg+xml" href="assets/myteacher-mark.svg">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#2563EB;--blue-d:#1D4ED8;--blue-l:#EFF6FF;
+  --yellow:#F59E0B;--yellow-l:#FFFBEB;--red:#EF4444;--red-l:#FEF2F2;
+  --green:#22C55E;--green-l:#F0FDF4;--purple:#A855F7;--teal:#0EA5E9;
+  --td:#111827;--tm:#374151;--mu:#6B7280;--tl:#9CA3AF;
+  --br:#E5E7EB;--brl:#F3F4F6;--bg:#F6F8FB;--wh:#FFFFFF;
+  --shadow-sm:0 1px 2px rgba(15,23,42,.06);
+  --shadow-md:0 12px 28px rgba(15,23,42,.10);
+  --f:'Montserrat',sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --blue:#3B82F6;--blue-d:#60A5FA;--blue-l:#17233F;
+    --yellow:#FBBF24;--yellow-l:#2B2411;--red:#F87171;--red-l:#2E1616;
+    --green:#4ADE80;--green-l:#12281A;
+    --td:#F3F4F6;--tm:#D1D5DB;--mu:#9CA3AF;--tl:#6B7280;
+    --br:#2A2F3A;--brl:#1E222B;--bg:#12151B;--wh:#191D25;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+    --shadow-md:0 12px 28px rgba(0,0,0,.5);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--f);background:var(--bg);color:var(--td);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+
+/* ═══ HEADER ═══ */
+.hd{position:sticky;top:0;z-index:40;background:var(--wh);border-bottom:1px solid var(--br);padding:10px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.hd-brand{display:flex;align-items:center;gap:9px;font-weight:700;font-size:15px;white-space:nowrap}
+.hd-brand i{width:26px;height:26px;border-radius:7px;background:var(--blue);color:#fff;display:grid;place-items:center;font-style:normal;font-size:13px;font-weight:700}
+.hd-name{flex:1;min-width:150px}
+.hd-name input{width:100%;max-width:280px;border:1px solid var(--br);background:var(--bg);border-radius:8px;padding:7px 11px;font-size:14px;font-weight:600}
+.hd-name input:focus{outline:2px solid var(--blue);outline-offset:-1px;border-color:transparent}
+.hd-timer{font-variant-numeric:tabular-nums;font-weight:700;font-size:15px;padding:6px 12px;border-radius:8px;background:var(--brl);color:var(--tm);white-space:nowrap}
+.hd-timer.warn{background:var(--red-l);color:var(--red);animation:pulse 1.6s infinite}
+@keyframes pulse{50%{opacity:.55}}
+.hd-btn{padding:7px 13px;border-radius:8px;border:1px solid var(--br);font-size:13px;font-weight:600;color:var(--tm);white-space:nowrap}
+.hd-btn:hover{background:var(--brl);color:var(--td)}
+.hd-btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.hd-btn.pri:hover{background:var(--blue-d)}
+
+/* ═══ LAYOUT ═══ */
+.wrap{max-width:1500px;margin:0 auto;padding:18px 20px 60px;display:grid;grid-template-columns:210px minmax(0,1fr) 310px;gap:18px;align-items:start}
+
+/* ═══ STEP NAV ═══ */
+.steps{position:sticky;top:76px;background:var(--wh);border:1px solid var(--br);border-radius:12px;padding:8px;box-shadow:var(--shadow-sm)}
+.step{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:9px;cursor:pointer;transition:background .13s;width:100%;text-align:left}
+.step:hover{background:var(--brl)}
+.step.on{background:var(--blue-l)}
+.step-n{width:23px;height:23px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:11px;font-weight:700;background:var(--brl);color:var(--mu)}
+.step.on .step-n{background:var(--blue);color:#fff}
+.step.done .step-n{background:var(--green);color:#fff}
+.step-t{font-size:13px;font-weight:600;color:var(--tm);line-height:1.3}
+.step.on .step-t{color:var(--blue-d)}
+.step-bar{height:5px;border-radius:3px;background:var(--brl);margin:8px 6px 4px;overflow:hidden}
+.step-bar i{display:block;height:100%;background:var(--green);border-radius:3px;transition:width .3s}
+.step-pct{font-size:11px;color:var(--mu);text-align:center;padding-bottom:5px}
+
+/* ═══ MAIN CARD ═══ */
+.card{background:var(--wh);border:1px solid var(--br);border-radius:14px;padding:22px;box-shadow:var(--shadow-sm);margin-bottom:16px}
+.c-kick{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+.c-title{font-size:23px;font-weight:700;letter-spacing:-.4px;line-height:1.25}
+.c-goal{font-size:14px;color:var(--mu);margin-top:6px}
+.sec{margin-top:22px}
+.sec-h{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);margin-bottom:10px}
+
+/* callouts */
+.note{border-radius:11px;padding:13px 15px;font-size:14px;line-height:1.6;border-left:3px solid;margin-bottom:10px}
+.note b{font-weight:700}
+.note.blue{background:var(--blue-l);border-color:var(--blue);color:var(--tm)}
+.note.red{background:var(--red-l);border-color:var(--red);color:var(--tm)}
+.note.yellow{background:var(--yellow-l);border-color:var(--yellow);color:var(--tm)}
+.note.green{background:var(--green-l);border-color:var(--green);color:var(--tm)}
+.note-t{font-weight:700;color:var(--td);display:block;margin-bottom:3px}
+
+/* script blocks */
+.scr{border:1px solid var(--br);border-radius:11px;margin-bottom:9px;overflow:hidden;background:var(--bg)}
+.scr-h{display:flex;align-items:center;gap:8px;padding:9px 13px;background:var(--brl);border-bottom:1px solid var(--br)}
+.scr-l{font-size:12px;font-weight:700;color:var(--tm);flex:1}
+.scr-c{font-size:11px;font-weight:700;color:var(--blue);padding:4px 9px;border-radius:6px;border:1px solid var(--br);background:var(--wh)}
+.scr-c:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.scr-c.ok{background:var(--green);color:#fff;border-color:var(--green)}
+.scr-b{padding:13px 15px;font-size:15px;line-height:1.65;color:var(--td);white-space:pre-wrap}
+
+/* checklist */
+.chk{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--br);border-radius:10px;margin-bottom:7px;cursor:pointer;transition:all .13s;background:var(--wh)}
+.chk:hover{border-color:var(--blue);background:var(--blue-l)}
+.chk.on{background:var(--green-l);border-color:var(--green)}
+.chk-b{width:20px;height:20px;flex:none;border-radius:6px;border:2px solid var(--br);display:grid;place-items:center;margin-top:1px;transition:all .13s}
+.chk.on .chk-b{background:var(--green);border-color:var(--green)}
+.chk.on .chk-b:after{content:'';width:5px;height:9px;border:solid #fff;border-width:0 2px 2px 0;transform:rotate(45deg) translate(-1px,-1px)}
+.chk-t{font-size:14px;color:var(--tm);line-height:1.45}
+.chk.on .chk-t{color:var(--td)}
+.chk.foc{outline:2px solid var(--blue);outline-offset:2px}
+
+/* question / anti lists */
+.qs{display:flex;flex-direction:column;gap:6px}
+.q{display:flex;gap:9px;font-size:14px;color:var(--tm);padding:8px 12px;border-radius:9px;background:var(--bg);line-height:1.5}
+.q:before{content:'?';flex:none;width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-size:11px;font-weight:700;display:grid;place-items:center;margin-top:2px}
+.anti{display:flex;gap:9px;font-size:14px;color:var(--tm);padding:8px 12px;border-radius:9px;background:var(--red-l);line-height:1.5;margin-bottom:6px}
+.anti:before{content:'\00d7';flex:none;width:18px;height:18px;border-radius:50%;background:var(--red);color:#fff;font-size:13px;font-weight:700;display:grid;place-items:center;margin-top:2px;line-height:1}
+
+/* tables */
+.tb{width:100%;border-collapse:collapse;font-size:14px;border:1px solid var(--br);border-radius:10px;overflow:hidden}
+.tb th{background:var(--brl);padding:9px 12px;text-align:left;font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}
+.tb td{padding:9px 12px;border-top:1px solid var(--br);color:var(--tm)}
+.tb td:last-child{text-align:right;font-weight:700;color:var(--td);white-space:nowrap}
+.tb-wrap{overflow-x:auto}
+
+/* notes textarea */
+.ta{width:100%;border:1px solid var(--br);background:var(--bg);border-radius:10px;padding:11px 13px;font-size:14px;line-height:1.55;resize:vertical;min-height:72px}
+.ta:focus{outline:2px solid var(--blue);outline-offset:-1px;border-color:transparent}
+
+/* radio pills */
+.pills{display:flex;gap:8px;flex-wrap:wrap}
+.pill{padding:9px 15px;border-radius:9px;border:1px solid var(--br);font-size:13px;font-weight:600;color:var(--tm);background:var(--wh)}
+.pill:hover{border-color:var(--blue)}
+.pill.on{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* nav footer */
+.navf{display:flex;justify-content:space-between;gap:10px;margin-top:6px}
+.navb{padding:11px 20px;border-radius:10px;font-size:14px;font-weight:600;border:1px solid var(--br);color:var(--tm);background:var(--wh)}
+.navb:hover{background:var(--brl)}
+.navb.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.navb.pri:hover{background:var(--blue-d)}
+.navb:disabled{opacity:.4;cursor:not-allowed}
+
+/* ═══ XEI PANEL ═══ */
+.xei{position:sticky;top:76px;background:var(--wh);border:1px solid var(--br);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm)}
+.xei-h{font-size:13px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--mu);margin-bottom:3px}
+.xei-sub{font-size:12px;color:var(--tl);line-height:1.45;margin-bottom:13px}
+.ax{margin-bottom:15px}
+.ax-h{display:flex;align-items:baseline;gap:7px;margin-bottom:7px}
+.ax-l{font-size:13px;font-weight:700;color:var(--td);flex:1}
+.ax-v{font-size:17px;font-weight:700;font-variant-numeric:tabular-nums}
+.ax-v.lo{color:var(--red)}.ax-v.mid{color:var(--yellow)}.ax-v.hi{color:var(--green)}.ax-v.un{color:var(--tl)}
+.ax-hint{font-size:11px;color:var(--mu);line-height:1.45;margin-bottom:7px}
+.scale{display:grid;grid-template-columns:repeat(11,1fr);gap:3px}
+.scale button{height:27px;border-radius:5px;background:var(--brl);font-size:11px;font-weight:700;color:var(--mu);transition:all .1s}
+.scale button:hover{background:var(--br)}
+.scale button.on{background:var(--blue);color:#fff}
+.probe{font-size:11.5px;color:var(--mu);background:var(--bg);border-radius:8px;padding:8px 10px;margin-top:7px;line-height:1.5;border-left:2px solid var(--br)}
+.probe b{color:var(--tm);font-weight:700}
+.fld{width:100%;border:1px solid var(--br);background:var(--bg);border-radius:8px;padding:8px 10px;font-size:13px;margin-bottom:7px}
+.sig{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--tm);padding:5px 7px;border-radius:7px;cursor:pointer}
+.sig:hover{background:var(--brl)}
+.sig input{width:15px;height:15px;accent-color:var(--blue);flex:none}
+.sig span:last-child{margin-left:auto;font-weight:700;font-size:11px;color:var(--mu);font-variant-numeric:tabular-nums}
+.xei-tot{border-top:1px solid var(--br);margin-top:4px;padding-top:12px;display:flex;align-items:baseline;gap:8px}
+.xei-tot-l{font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;flex:1}
+.xei-tot-v{font-size:24px;font-weight:700;letter-spacing:-.5px}
+.xei-warn{font-size:12px;line-height:1.5;border-radius:9px;padding:10px 12px;margin-top:11px}
+
+/* ═══ PRICE RESULT ═══ */
+.pr{border:2px solid var(--blue);border-radius:14px;overflow:hidden;margin-bottom:14px}
+.pr-h{background:var(--blue);color:#fff;padding:14px 18px}
+.pr-k{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;opacity:.85}
+.pr-p{font-size:34px;font-weight:700;letter-spacing:-1px;line-height:1.1;margin-top:2px}
+.pr-f{font-size:14px;opacity:.9;margin-top:2px}
+.pr-b{padding:16px 18px;background:var(--wh)}
+.pr-why{font-size:12.5px;color:var(--mu);line-height:1.55;margin-bottom:12px;font-variant-numeric:tabular-nums}
+.pr-alt{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--tm);background:var(--bg);border-radius:9px;padding:10px 13px;margin-top:11px}
+.pr-alt b{color:var(--td)}
+.locked{text-align:center;padding:30px 20px;color:var(--mu);font-size:14px;line-height:1.6;background:var(--bg);border:1px dashed var(--br);border-radius:12px}
+.locked b{display:block;color:var(--td);font-size:16px;margin-bottom:5px}
+
+/* outcome */
+.oc{display:flex;gap:9px;flex-wrap:wrap}
+.oc button{flex:1;min-width:120px;padding:13px;border-radius:10px;border:2px solid var(--br);font-size:14px;font-weight:700;color:var(--tm);background:var(--wh)}
+.oc button[data-v=paid]:hover,.oc button[data-v=paid].on{background:var(--green);border-color:var(--green);color:#fff}
+.oc button[data-v=thinking]:hover,.oc button[data-v=thinking].on{background:var(--yellow);border-color:var(--yellow);color:#fff}
+.oc button[data-v=refused]:hover,.oc button[data-v=refused].on{background:var(--red);border-color:var(--red);color:#fff}
+
+/* ═══ MODAL ═══ */
+.ov{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:90;display:none;padding:20px;overflow-y:auto}
+.ov.on{display:block}
+.md{background:var(--wh);border-radius:16px;max-width:760px;margin:40px auto;box-shadow:var(--shadow-md);overflow:hidden}
+.md-h{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--br)}
+.md-t{font-size:17px;font-weight:700;flex:1}
+.md-x{width:30px;height:30px;border-radius:8px;color:var(--mu);font-size:20px;line-height:1}
+.md-x:hover{background:var(--brl);color:var(--td)}
+.md-b{padding:20px;max-height:70vh;overflow-y:auto}
+.acc{border:1px solid var(--br);border-radius:10px;margin-bottom:7px;overflow:hidden}
+.acc-h{width:100%;text-align:left;padding:12px 15px;font-size:14px;font-weight:600;color:var(--td);display:flex;gap:10px;align-items:center}
+.acc-h:hover{background:var(--brl)}
+.acc-h i{margin-left:auto;font-style:normal;color:var(--mu);transition:transform .16s}
+.acc.on .acc-h i{transform:rotate(90deg)}
+.acc-b{display:none;padding:0 15px 14px;font-size:14px;color:var(--tm);line-height:1.6}
+.acc.on .acc-b{display:block}
+.hist{width:100%;border-collapse:collapse;font-size:13.5px}
+.hist th{text-align:left;padding:8px 10px;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);border-bottom:1px solid var(--br)}
+.hist td{padding:9px 10px;border-bottom:1px solid var(--brl);color:var(--tm)}
+.hist tr:hover td{background:var(--bg)}
+.tag{display:inline-block;padding:2px 8px;border-radius:5px;font-size:11px;font-weight:700}
+.tag.paid{background:var(--green-l);color:var(--green)}
+.tag.thinking{background:var(--yellow-l);color:var(--yellow)}
+.tag.refused{background:var(--red-l);color:var(--red)}
+.tag.none{background:var(--brl);color:var(--mu)}
+.st-row{display:grid;grid-template-columns:1fr 130px;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--brl);font-size:13.5px;color:var(--tm)}
+.st-row input{border:1px solid var(--br);background:var(--bg);border-radius:7px;padding:7px 9px;font-size:13px;width:100%;text-align:right;font-variant-numeric:tabular-nums}
+.empty{text-align:center;padding:36px 20px;color:var(--mu);font-size:14px}
+
+/* toast */
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(90px);background:var(--td);color:var(--bg);padding:11px 20px;border-radius:10px;font-size:13.5px;font-weight:600;z-index:100;transition:transform .24s;box-shadow:var(--shadow-md)}
+.toast.on{transform:translateX(-50%) translateY(0)}
+
+/* ═══ RESPONSIVE ═══ */
+@media (max-width:1180px){
+  .wrap{grid-template-columns:1fr;gap:14px}
+  .steps{position:static;display:flex;gap:6px;overflow-x:auto;padding:7px}
+  .step{flex:none;width:auto;flex-direction:column;gap:5px;min-width:84px;text-align:center;padding:9px 9px}
+  .step-t{font-size:11.5px}
+  .step-bar,.step-pct{display:none}
+  .xei{position:static}
+  .xei-mob{display:block}
+  .xei-body.hid{display:none}
+}
+@media (min-width:1181px){.xei-mob{display:none}}
+.xei-mob{width:100%;text-align:left;font-size:13px;font-weight:700;color:var(--blue);padding:9px 0 4px}
+@media (max-width:560px){
+  body{font-size:14.5px}
+  .wrap{padding:14px 12px 50px}
+  .card{padding:16px 14px;border-radius:12px}
+  .c-title{font-size:20px}
+  .hd{padding:9px 12px;gap:9px}
+  .hd-name{order:5;flex-basis:100%}
+  .hd-name input{max-width:none}
+  .pr-p{font-size:28px}
+  .scale{grid-template-columns:repeat(6,1fr);gap:4px}
+  .scale button{height:32px;font-size:12px}
+  .navb{flex:1;padding:12px 10px;text-align:center}
+}
+
+/* ═══ PRINT ═══ */
+@media print{
+  .hd,.steps,.xei,.navf,.scr-c,.hd-btn,.toast,.ov{display:none!important}
+  body{background:#fff;font-size:11pt}
+  .wrap{display:block;max-width:none;padding:0}
+  .card{border:none;box-shadow:none;padding:0 0 18pt;page-break-inside:avoid}
+  .print-all{display:block!important}
+}
+.print-all{display:none}
+</style>
+</head>
+<body>
+
+<header class="hd">
+  <div class="hd-brand"><i>M</i>Ustozlar yo'riqnomasi</div>
+  <div class="hd-name"><input id="fName" placeholder="O'quvchining ismi..." autocomplete="off"></div>
+  <div class="hd-timer" id="fTimer">00:00</div>
+  <button class="hd-btn" onclick="openAbout()">MyTeacher haqida</button>
+  <button class="hd-btn" onclick="openHist()">Tarix</button>
+  <button class="hd-btn pri" onclick="newSession()">Yangi sessiya</button>
+</header>
+
+<div class="wrap">
+  <nav class="steps" id="fSteps"></nav>
+
+  <main>
+    <div id="fStage"></div>
+    <div class="navf">
+      <button class="navb" id="fPrev" onclick="go(-1)">← Orqaga</button>
+      <button class="navb pri" id="fNext" onclick="go(1)">Keyingi bosqich →</button>
+    </div>
+  </main>
+
+  <aside class="xei">
+    <div class="xei-h">XEI paneli</div>
+    <div class="xei-sub">Dars davomida to'ldirib boring. To'g'ridan-to'g'ri so'ramang — gap orasida aniqlang.</div>
+    <button class="xei-mob" onclick="toggleXei()" id="fXeiToggle">XEI panelini ochish ▾</button>
+    <div class="xei-body hid" id="fXeiBody"></div>
+  </aside>
+</div>
+
+<div class="print-all" id="fPrintAll"></div>
+
+<div class="ov" id="fOv" onclick="if(event.target===this)closeMd()">
+  <div class="md">
+    <div class="md-h"><div class="md-t" id="fMdT"></div><button class="md-x" onclick="closeMd()">&times;</button></div>
+    <div class="md-b" id="fMdB"></div>
+  </div>
+</div>
+
+<div class="toast" id="fToast"></div>
+
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════════
+   KONTENT KONFIGURATSIYASI
+   Matnlarni, savollarni, narxlarni shu yerdan o'zgartiring.
+   Kodga tegishning hojati yo'q.
+   ══════════════════════════════════════════════════════════════════ */
+const GUIDE = {
+
+stages:[
+{
+  id:0, short:"Tayyorgarlik", title:"Darsgacha",
+  kick:"Bosqich 0",
+  goal:"Lid keldi, dars hali boshlanmadi. Shu 5 daqiqa keyingi 45 daqiqani belgilaydi.",
+  notes:[{
+    type:"blue", t:"Onlaynda \"bino\" yo'q",
+    b:"Oflayn markazda o'quvchini ushlab qoladigan narsa — interyer va estetika. Onlaynda bunday bino yo'q. Sizning <b>muomalangiz, yordamga tayyorligingiz, mehringiz va professionalizmingiz</b> — bu yerda binoning o'rnini bosadi. Birinchi 3 daqiqada shu his uyg'onmasa, qolgani ishlamaydi."
+  }],
+  checks:[
+    "O'quvchining ismi, yoshi va aloqa raqami yozib olindi",
+    "Lid qayerdan kelgani ko'rildi (Instagram / Telegram / tanish)",
+    "Dars vaqti tasdiqlandi va link yuborildi",
+    "Kamera, mikrofon, yorug'lik va fon tekshirildi",
+    "MyTeacher ilovasi ochiq va ekranda ko'rsatishga tayyor"
+  ]
+},
+{
+  id:1, short:"Tanishuv", title:"Salomlashuv va tanishuv",
+  kick:"Bosqich 1",
+  goal:"Ishonch va iliqlik. Konspekt bo'yicha onlaynda o'quvchini ushlab qoladigan asosiy faktor — aynan shu.",
+  scripts:[
+    {l:"Ochilish — 20 soniya", t:"Assalomu alaykum, {ISM}! Tanishganimdan xursandman. Men {USTOZ}, MyTeacher'da ingliz tili ustoziman. Bugungi darsni siz bilan men o'taman."},
+    {l:"Ko'prik — darsning tuzilishi", t:"{ISM}, bugun biz shunday qilamiz: avval bir-birimiz bilan tanishib olamiz va sizga ingliz tili aynan nima uchun kerakligini tushunib olaman. Keyin sizga eng qulay usulni topamiz va kichik bir dars qilamiz. Oxirida esa sizning holatingizga mos yo'l xaritasini beraman. Hech narsadan hayiqmang — bu imtihon emas."},
+    {l:"Agar o'quvchi uyalsa / gapirmasa", t:"{ISM}, birinchi darsda hamma shunday bo'ladi, bu juda normal. Men sizni tuzatish uchun emas, yordam berish uchun o'tiribman. Xato qilsangiz ham hech narsa bo'lmaydi — biz shuning uchun yig'ilganmiz."}
+  ],
+  anti:[
+    "Darrov \"qaysi tarif kerak?\" deb so'rash — hali erta, ishonch qurilmagan",
+    "Bir ovozda monolog qilish, o'quvchiga gapirtirmaslik",
+    "Rasmiy va sovuq ton — onlaynda bu darhol seziladi"
+  ],
+  checks:[
+    "O'quvchiga ismi bilan murojaat qildim",
+    "O'zimni qisqa tanishtirdim (2 gapdan oshmadi)",
+    "Darsning tuzilishini aytib berdim",
+    "O'quvchi kamida bir marta jilmaydi yoki ochildi"
+  ],
+  focus:"i",
+  focusNote:"Shu bosqichda <b>Imkoniyat</b> signallari ochiladi: o'quvchi qayerdan, qanday qurilmadan ulangan, fon qanday, gapirish uslubi qanday."
+},
+{
+  id:2, short:"Ehtiyoj", title:"Ehtiyojlarni aniqlash",
+  kick:"Bosqich 2",
+  goal:"O'quvchi ingliz tilini NIMA UCHUN o'rganayotganini va bu QANCHALIK jiddiyligini aniqlash. Bu XEI dagi Ehtiyoj o'qining asosi.",
+  questions:[
+    "Ingliz tili sizga aynan qaysi ishda kerak bo'lib qolyapti?",
+    "Buni qachongacha uddalashingiz kerak? — eng muhim savol, muddat ehtiyojni ochadi",
+    "Ilgari o'rganib ko'rganmisiz? Nima to'xtatgan edi?",
+    "Agar 3 oydan keyin bemalol gapira olsangiz, hayotingizda nima o'zgaradi?"
+  ],
+  table:{
+    head:["Nima eshitilsa","Ehtiyoj balli"],
+    rows:[
+      ["Green card yutgan, Amerikaga ketyapti","10"],
+      ["Chetga chiqib ishlash bo'yicha <b>qat'iy qaror</b> bor (orzu emas)","10"],
+      ["Sertifikat bo'lmasa ishdan bo'shashi mumkin","10"],
+      ["O'qituvchi — kasbi bo'yicha zarur","9–10"],
+      ["\"Hayotimni boshqattan qurishim kerak\" — qat'iy","9–10"],
+      ["\"Hamma o'rganyapti, menam o'rganib qo'yishim kerak\"","5–6"],
+      ["\"Biroz qiziqishim bor\"","5–6"],
+      ["\"Shunchaki bir qiziqdim-da\"","0–2"]
+    ]
+  },
+  notes:[{
+    type:"yellow", t:"Orzu bilan qarorni farqlang",
+    b:"\"Chetga chiqsam deyman\" — bu <b>orzu</b>, ball 5–6. \"Hujjatlarim topshirilgan, iyunda ketaman\" — bu <b>qaror</b>, ball 10. Farqi: qarorda sana, hujjat yoki majburiyat bo'ladi."
+  }],
+  checks:[
+    "O'quvchi ingliz tili nimaga kerakligini o'z so'zi bilan aytdi",
+    "Muddat bormi-yo'qmi aniqlandi",
+    "Oldingi urinishlari va nima to'xtatgani so'raldi",
+    "Ehtiyoj balli XEI panelida belgilandi"
+  ],
+  focus:"e",
+  focusNote:"Shu bosqichda <b>Ehtiyoj</b> ballini qo'ying. Muddat bor bo'lsa — ball yuqori."
+},
+{
+  id:3, short:"Usul", title:"O'rganish usulini tanlash",
+  kick:"Bosqich 3",
+  goal:"O'quvchiga qulay o'rganish usulini va materialini aniqlash.",
+  notes:[{
+    type:"blue", t:"Asosiy qoida",
+    b:"Agar o'quvchida hozir o'zi o'rganib yurgan va yaxshi qabul qiladigan kitob yoki material bo'lsa — <b>o'shandan o'tish afzal</b>. Tajriba shuni ko'rsatadiki, yangi materialni o'quvchi har doim ham iliq qabul qilavermaydi."
+  }],
+  questions:[
+    "Hozir qanday kitob yoki material bilan shug'ullanyapsiz?",
+    "O'zingizga qaysi usul qulay: gapirib o'rganish, yozib o'rganish, yoki ko'rib o'rganish?",
+    "Oldin qaysi darslar sizga yoqqan edi? Nimasi bilan yoqqan?"
+  ],
+  method:true,
+  checks:[
+    "O'quvchining hozirgi materiali so'raldi",
+    "Unga qulay o'rganish uslubi aniqlandi",
+    "Material bo'yicha qaror qabul qilindi"
+  ],
+  focus:"x",
+  focusNote:"Shu bosqichda <b>Xohish</b> ochiladi. O'z materiali haqida qiziqib gapirsa — Xohish yuqori. \"Bilmadim, nima desangiz shu\" — Xohish past."
+},
+{
+  id:4, short:"Dars", title:"Prezentatsiya va dars o'tish",
+  kick:"Bosqich 4",
+  goal:"Haqiqiy qiymat berish. O'quvchi aynan shu yerda \"men bu odam bilan o'rganaman\" degan qarorga keladi.",
+  table:{
+    head:["Blok","Vaqt","Mazmun"],
+    rows:[
+      ["Kichik g'alaba","5–7 daq","O'quvchi darrov gapirib yoki tushunib qoladigan bitta aniq narsa"],
+      ["Ilovani ko'rsatish","3–5 daq","Sun'iy intellekt qismi — mustaqil mashq, chat, tekshirish"],
+      ["Yo'l xaritasi","2–3 daq","\"Sizning holatingizda 3 oyda bu yergacha chiqamiz\""]
+    ]
+  },
+  notes:[{
+    type:"red", t:"Ilovani ko'rsatishni o'tkazib yubormang",
+    b:"MyTeacher ilovasidagi <b>sun'iy intellekt</b> — shunchaki qo'shimcha emas, u darslar orasidagi bo'shliqni to'ldiradi. Bu keyingi bosqichdagi past tarif skriptining asosiy tayanchi. Ko'rsatmasangiz, 350 minglik taklifni asoslay olmaysiz."
+  }],
+  scripts:[
+    {l:"Yo'l xaritasi — dars oxirida", t:"{ISM}, hozir men sizning darajangizni ko'rdim. Sizning holatingizda birinchi oyda o'zingizni tanishtirish va kundalik savol-javobni yopamiz. Ikkinchi oyda — o'z fikringizni bemalol aytadigan bo'lasiz. Uchinchi oyga borib esa siz aytgan {MAQSAD} uchun yetarli darajaga chiqamiz. Lekin buning bitta sharti bor — muntazamlik."}
+  ],
+  checks:[
+    "O'quvchi kamida bir marta o'zi ingliz tilida gapirdi",
+    "Bitta aniq \"men buni uddaladim\" momenti bo'ldi",
+    "Ilova va AI qismi ekranda ko'rsatildi",
+    "O'quvchiga shaxsiy yo'l xaritasi aytildi"
+  ]
+},
+{
+  id:5, short:"Narx", title:"Narx aytish va to'lov",
+  kick:"Bosqich 5 — eng muhim",
+  goal:"O'quvchi qizib turgan zahoti to'lovga olib chiqish.",
+  notes:[
+    {type:"blue", t:"Nega narxni ustoz aytadi?",
+     b:"Oflayn maktabda narx aytish ustozga yuklangan edi va ustozlar buni noqulay qabul qilardi. \"Ustoz narx aytmasin\" degan taklif tushdi — <b>lekin qabul qilinmadi.</b> Sabab: onlaynda o'quvchi qizib turgan zahoti, <b>5–10 daqiqa ichida</b> to'lamasa, hayotga chalg'ib to'lovni umuman qilmay ketishi mumkin. Shuning uchun vaziyatga qarab to'lovni <b>imkon qadar ustoz o'zi qildiradi</b>."},
+    {type:"green", t:"Bu sizning ustunligingiz",
+     b:"Oflayn maktabda narxlar fixed. Bizda esa <b>flexible</b> — siz o'quvchiga aynan mos keladigan tarifni tanlay olasiz. Bu noqulaylik emas, bu imkoniyat."}
+  ],
+  price:true,
+  checks:[
+    "Narx aytildi va tarif tushuntirildi",
+    "To'lov linki yoki karta ma'lumoti yuborildi",
+    "O'quvchi ekranda turganida to'lov qilishga taklif qilindi",
+    "Keyingi dars sanasi kelishildi"
+  ]
+}
+],
+
+/* ─── XEI ─── */
+xei:{
+  weights:{e:0.45, x:0.30, i:0.25},
+  axes:{
+    x:{label:"Xohish", hint:"O'rganishni sevadimi, o'zi qiziqadimi?",
+       probe:"<b>9–10:</b> o'zi qiziqib gapiradi, material olib yuribdi, savol beradi.<br><b>5–6:</b> qiziqish bor, lekin harakat yo'q.<br><b>0–3:</b> \"nima desangiz shu\", befarq ton."},
+    e:{label:"Ehtiyoj", hint:"Qanchalik zarur? Muddat bormi?",
+       probe:"<b>10:</b> Green card, qat'iy qaror, ishdan bo'shash xavfi.<br><b>5–6:</b> \"hamma o'rganyapti\", biroz qiziqish.<br><b>0–2:</b> shunchaki qiziqdi."}
+  },
+  regions:[
+    {key:"", label:"Hudud tanlanmagan", base:null},
+    {key:"tosh", label:"Toshkent shahri", base:10},
+    {key:"vodiy", label:"Vodiy (Farg'ona, Andijon, Namangan)", base:9},
+    {key:"sambux", label:"Samarqand, Buxoro", base:8},
+    {key:"voha", label:"Voha hududlari", base:7},
+    {key:"chekka", label:"Boshqa / chekka tumanlar", base:5}
+  ],
+  signals:[
+    {key:"iphone", label:"iPhone ishlatadi", delta:1},
+    {key:"car", label:"Mashinada yuradi", delta:1},
+    {key:"job", label:"Lavozimi / kasbi yuqori", delta:1},
+    {key:"nojob", label:"Talaba yoki hozir ishlamaydi", delta:-2},
+    {key:"family", label:"Yagona daromad, oilasi katta", delta:-1}
+  ],
+  probeI:"<b>To'g'ridan-to'g'ri so'ramang!</b> Gap orasida aniqlang:<br>• \"Darsni qaysi vaqtda qilsak qulay — ishdan keyinmi?\" → ish bormi<br>• \"Yo'lda bo'lsangiz ham ulana olasizmi?\" → transport<br>• \"Internetingiz qanday, uzilib qolmaydimi?\" → hudud va sharoit"
+},
+
+/* ─── NARXLAR ─── */
+pricing:{
+  tiers:[
+    {level:1, perWeek:1, price:350000},
+    {level:2, perWeek:2, price:450000},
+    {level:3, perWeek:3, price:550000},
+    {level:4, perWeek:4, price:650000},
+    {level:5, perWeek:5, price:750000},
+    {level:6, perWeek:6, price:850000}
+  ],
+  /* Imkoniyat balli → maksimal ruxsat etilgan daraja (to'lay olmaydigan tarifni taklif qilmaslik) */
+  caps:[
+    {maxI:3, level:1},{maxI:5, level:2},{maxI:7, level:3},
+    {maxI:8, level:4},{maxI:9, level:5},{maxI:10, level:6}
+  ],
+  /* Xohish balli → maksimal daraja (o'rganishni sevmagan odam intensivga chiqmaydi, tashlab ketadi) */
+  capsX:[
+    {maxX:3, level:2},{maxX:5, level:4},{maxX:10, level:6}
+  ],
+  min:350000, max:1200000
+},
+
+/* ─── PODACHA SKRIPTLARI ─── */
+scripts:{
+  low_ai:{
+    name:"AI urg'usi",
+    for:"Imkoniyat past, Xohish/Ehtiyoj yuqori",
+    text:"{ISM} aka/opa, sizga to'g'risini aytaman. Mana hozir sizga bu juda zarur bo'lib turibdi. Sizga ilovaning ichidagi sun'iy intellektning o'zi ham juda katta yordam bera oladi. Men esa siz bilan haftada {N} marta dars qilaman, mashqlarni so'rab olaman. Siz faqat o'z vaqtida mustaqil kirib, ketma-ket bajarib tursangiz bo'ldi. Zarurat bo'lganda ilova ichidan chatlashib ham turamiz.\n\nOyiga {NARX} — bu sizning holatingizga eng to'g'ri keladigan variant.",
+    focus:"Kam narx — kam qiymat emas. AI darslar orasidagi bo'shliqni to'ldiradi, siz esa nazorat qilasiz."
+  },
+  mid_balance:{
+    name:"Muvozanat urg'usi",
+    for:"Barcha o'qlar o'rtacha",
+    text:"{ISM}, sizning maqsadingizga qarab haftada {N} marta dars eng to'g'ri bo'ladi. Bunda siz o'rganganingizni unutishga ulgurmaysiz — darslar orasida ilova sizni mashq qildirib turadi, men esa har darsda xatolaringizni yopib boraman. Bu tezlik siz aytgan muddatga yetib borishga yetadi.\n\nOyiga {NARX}.",
+    focus:"Ritm va muntazamlik — asosiy argument. Unutishga ulgurmaydi."
+  },
+  high_daily:{
+    name:"Har kunlik urg'usi",
+    for:"Imkoniyat va Ehtiyoj yuqori",
+    text:"{ISM}, sizning holatingizda vaqt tig'iz va masala jiddiy. Men o'zim sizga Yakshanbadan tashqari har kuni dars o'taman va darslaringizda yordam berib turaman. Har kuni gaplashsangiz, til ochilishi butunlay boshqacha tezlikda ketadi — bu eng tez yo'l.\n\nOyiga {NARX}.",
+    focus:"Bu yerda AI emas, SIZNING O'ZINGIZ asosiy qiymat. Shaxsiy, kunlik hamrohlik."
+  }
+},
+
+priceRules:[
+  "Narxni <b>aytib bo'lgach jim turing.</b> Birinchi gapirgan — yon beradi.",
+  "Uzr so'ramang, narxni pasaytirib aytmang. \"Atigi\", \"jami-yo'g'i\" degan so'zlar kerak emas.",
+  "Chegirma so'ralsa: narxni tushirmang, <b>dars sonini kamaytiring</b> — tarif pastga tushadi, qiymat saqlanadi.",
+  "To'lovni <b>hoziroq</b>, o'quvchi ekranda turganida qildiring."
+],
+
+/* ─── OGOHLANTIRISHLAR ─── */
+warns:[
+  {when:x=>x.e!==null&&x.e<=2, type:"red",
+   t:"Ehtiyoj yo'q",
+   b:"Narx aytish o'rniga ehtiyojni oshirishga qayting. Bu odam hozirgi holatda sotib olmaydi — nima uchun kerakligini o'zi aytmaguncha davom etmang."},
+  {when:x=>x.x!==null&&x.e!==null&&x.x<=3&&x.e>=8, type:"yellow",
+   t:"Zarur, lekin sevmaydi",
+   b:"Intensiv tarif bermang — tashlab ketadi. Past tarif + AI qo'llab-quvvatlash to'g'ri keladi."},
+  {when:x=>x.i!==null&&x.e!==null&&x.i<=3&&x.e>=8, type:"blue",
+   t:"Klassik holat",
+   b:"Juda zarur, imkoniyat kam. 350 000 + AI urg'usi skriptidan foydalaning — bu eng ko'p uchraydigan va eng yaxshi ishlaydigan holat."},
+  {when:x=>x.x>=9&&x.e>=9&&x.i>=9, type:"green",
+   t:"Eng kuchli holat",
+   b:"Har kunlik tarifni ishonch bilan taklif qiling. Pasaytirmang — bu odam qiymatni ko'radi."}
+],
+
+/* ─── MYTEACHER HAQIDA ─── */
+about:[
+  {q:"MyTeacher nima?",
+   a:"MyTeacher — onlayn ingliz tili o'rganish platformasi. Ilgari turli uslublarda dars berib ko'rilgan, hozir esa <b>sun'iy intellekt asosidagi yangi tizim, yangi ilova va yangi metodologiya</b> yo'lga qo'yilmoqda."},
+  {q:"Oddiy kurslardan farqi nima?",
+   a:"Ikkita: birinchidan, dars ustoz bilan yakkama-yakka — guruhda emas. Ikkinchidan, darslar orasida ilovaning sun'iy intellekti o'quvchi bilan ishlaydi: mashq beradi, xatoni tekshiradi, savolga javob beradi. Ya'ni o'quvchi haftada 1 marta dars qilsa ham, har kuni til bilan ishlaydi."},
+  {q:"Ilovaning sun'iy intellekti nima qiladi?",
+   a:"Mustaqil mashqlar beradi va tekshiradi, talaffuzni tinglaydi, yozgan matnni tuzatadi, va o'quvchi istalgan vaqtda chatda savol bera oladi. Ustoz esa darsda shu ishlarning natijasini ko'rib, kerakli joyini yopadi."},
+  {q:"Tariflar qanday?",
+   a:"Haftadagi dars soniga qarab: 1 marta — 350 000, 2 marta — 450 000, 3 marta — 550 000, 4 marta — 650 000, 5 marta — 750 000, 6 marta (Yakshanbadan tashqari har kuni) — 850 000 so'm. Hammasida ilova va AI qismi to'liq ochiq."},
+  {q:"Darslar necha daqiqa?",
+   a:"To'ldirilishi kerak — eski sotuv skriptlari faylidan."},
+  {q:"Pulni qaytarish kafolati bormi?",
+   a:"To'ldirilishi kerak — eski sotuv skriptlari faylidan."},
+  {q:"Ustozlar kimlar?",
+   a:"To'ldirilishi kerak — eski sotuv skriptlari faylidan."},
+  {q:"Sertifikat beriladimi?",
+   a:"To'ldirilishi kerak — eski sotuv skriptlari faylidan."}
+],
+
+methods:[
+  {key:"student_material", label:"O'quvchining materiali"},
+  {key:"myteacher", label:"MyTeacher materiali"},
+  {key:"mixed", label:"Aralash"}
+],
+
+timerWarnMin:45
+};
+
+/* ══════════════════════════════════════════════════════════════════
+   HOLAT (STATE)
+   ══════════════════════════════════════════════════════════════════ */
+const KEY='mt_guide_v1', CFGKEY='mt_guide_cfg_v1', MAX_SESSIONS=50;
+let db={version:1,activeSessionId:null,sessions:[]};
+let S=null;              // joriy sessiya
+let focusIdx=-1;         // klaviatura uchun checklist fokusi
+let tick=null;
+
+function blank(){
+  return {
+    id:'s_'+Date.now(), createdAt:new Date().toISOString(), updatedAt:null,
+    student:{name:'',age:null,phone:'',source:''},
+    stage:0, checks:{}, notes:{}, method:null,
+    xei:{x:null,e:null,i:{region:'',signals:[],final:null}},
+    pricing:null, offered:null, outcome:null, outcomeAt:null,
+    startedAt:Date.now(), durationSec:0
+  };
+}
+function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){ const p=JSON.parse(raw); if(p&&p.version===1&&Array.isArray(p.sessions)) db=p; }
+  }catch(e){ console.warn('localStorage o\'qilmadi',e); }
+  try{
+    const c=localStorage.getItem(CFGKEY);
+    if(c){ const p=JSON.parse(c); if(p&&p.tiers) GUIDE.pricing.tiers=p.tiers; if(p&&p.weights) GUIDE.xei.weights=p.weights; }
+  }catch(e){}
+  S=db.sessions.find(s=>s.id===db.activeSessionId);
+  if(!S){ S=blank(); db.sessions.unshift(S); db.activeSessionId=S.id; }
+  if(!S.startedAt) S.startedAt=Date.now();
+}
+let saveT=null;
+function save(){
+  if(!S) return;
+  S.updatedAt=new Date().toISOString();
+  S.durationSec=Math.floor((Date.now()-S.startedAt)/1000);
+  S.xei.i.final=calcI(S);
+  clearTimeout(saveT);
+  saveT=setTimeout(()=>{
+    try{
+      db.sessions=db.sessions.slice(0,MAX_SESSIONS);
+      localStorage.setItem(KEY,JSON.stringify(db));
+    }catch(e){ toast('Saqlab bo\'lmadi — xotira to\'lgan bo\'lishi mumkin'); }
+  },300);
+}
+function saveCfg(){
+  try{ localStorage.setItem(CFGKEY,JSON.stringify({tiers:GUIDE.pricing.tiers,weights:GUIDE.xei.weights})); }catch(e){}
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   YORDAMCHILAR
+   ══════════════════════════════════════════════════════════════════ */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ')+' so\'m';
+function fill(t){
+  const n=(S.student.name||'').trim();
+  return t.replace(/\{ISM\}/g, n||'...')
+          .replace(/\{USTOZ\}/g,'...')
+          .replace(/\{MAQSAD\}/g,'maqsadingiz');
+}
+let toastT=null;
+function toast(m){
+  const el=$('fToast'); el.textContent=m; el.classList.add('on');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('on'),2200);
+}
+function copyTxt(txt,btn){
+  const done=()=>{ const o=btn.textContent; btn.textContent='Nusxa olindi'; btn.classList.add('ok');
+    setTimeout(()=>{btn.textContent=o;btn.classList.remove('ok');},1500); };
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>fallback(txt,done));
+  } else fallback(txt,done);
+}
+function fallback(txt,done){
+  const ta=document.createElement('textarea');
+  ta.value=txt; ta.style.position='fixed'; ta.style.opacity='0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); done(); }catch(e){ toast('Nusxa olinmadi'); }
+  document.body.removeChild(ta);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   XEI HISOBI
+   ══════════════════════════════════════════════════════════════════ */
+function calcI(sess){
+  const ss=sess||S;
+  if(!ss||!ss.xei||!ss.xei.i) return null;
+  const r=GUIDE.xei.regions.find(r=>r.key===ss.xei.i.region);
+  if(!r||r.base===null) return null;
+  let v=r.base;
+  GUIDE.xei.signals.forEach(s=>{ if((ss.xei.i.signals||[]).includes(s.key)) v+=s.delta; });
+  return Math.max(0,Math.min(10,v));
+}
+function xeiVals(){
+  return {x:S.xei.x, e:S.xei.e, i:calcI()};
+}
+function xeiReady(){
+  const v=xeiVals();
+  return v.x!==null && v.e!==null && v.i!==null;
+}
+function capFor(i){
+  const c=GUIDE.pricing.caps.slice().sort((a,b)=>a.maxI-b.maxI).find(c=>i<=c.maxI);
+  return c?c.level:GUIDE.pricing.tiers.length;
+}
+function capForX(x){
+  const c=(GUIDE.pricing.capsX||[]).slice().sort((a,b)=>a.maxX-b.maxX).find(c=>x<=c.maxX);
+  return c?c.level:GUIDE.pricing.tiers.length;
+}
+function tierBy(level){
+  return GUIDE.pricing.tiers.find(t=>t.level===level)||null;
+}
+function scriptKey(level){
+  if(level<=2) return 'low_ai';
+  if(level<=4) return 'mid_balance';
+  return 'high_daily';
+}
+function calcPrice(){
+  const v=xeiVals();
+  if(v.x===null||v.e===null||v.i===null) return null;
+  const w=GUIDE.xei.weights;
+  const maxLevel=GUIDE.pricing.tiers.length;
+  const rawScore=w.e*v.e + w.x*v.x + w.i*v.i;
+  const rawLevel=Math.max(1,Math.min(maxLevel,Math.round(rawScore/10*maxLevel)));
+  const capLevel=capFor(v.i);
+  const capXLevel=capForX(v.x);
+  const cap=Math.min(capLevel,capXLevel);
+  const level=Math.min(rawLevel,cap);
+  const t=tierBy(level);
+  const altT=(level<cap)?tierBy(level+1):null;
+  return {
+    x:v.x, e:v.e, i:v.i,
+    rawScore:Math.round(rawScore*100)/100, rawLevel, capLevel, capXLevel, cap, level,
+    perWeek:t.perWeek, recommended:t.price,
+    alternative:altT?altT.price:null, altPerWeek:altT?altT.perWeek:null,
+    scriptUsed:scriptKey(level),
+    cappedByI:rawLevel>capLevel, cappedByX:rawLevel>capXLevel && capXLevel<=capLevel
+  };
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RENDER — BOSQICHLAR NAVIGATSIYASI
+   ══════════════════════════════════════════════════════════════════ */
+function stageChecks(st){ return st.checks||[]; }
+function stageDone(st){
+  const cs=stageChecks(st);
+  if(!cs.length) return false;
+  return cs.every((_,i)=>S.checks[st.id+'.'+i]);
+}
+function totalProgress(){
+  let all=0,on=0;
+  GUIDE.stages.forEach(st=>stageChecks(st).forEach((_,i)=>{all++; if(S.checks[st.id+'.'+i])on++;}));
+  return all?Math.round(on/all*100):0;
+}
+function renderSteps(){
+  const pct=totalProgress();
+  $('fSteps').innerHTML=
+    GUIDE.stages.map(st=>{
+      const cls=['step']; if(st.id===S.stage)cls.push('on'); if(stageDone(st))cls.push('done');
+      return `<button class="${cls.join(' ')}" onclick="goTo(${st.id})">
+        <span class="step-n">${stageDone(st)&&st.id!==S.stage?'&#10003;':st.id}</span>
+        <span class="step-t">${esc(st.short)}</span></button>`;
+    }).join('')
+    +`<div class="step-bar"><i style="width:${pct}%"></i></div><div class="step-pct">${pct}% bajarildi</div>`;
+  // mobil gorizontal lentada aktiv bosqichni ko'rinadigan joyga surish
+  const nav=$('fSteps');
+  if(nav.scrollWidth>nav.clientWidth){
+    const on=nav.querySelector('.step.on');
+    if(on) nav.scrollTo({left:on.offsetLeft-nav.clientWidth/2+on.offsetWidth/2, behavior:'smooth'});
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RENDER — JORIY BOSQICH
+   ══════════════════════════════════════════════════════════════════ */
+function renderStage(){
+  const st=GUIDE.stages[S.stage];
+  let h=`<div class="card">
+    <div class="c-kick">${esc(st.kick)}</div>
+    <div class="c-title">${esc(st.title)}</div>
+    <div class="c-goal">${esc(st.goal)}</div>`;
+
+  (st.notes||[]).forEach(n=>{
+    h+=`<div class="sec"><div class="note ${n.type}"><span class="note-t">${esc(n.t)}</span>${n.b}</div></div>`;
+  });
+
+  if(st.focusNote){
+    h+=`<div class="sec"><div class="note blue"><span class="note-t">XEI panelida belgilang</span>${st.focusNote}</div></div>`;
+  }
+
+  if(st.scripts&&st.scripts.length){
+    h+=`<div class="sec"><div class="sec-h">Nima deyish kerak</div>`;
+    st.scripts.forEach((sc,i)=>{
+      const txt=fill(sc.t);
+      h+=`<div class="scr"><div class="scr-h"><span class="scr-l">${esc(sc.l)}</span>
+        <button class="scr-c" onclick="copyScript(${S.stage},${i},this)">Nusxa olish</button></div>
+        <div class="scr-b">${esc(txt)}</div></div>`;
+    });
+    h+=`</div>`;
+  }
+
+  if(st.questions&&st.questions.length){
+    h+=`<div class="sec"><div class="sec-h">Beriladigan savollar</div><div class="qs">`
+      +st.questions.map(q=>`<div class="q">${esc(q)}</div>`).join('')+`</div></div>`;
+  }
+
+  if(st.table){
+    h+=`<div class="sec"><div class="sec-h">Yo'riqnoma jadvali</div><div class="tb-wrap"><table class="tb">
+      <thead><tr>${st.table.head.map(x=>`<th>${esc(x)}</th>`).join('')}</tr></thead>
+      <tbody>${st.table.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+    </table></div></div>`;
+  }
+
+  if(st.anti&&st.anti.length){
+    h+=`<div class="sec"><div class="sec-h">Nima qilmaslik kerak</div>`
+      +st.anti.map(a=>`<div class="anti">${esc(a)}</div>`).join('')+`</div>`;
+  }
+
+  if(st.method){
+    h+=`<div class="sec"><div class="sec-h">Material bo'yicha qaror</div><div class="pills">`
+      +GUIDE.methods.map(m=>`<button class="pill ${S.method===m.key?'on':''}" onclick="setMethod('${m.key}')">${esc(m.label)}</button>`).join('')
+      +`</div></div>`;
+  }
+
+  if(st.price) h+=renderPriceBlock();
+
+  const cs=stageChecks(st);
+  if(cs.length){
+    h+=`<div class="sec"><div class="sec-h">Checklist</div>`
+      +cs.map((c,i)=>{
+        const k=st.id+'.'+i, on=!!S.checks[k];
+        return `<div class="chk ${on?'on':''} ${focusIdx===i?'foc':''}" onclick="toggleChk('${k}')" data-ci="${i}">
+          <span class="chk-b"></span><span class="chk-t">${esc(c)}</span></div>`;
+      }).join('')+`</div>`;
+  }
+
+  h+=`<div class="sec"><div class="sec-h">Izoh (faqat siz ko'rasiz)</div>
+    <textarea class="ta" placeholder="O'quvchi haqida eslab qolish kerak bo'lgan narsalar..."
+      oninput="setNote(this.value)">${esc(S.notes[S.stage]||'')}</textarea></div>`;
+
+  h+=`</div>`;
+  $('fStage').innerHTML=h;
+
+  $('fPrev').disabled=S.stage===0;
+  $('fNext').disabled=S.stage===GUIDE.stages.length-1;
+  $('fNext').textContent=S.stage===GUIDE.stages.length-1?'Oxirgi bosqich':'Keyingi bosqich →';
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RENDER — NARX BLOKI
+   ══════════════════════════════════════════════════════════════════ */
+function renderPriceBlock(){
+  if(!xeiReady()){
+    const v=xeiVals(), miss=[];
+    if(v.x===null)miss.push('Xohish'); if(v.e===null)miss.push('Ehtiyoj'); if(v.i===null)miss.push('Imkoniyat');
+    return `<div class="sec"><div class="sec-h">Tarif taklifi</div>
+      <div class="locked"><b>Avval XEI ni to'ldiring</b>
+      Narx aytishdan oldin uchta narsa aniqlangan bo'lishi shart.<br>
+      Yetishmayapti: <b style="display:inline">${miss.join(', ')}</b></div></div>`;
+  }
+  const p=calcPrice();
+  S.pricing=p;
+  const sc=GUIDE.scripts[p.scriptUsed];
+  const w=GUIDE.xei.weights;
+  const txt=fill(sc.text).replace(/\{N\}/g,p.perWeek).replace(/\{NARX\}/g,money(p.recommended));
+
+  let h=`<div class="sec"><div class="sec-h">Tarif taklifi</div>
+  <div class="pr">
+    <div class="pr-h">
+      <div class="pr-k">Tavsiya etilgan tarif</div>
+      <div class="pr-p">${money(p.recommended)}</div>
+      <div class="pr-f">Haftada ${p.perWeek} marta${p.perWeek===6?" (Yakshanbadan tashqari har kuni)":""}</div>
+    </div>
+    <div class="pr-b">
+      <div class="pr-why">Hisob: ${w.e}&times;E(${p.e}) + ${w.x}&times;X(${p.x}) + ${w.i}&times;I(${p.i}) = <b>${p.rawScore}</b>
+        &rarr; daraja ${p.rawLevel}${p.level<p.rawLevel?` &rarr; shift bilan <b>${p.level}</b>`:''}
+        ${p.cappedByX?`<br><b>Diqqat:</b> Xohish past (${p.x}) — intensiv tarif bermang, tashlab ketadi. Shift: ${p.capXLevel}-daraja.`
+          :p.cappedByI?`<br><b>Diqqat:</b> ehtiyoji bo'yicha ko'proq dars kerak edi, lekin imkoniyati yo'l qo'ymaydi.`:''}</div>
+      <div class="scr"><div class="scr-h">
+        <span class="scr-l">Podacha skripti — ${esc(sc.name)}</span>
+        <button class="scr-c" onclick="copyPrice(this)">Nusxa olish</button></div>
+        <div class="scr-b">${esc(txt)}</div></div>
+      <div class="note blue" style="margin-top:9px"><span class="note-t">Urg'u qayerga</span>${esc(sc.focus)}</div>
+      ${p.alternative?`<div class="pr-alt">Agar yaxshi ketsa, bir pog'ona yuqori: <b>${money(p.alternative)}</b> &mdash; haftada ${p.altPerWeek} marta</div>`:''}
+    </div>
+  </div>`;
+
+  h+=`<div class="sec-h" style="margin-top:16px">Narx aytish qoidalari</div>`
+    +GUIDE.priceRules.map(r=>`<div class="note yellow" style="border-left-width:3px">${r}</div>`).join('');
+
+  h+=`<div class="sec-h" style="margin-top:16px">Natija</div><div class="oc">`
+    +[['paid','To\'ladi'],['thinking','O\'ylab ko\'raman'],['refused','Yo\'q']]
+      .map(([v,l])=>`<button data-v="${v}" class="${S.outcome===v?'on':''}" onclick="setOutcome('${v}')">${l}</button>`).join('')
+    +`</div></div>`;
+  return h;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RENDER — XEI PANELI
+   ══════════════════════════════════════════════════════════════════ */
+function ballCls(v){ return v===null?'un':v<=3?'lo':v<=7?'mid':'hi'; }
+function scaleRow(axis,val){
+  let h='<div class="scale">';
+  for(let n=0;n<=10;n++) h+=`<button class="${val===n?'on':''}" onclick="setAx('${axis}',${n})">${n}</button>`;
+  return h+'</div>';
+}
+function renderXei(){
+  const v=xeiVals(), X=GUIDE.xei;
+  let h='';
+
+  ['x','e'].forEach(k=>{
+    const a=X.axes[k];
+    h+=`<div class="ax">
+      <div class="ax-h"><span class="ax-l">${esc(a.label)}</span>
+        <span class="ax-v ${ballCls(v[k])}">${v[k]===null?'—':v[k]}</span></div>
+      <div class="ax-hint">${esc(a.hint)}</div>
+      ${scaleRow(k,v[k])}
+      <div class="probe">${a.probe}</div></div>`;
+  });
+
+  h+=`<div class="ax">
+    <div class="ax-h"><span class="ax-l">Imkoniyat</span>
+      <span class="ax-v ${ballCls(v.i)}">${v.i===null?'—':v.i}</span></div>
+    <div class="ax-hint">Hudud + signallar asosida avtomatik hisoblanadi.</div>
+    <select class="fld" onchange="setRegion(this.value)">
+      ${X.regions.map(r=>`<option value="${r.key}" ${S.xei.i.region===r.key?'selected':''}>${esc(r.label)}${r.base!==null?' ('+r.base+')':''}</option>`).join('')}
+    </select>
+    ${X.signals.map(s=>`<label class="sig">
+      <input type="checkbox" ${S.xei.i.signals.includes(s.key)?'checked':''} onchange="setSig('${s.key}',this.checked)">
+      <span>${esc(s.label)}</span><span>${s.delta>0?'+':''}${s.delta}</span></label>`).join('')}
+    <div class="probe">${X.probeI}</div></div>`;
+
+  const tot=(v.x!==null&&v.e!==null&&v.i!==null)?(v.x+v.e+v.i):null;
+  h+=`<div class="xei-tot"><span class="xei-tot-l">Umumiy</span>
+    <span class="xei-tot-v ${tot===null?'un':tot<=12?'lo':tot<=21?'mid':'hi'}">${tot===null?'— / 30':tot+' / 30'}</span></div>`;
+
+  GUIDE.warns.forEach(wr=>{
+    let hit=false; try{ hit=wr.when(v); }catch(e){}
+    if(hit) h+=`<div class="xei-warn note ${wr.type}" style="margin-top:9px;border-left-width:3px">
+      <span class="note-t">${esc(wr.t)}</span>${esc(wr.b)}</div>`;
+  });
+
+  $('fXeiBody').innerHTML=h;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   HODISALAR
+   ══════════════════════════════════════════════════════════════════ */
+function rerender(){ renderSteps(); renderStage(); renderXei(); }
+
+function goTo(i){
+  if(i<0||i>=GUIDE.stages.length) return;
+  S.stage=i; focusIdx=-1; save(); rerender();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function go(d){ goTo(S.stage+d); }
+function toggleChk(k){ S.checks[k]=!S.checks[k]; save(); renderSteps(); renderStage(); }
+function setNote(v){ S.notes[S.stage]=v; save(); }
+function setMethod(k){ S.method=S.method===k?null:k; save(); renderStage(); }
+function setAx(a,n){ S.xei[a]=S.xei[a]===n?null:n; save(); renderXei(); if(GUIDE.stages[S.stage].price) renderStage(); }
+function setRegion(k){ S.xei.i.region=k; S.xei.i.final=calcI(); save(); renderXei(); if(GUIDE.stages[S.stage].price) renderStage(); }
+function setSig(k,on){
+  const a=S.xei.i.signals;
+  if(on){ if(!a.includes(k)) a.push(k); } else { const j=a.indexOf(k); if(j>-1) a.splice(j,1); }
+  S.xei.i.final=calcI(); save(); renderXei(); if(GUIDE.stages[S.stage].price) renderStage();
+}
+function setOutcome(v){
+  S.outcome=S.outcome===v?null:v;
+  S.outcomeAt=S.outcome?new Date().toISOString():null;
+  if(S.outcome==='paid'&&S.pricing) S.offered=S.pricing.recommended;
+  save(); renderStage();
+  if(S.outcome==='paid') toast('Tabriklaymiz! Natija saqlandi.');
+}
+function copyScript(sid,i,btn){ copyTxt(fill(GUIDE.stages[sid].scripts[i].t),btn); }
+function copyPrice(btn){
+  const p=S.pricing; if(!p) return;
+  const sc=GUIDE.scripts[p.scriptUsed];
+  copyTxt(fill(sc.text).replace(/\{N\}/g,p.perWeek).replace(/\{NARX\}/g,money(p.recommended)),btn);
+}
+function toggleXei(){
+  const b=$('fXeiBody'), t=$('fXeiToggle');
+  b.classList.toggle('hid');
+  t.textContent=b.classList.contains('hid')?'XEI panelini ochish ▾':'XEI panelini yopish ▴';
+}
+function newSession(){
+  const hasWork=S&&(Object.keys(S.checks).length||S.student.name);
+  if(hasWork&&!confirm('Yangi sessiya ochilsinmi? Joriy sessiya tarixda saqlanib qoladi.')) return;
+  S=blank(); db.sessions.unshift(S); db.activeSessionId=S.id;
+  $('fName').value=''; focusIdx=-1; save(); rerender();
+  window.scrollTo({top:0});
+  toast('Yangi sessiya ochildi');
+}
+function openSession(id){
+  const s=db.sessions.find(x=>x.id===id); if(!s) return;
+  S=s; db.activeSessionId=id; if(!S.startedAt) S.startedAt=Date.now();
+  $('fName').value=S.student.name||''; closeMd(); save(); rerender();
+  window.scrollTo({top:0});
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MODALLAR
+   ══════════════════════════════════════════════════════════════════ */
+function showMd(title,body){ $('fMdT').textContent=title; $('fMdB').innerHTML=body; $('fOv').classList.add('on'); }
+function closeMd(){ $('fOv').classList.remove('on'); }
+
+function openAbout(){
+  showMd('MyTeacher haqida',
+    GUIDE.about.map((a,i)=>`<div class="acc" id="ac${i}">
+      <button class="acc-h" onclick="document.getElementById('ac${i}').classList.toggle('on')">${esc(a.q)}<i>&rsaquo;</i></button>
+      <div class="acc-b">${a.a}</div></div>`).join('')
+    +`<div class="note yellow" style="margin-top:14px"><span class="note-t">Eslatma</span>
+      Bir nechta javob hali to'ldirilmagan — eski sotuv skriptlari fayli kelgach, kodning yuqorisidagi
+      <b>GUIDE.about</b> ro'yxatiga yoziladi.</div>`);
+}
+
+function openHist(){
+  const rows=db.sessions.filter(s=>s.student.name||Object.keys(s.checks).length);
+  const lbl={paid:'To\'ladi',thinking:'O\'ylaydi',refused:'Yo\'q'};
+  let body;
+  if(!rows.length){
+    body=`<div class="empty">Hali sessiya yo'q.<br>Birinchi sinov darsingizni o'tkazing.</div>`;
+  } else {
+    const paid=rows.filter(s=>s.outcome==='paid').length;
+    const closed=rows.filter(s=>s.outcome).length;
+    body=`<div class="note blue" style="margin-bottom:14px"><span class="note-t">Natijalaringiz</span>
+      Jami sessiya: <b>${rows.length}</b> &nbsp;·&nbsp; Yopilgan: <b>${closed}</b> &nbsp;·&nbsp;
+      To'lov: <b>${paid}</b> &nbsp;·&nbsp; Konversiya: <b>${closed?Math.round(paid/closed*100):0}%</b></div>
+      <table class="hist"><thead><tr><th>Sana</th><th>O'quvchi</th><th>XEI</th><th>Tarif</th><th>Natija</th></tr></thead><tbody>`
+      +rows.map(s=>{
+        const d=new Date(s.createdAt);
+        const v=[s.xei.x,s.xei.e,calcI(s)];
+        const xs=v.every(n=>n!==null&&n!==undefined)?v.join(' / '):'—';
+        const oc=s.outcome||'none';
+        return `<tr onclick="openSession('${s.id}')" style="cursor:pointer">
+          <td>${d.getDate()}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}</td>
+          <td><b>${esc(s.student.name||'Ismsiz')}</b></td>
+          <td>${xs}</td>
+          <td>${s.pricing?money(s.pricing.recommended):'—'}</td>
+          <td><span class="tag ${oc}">${lbl[s.outcome]||'Ochiq'}</span></td></tr>`;
+      }).join('')+`</tbody></table>
+      <div class="note yellow" style="margin-top:14px"><span class="note-t">Diqqat</span>
+      Bu ma'lumot faqat shu brauzerda saqlanadi va oxirgi ${MAX_SESSIONS} ta sessiya bilan cheklangan.
+      Boshqa qurilmada ko'rinmaydi.</div>`;
+  }
+  showMd('Sessiyalar tarixi',body);
+}
+
+function openSettings(){
+  const w=GUIDE.xei.weights;
+  showMd('Sozlamalar',
+    `<div class="note red"><span class="note-t">Ehtiyot bo'ling</span>
+      Bu qiymatlar barcha hisob-kitobga ta'sir qiladi. Faqat rasmiy o'zgarish bo'lganda tahrirlang.</div>
+     <div class="sec-h" style="margin-top:16px">Tariflar (UZS)</div>`
+    +GUIDE.pricing.tiers.map(t=>`<div class="st-row"><span>Haftada ${t.perWeek} marta</span>
+      <input type="number" step="10000" value="${t.price}" onchange="setTier(${t.level},this.value)"></div>`).join('')
+    +`<div class="sec-h" style="margin-top:18px">Formula koeffitsiyentlari</div>
+     <div class="st-row"><span>Ehtiyoj (E)</span><input type="number" step="0.05" value="${w.e}" onchange="setW('e',this.value)"></div>
+     <div class="st-row"><span>Xohish (X)</span><input type="number" step="0.05" value="${w.x}" onchange="setW('x',this.value)"></div>
+     <div class="st-row"><span>Imkoniyat (I)</span><input type="number" step="0.05" value="${w.i}" onchange="setW('i',this.value)"></div>
+     <div class="note yellow" style="margin-top:14px">Uchta koeffitsiyent yig'indisi <b>1.00</b> bo'lishi kerak.
+       Hozirgi yig'indi: <b id="wsum">${(w.e+w.x+w.i).toFixed(2)}</b></div>
+     <button class="navb" style="margin-top:14px" onclick="resetCfg()">Standart qiymatlarga qaytarish</button>`);
+}
+function setTier(level,val){
+  const t=tierBy(level); if(!t) return;
+  const n=parseInt(val,10);
+  if(isNaN(n)||n<0){ toast('Noto\'g\'ri narx'); return; }
+  t.price=n; saveCfg(); toast('Narx saqlandi'); if(GUIDE.stages[S.stage].price) renderStage();
+}
+function setW(k,val){
+  const n=parseFloat(val);
+  if(isNaN(n)||n<0){ toast('Noto\'g\'ri qiymat'); return; }
+  GUIDE.xei.weights[k]=n; saveCfg();
+  const w=GUIDE.xei.weights, el=$('wsum');
+  if(el) el.textContent=(w.e+w.x+w.i).toFixed(2);
+  if(GUIDE.stages[S.stage].price) renderStage();
+}
+function resetCfg(){
+  if(!confirm('Narxlar va koeffitsiyentlar standart holatga qaytarilsinmi?')) return;
+  try{ localStorage.removeItem(CFGKEY); }catch(e){}
+  location.reload();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   TAYMER
+   ══════════════════════════════════════════════════════════════════ */
+function renderTimer(){
+  const sec=Math.floor((Date.now()-S.startedAt)/1000);
+  const m=Math.floor(sec/60), s=sec%60;
+  const el=$('fTimer');
+  el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  if(m>=GUIDE.timerWarnMin){
+    if(!el.classList.contains('warn')){
+      el.classList.add('warn');
+      el.title='Vaqt ketyapti. O\'quvchi qizib turibdi — narxga o\'ting.';
+      toast('Vaqt ketyapti — narx bosqichiga o\'ting');
+    }
+  } else el.classList.remove('warn');
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   CHOP ETISH (Ctrl+P) — butun yo'riqnoma matni
+   ══════════════════════════════════════════════════════════════════ */
+function renderPrintAll(){
+  $('fPrintAll').innerHTML=GUIDE.stages.map(st=>{
+    let h=`<div class="card"><div class="c-kick">${esc(st.kick)}</div>
+      <div class="c-title">${esc(st.title)}</div><div class="c-goal">${esc(st.goal)}</div>`;
+    (st.notes||[]).forEach(n=>h+=`<div class="note ${n.type}"><span class="note-t">${esc(n.t)}</span>${n.b}</div>`);
+    (st.scripts||[]).forEach(sc=>h+=`<div class="scr"><div class="scr-h"><span class="scr-l">${esc(sc.l)}</span></div>
+      <div class="scr-b">${esc(sc.t)}</div></div>`);
+    if(st.questions) h+=`<div class="qs">`+st.questions.map(q=>`<div class="q">${esc(q)}</div>`).join('')+`</div>`;
+    if(st.table) h+=`<table class="tb"><thead><tr>${st.table.head.map(x=>`<th>${esc(x)}</th>`).join('')}</tr></thead>
+      <tbody>${st.table.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    (st.anti||[]).forEach(a=>h+=`<div class="anti">${esc(a)}</div>`);
+    (st.checks||[]).forEach(c=>h+=`<div class="chk"><span class="chk-b"></span><span class="chk-t">${esc(c)}</span></div>`);
+    return h+`</div>`;
+  }).join('')
+  +`<div class="card"><div class="c-title">Narx podacha skriptlari</div>`
+  +Object.values(GUIDE.scripts).map(sc=>`<div class="scr"><div class="scr-h">
+     <span class="scr-l">${esc(sc.name)} — ${esc(sc.for)}</span></div>
+     <div class="scr-b">${esc(sc.text)}</div></div>`).join('')+`</div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   KLAVIATURA
+   ══════════════════════════════════════════════════════════════════ */
+document.addEventListener('keydown',e=>{
+  const tag=(e.target.tagName||'').toLowerCase();
+  if(tag==='input'||tag==='textarea'||tag==='select') return;
+  if(e.key==='Escape'){ closeMd(); return; }
+  if($('fOv').classList.contains('on')) return;
+  if(e.key==='ArrowRight'){ e.preventDefault(); go(1); }
+  else if(e.key==='ArrowLeft'){ e.preventDefault(); go(-1); }
+  else if(e.key===' '||e.key==='ArrowDown'||e.key==='ArrowUp'){
+    const cs=stageChecks(GUIDE.stages[S.stage]);
+    if(!cs.length) return;
+    e.preventDefault();
+    if(e.key===' '){
+      if(focusIdx<0) focusIdx=0;
+      else { toggleChk(S.stage+'.'+focusIdx); if(focusIdx<cs.length-1) focusIdx++; }
+    } else focusIdx=Math.max(0,Math.min(cs.length-1,focusIdx+(e.key==='ArrowDown'?1:-1)));
+    renderStage();
+    const el=document.querySelector('.chk.foc'); if(el) el.scrollIntoView({block:'nearest'});
+  }
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   ISHGA TUSHIRISH
+   ══════════════════════════════════════════════════════════════════ */
+(function init(){
+  load();
+  $('fName').value=S.student.name||'';
+  $('fName').addEventListener('input',e=>{
+    S.student.name=e.target.value; save();
+    renderStage();
+  });
+  // yashirin sozlamalar: brend logotipiga 3 marta bosing
+  let taps=0, tapT=null;
+  document.querySelector('.hd-brand').addEventListener('click',()=>{
+    taps++; clearTimeout(tapT); tapT=setTimeout(()=>taps=0,700);
+    if(taps>=3){ taps=0; openSettings(); }
+  });
+  rerender();
+  renderPrintAll();
+  renderTimer();
+  tick=setInterval(renderTimer,1000);
+  window.addEventListener('beforeunload',()=>{ clearTimeout(saveT); save(); });
+})();
+</script>
+</body>
+</html>
