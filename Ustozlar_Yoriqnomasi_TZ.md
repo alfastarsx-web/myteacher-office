@@ -493,16 +493,54 @@ Yangi NestJS feature: `backend/src/features/teacher-guide/` — mavjud clean arc
 
 ## 10. UI/UX talablari
 
-1. **Dars paytida ishlatiladi** — shrift kattaligi o'qishga qulay (asosiy matn ≥ 15px), skript bloklari ko'z bilan bir zumda topiladigan.
-2. **Nusxa olish** — har skript blokida "Nusxa olish" tugmasi, bosilganda vizual tasdiq.
-3. **XEI paneli doim ko'rinadi** — har uch o'q slayder yoki 0–10 tugmalar qatori, tepasida jonli umumiy ball.
-4. **Progress** — yuqorida nechta bosqich tugagani ko'rinadi.
-5. **Taymer** — dars boshlanganidan beri o'tgan vaqt; 45 daqiqada ogohlantirish.
-6. **Klaviatura** — `←` / `→` bosqichlar orasida yuradi, `Space` joriy checkbox'ni belgilaydi.
-7. **Mobil (≤ 480px)** — barcha kontent bitta ustunga tushadi, gorizontal skroll **yo'q**, XEI paneli pastdan chiqadigan panel.
-8. **Chop etish** — `Ctrl+P` da butun yo'riqnoma oddiy matn ko'rinishida chiqadi (yangi o'qituvchi o'qib chiqishi uchun).
-9. **Qorong'i rejim** — `prefers-color-scheme` ni hurmat qiladi.
-10. **Ranglar** — `index.html` dagi CSS o'zgaruvchilari bilan bir xil palitra.
+Asosiy prinsip: **bu boshqaruv paneli emas, jonli chiqish quroli.** O'qituvchi uni o'quvchi ekranda o'tirganida ochadi — bunday paytda odam o'qimaydi, ko'z tashlaydi. Har bir qaror shu mezon bilan o'lchanadi.
+
+### 10.1 Tuzilma
+
+**Desktop (≥ 1181px)** — uch ustun: bosqichlar navigatsiyasi | joriy bosqich | o'ng panel (Izoh + XEI).
+**Telefon va planshet (≤ 1180px)** — bitta ustun, bosqichlar yuqorida gorizontal lenta, **XEI va Izoh ekran tagidagi doimiy panelda** (dock). Dock'ga bosilsa pastdan sheet ochiladi.
+
+> XEI ni pastki panelga chiqarish — eng muhim qaror. Aks holda o'qituvchi dars o'rtasida ball qo'yish uchun ikki-uch ekran pastga skroll qilishi kerak bo'ladi va amalda buni qilmaydi.
+
+### 10.2 Ma'lumot zichligi
+
+| Element | Holati |
+|---|---|
+| Skriptlar | **Doim ochiq**, 17.5px shrift — ko'z tashlanadigan asosiy matn |
+| Checklist | **Doim ochiq** — dars davomida belgilanadi |
+| Tarif bloki | **Doim ochiq** |
+| Savollar, jadvallar, anti-patternlar, XEI eslatmasi | **Yig'ilgan** (`<details>`), yonida element soni |
+
+Natija: bitta bosqich kartochkasi telefonda ~880px (avval 1816px edi), butun sahifa ~1230px (avval 2315px).
+
+### 10.3 XEI kiritish
+
+Har o'q uchun **3 ta nomli tugma** — Past / O'rta / Yuqori, har birida aniq misol yozilgan (masalan Ehtiyoj → Yuqori: *"Green card, qat'iy qaror, ish talabi. Aniq sana yoki majburiyat bor."*).
+
+0–10 shkalasi yig'ilgan "Aniqroq ball qo'yish" bo'limida qoladi — kerak bo'lganda ochiladi, lekin standart yo'l bu emas.
+
+> **Nega 11 ta tugma emas?** Odam jonli suhbat bosimi ostida 6 bilan 7 ni ishonchli farqlay olmaydi. 11 ta variant soxta aniqlik beradi va tanlashni sekinlashtiradi. Nomli darajalar tezroq va halolroq.
+
+### 10.4 Boshqa talablar
+
+1. **Nusxa olish** — har skript blokida tugma, bosilganda vizual tasdiq.
+2. **Izoh maydoni** — desktopda o'ng panelning eng tepasida, doim ko'rinadi; telefonda dock'dagi qalam tugmasi orqali (yozilgan izoh bo'lsa tugmada nuqta paydo bo'ladi).
+3. **Progress** — bosqichlar navigatsiyasida va foizda.
+4. **Taymer** — 45 daqiqada qizil ogohlantirish.
+5. **Chop etish** — `Ctrl+P` da butun yo'riqnoma bitta matn bo'lib chiqadi.
+6. **Rang** — kam ishlatiladi: har bosqichda ko'pi bilan bitta rangli kartochka, qolgani neytral. Palitra `index.html` bilan bir xil.
+7. **Tipografika** — sarlavhalar Montserrat, asosiy matn tizim shrifti (uzun matn o'qishga qulayroq).
+8. **Qorong'i rejim** — `prefers-color-scheme`, ikkala rejimda ham to'liq tekshirilgan.
+
+### 10.5 Accessibility (WCAG 2.1 AA)
+
+- Checklist va signallar — **haqiqiy `<input type="checkbox">`**, Tab va Space bilan ishlaydi.
+- Tanlanadigan tugmalarda `aria-pressed`, joriy bosqichda `aria-current="step"`.
+- Modal va sheet: `role="dialog"`, `aria-modal`, **fokus tuzog'i**, Esc bilan yopiladi, yopilgach fokus chaqirgan tugmaga qaytadi.
+- XEI qayta chizilganda **fokus va skroll o'z joyida qoladi** (`data-fk` kalitlari orqali) — klaviatura bilan ishlaydigan odam joyini yo'qotmaydi.
+- Barcha matn kontrasti **≥ 4.5:1** (o'lchangan eng past qiymat 5.44).
+- `prefers-reduced-motion` hurmat qilinadi.
+- `:focus-visible` har bir interaktiv elementda ko'rinadi.
 
 ---
 
@@ -520,7 +558,11 @@ Yangi NestJS feature: `backend/src/features/teacher-guide/` — mavjud clean arc
 - [ ] 5.4 dagi 4 ta ogohlantirish holati to'g'ri ishlaydi
 - [ ] Narxlar va koeffitsiyentlar `GUIDE` obyektidan kod tegmasdan o'zgaradi
 - [ ] Natija (`paid`/`thinking`/`refused`) qayd etiladi va tarixda ko'rinadi
-- [ ] 375px kenglikda gorizontal skroll yo'q
+- [ ] 375px kenglikda gorizontal skroll yo'q va XEI ekran tagidagi dock'dan bir bosishda ochiladi
+- [ ] Yordamchi bo'limlar yig'ilgan, skript va checklist ochiq
+- [ ] XEI da 3 ta nomli tugma, 0–10 shkalasi yig'ilgan holda
+- [ ] Klaviatura bilan to'liq boshqariladi, modal fokus tuzog'i ishlaydi
+- [ ] Matn kontrasti yorug' va qorong'i rejimda ≥ 4.5:1
 - [ ] Butun matn **faqat lotin yozuvida**, kirill harflari yo'q
 - [ ] Sahifada hech qanday maxfiy ma'lumot yo'q
 
