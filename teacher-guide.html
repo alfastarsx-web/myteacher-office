@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Ustozlar yo'riqnomasi — MyTeacher</title>
+<link rel="icon" type="image/svg+xml" href="assets/myteacher-mark.svg">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#2563EB;--blue-d:#1D4ED8;--blue-l:#EFF6FF;
+  --yellow:#B45309;--yellow-l:#FFFBEB;--red:#DC2626;--red-l:#FEF2F2;
+  --green:#15803D;--green-l:#F0FDF4;
+  --td:#111827;--tm:#374151;--mu:#5B6472;--tl:#6B7280;
+  --br:#E5E7EB;--brl:#F3F4F6;--bg:#F6F8FB;--wh:#FFFFFF;
+  --shadow-sm:0 1px 2px rgba(15,23,42,.06);
+  --shadow-md:0 12px 28px rgba(15,23,42,.12);
+  --shadow-up:0 -6px 24px rgba(15,23,42,.10);
+  --f:'Montserrat',system-ui,sans-serif;
+  --fb:system-ui,-apple-system,'Segoe UI',Roboto,'Helvetica Neue',sans-serif;
+  --bar:0px;
+}
+@media (prefers-color-scheme:dark){
+  :root{
+    --blue:#60A5FA;--blue-d:#93C5FD;--blue-l:#17233F;
+    --yellow:#FCD34D;--yellow-l:#2B2411;--red:#FCA5A5;--red-l:#2E1616;
+    --green:#86EFAC;--green-l:#12281A;
+    --td:#F3F4F6;--tm:#D8DCE3;--mu:#A3ABB8;--tl:#9CA3AF;
+    --br:#2A2F3A;--brl:#1E222B;--bg:#12151B;--wh:#191D25;
+    --shadow-sm:0 1px 2px rgba(0,0,0,.4);
+    --shadow-md:0 12px 28px rgba(0,0,0,.55);
+    --shadow-up:0 -6px 24px rgba(0,0,0,.5);
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--fb);background:var(--bg);color:var(--td);font-size:15px;line-height:1.55;-webkit-font-smoothing:antialiased}
+button{font-family:inherit;font-size:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,select,textarea{font-family:inherit;font-size:inherit;color:inherit}
+h1,h2,h3,.dsp{font-family:var(--f)}
+:focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* ══ HEADER ══ */
+.hd{position:sticky;top:0;z-index:40;background:var(--wh);border-bottom:1px solid var(--br);
+    padding:9px 18px;display:flex;align-items:center;gap:12px}
+.hd-brand{display:flex;align-items:center;gap:9px;font-family:var(--f);font-weight:700;font-size:15px;white-space:nowrap;flex:none}
+.hd-brand i{width:27px;height:27px;border-radius:8px;background:var(--blue);color:#fff;display:grid;place-items:center;font-style:normal;font-size:13px;font-weight:700;flex:none}
+.hd-name{flex:1;min-width:0;max-width:300px}
+.hd-name input{width:100%;border:1px solid var(--br);background:var(--bg);border-radius:9px;padding:8px 12px;font-size:14.5px;font-weight:600}
+.hd-name input:focus-visible{outline:2px solid var(--blue);outline-offset:-1px;border-color:transparent}
+.hd-sp{flex:1}
+.hd-timer{font-variant-numeric:tabular-nums;font-weight:700;font-size:15px;padding:7px 12px;border-radius:9px;background:var(--brl);color:var(--tm);white-space:nowrap;flex:none}
+.hd-timer.warn{background:var(--red-l);color:var(--red)}
+.hd-btn{padding:8px 13px;border-radius:9px;border:1px solid var(--br);font-size:13.5px;font-weight:600;color:var(--tm);white-space:nowrap;flex:none}
+.hd-btn:hover{background:var(--brl);color:var(--td)}
+.hd-btn.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.hd-btn.pri:hover{background:var(--blue-d)}
+.hd-more{display:none;position:relative;flex:none}
+.hd-more>button{width:38px;height:38px;border-radius:9px;border:1px solid var(--br);font-size:19px;line-height:1;color:var(--tm)}
+.hd-menu{position:absolute;right:0;top:44px;background:var(--wh);border:1px solid var(--br);border-radius:11px;
+         box-shadow:var(--shadow-md);min-width:200px;padding:6px;z-index:50}
+.hd-menu[hidden]{display:none}
+.hd-menu button{display:block;width:100%;text-align:left;padding:11px 13px;border-radius:8px;font-size:14.5px;font-weight:600;color:var(--tm)}
+.hd-menu button:hover{background:var(--brl);color:var(--td)}
+
+/* ══ LAYOUT ══ */
+.wrap{max-width:1520px;margin:0 auto;padding:18px 20px calc(60px + var(--bar));
+      display:grid;grid-template-columns:196px minmax(0,1fr) 330px;gap:18px;align-items:start}
+
+/* ══ STEPS ══ */
+.steps{position:sticky;top:74px;background:var(--wh);border:1px solid var(--br);border-radius:13px;padding:8px;box-shadow:var(--shadow-sm)}
+.step{display:flex;align-items:center;gap:10px;padding:10px;border-radius:9px;width:100%;text-align:left;transition:background .13s}
+.step:hover{background:var(--brl)}
+.step[aria-current=step]{background:var(--blue-l)}
+.step-n{width:24px;height:24px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:11.5px;font-weight:700;background:var(--brl);color:var(--mu)}
+.step[aria-current=step] .step-n{background:var(--blue);color:#fff}
+.step.done .step-n{background:var(--green);color:#fff}
+.step-t{font-size:13.5px;font-weight:600;color:var(--tm);line-height:1.3}
+.step[aria-current=step] .step-t{color:var(--blue-d)}
+.step-bar{height:5px;border-radius:3px;background:var(--brl);margin:9px 6px 5px;overflow:hidden}
+.step-bar i{display:block;height:100%;background:var(--green);border-radius:3px;transition:width .3s}
+.step-pct{font-size:11.5px;color:var(--mu);text-align:center;padding-bottom:5px}
+
+/* ══ CARD ══ */
+.card{background:var(--wh);border:1px solid var(--br);border-radius:15px;padding:24px;box-shadow:var(--shadow-sm);margin-bottom:16px}
+.c-kick{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+.c-title{font-family:var(--f);font-size:25px;font-weight:700;letter-spacing:-.5px;line-height:1.2}
+.c-goal{font-size:15px;color:var(--mu);margin-top:7px;max-width:62ch}
+.sec{margin-top:24px}
+.sec-h{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu);margin-bottom:11px}
+
+/* ══ CALLOUTS — rang kam ishlatiladi ══ */
+.note{border-radius:11px;padding:14px 16px;font-size:14.5px;line-height:1.62;margin-bottom:10px;
+      background:var(--bg);border:1px solid var(--br);color:var(--tm);max-width:72ch}
+.note-t{display:block;font-family:var(--f);font-weight:700;color:var(--td);margin-bottom:4px;font-size:14.5px}
+.note.key{background:var(--blue-l);border-color:transparent;border-left:3px solid var(--blue)}
+.note.red{background:var(--red-l);border-color:transparent;border-left:3px solid var(--red)}
+.note.green{background:var(--green-l);border-color:transparent;border-left:3px solid var(--green)}
+.note.yellow{background:var(--yellow-l);border-color:transparent;border-left:3px solid var(--yellow)}
+
+/* ══ SCRIPTS — ko'z tashlanadigan katta matn ══ */
+.scr{border:1px solid var(--br);border-radius:12px;margin-bottom:11px;overflow:hidden;background:var(--wh)}
+.scr-h{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--brl);border-bottom:1px solid var(--br)}
+.scr-l{font-size:12.5px;font-weight:700;color:var(--tm);flex:1}
+.scr-c{font-size:12px;font-weight:700;color:var(--blue);padding:6px 11px;border-radius:7px;border:1px solid var(--br);background:var(--wh);white-space:nowrap}
+.scr-c:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
+.scr-c[data-ok]{background:var(--green);color:#fff;border-color:var(--green)}
+.scr-b{padding:16px 18px;font-size:17.5px;line-height:1.72;color:var(--td);white-space:pre-wrap;max-width:60ch}
+
+/* ══ CHECKLIST — haqiqiy checkbox ══ */
+.chk{display:flex;align-items:flex-start;gap:12px;padding:12px 14px;border:1px solid var(--br);
+     border-radius:11px;margin-bottom:8px;cursor:pointer;transition:all .13s;background:var(--wh)}
+.chk:hover{border-color:var(--blue);background:var(--blue-l)}
+.chk:has(input:checked){background:var(--green-l);border-color:var(--green)}
+.chk:has(input:focus-visible){outline:2px solid var(--blue);outline-offset:2px}
+.chk input{width:21px;height:21px;flex:none;margin-top:1px;accent-color:var(--green);cursor:pointer}
+.chk span{font-size:15px;color:var(--tm);line-height:1.5}
+.chk:has(input:checked) span{color:var(--td)}
+
+/* ══ YIG'ILADIGAN BO'LIMLAR ══ */
+details.fold{border:1px solid var(--br);border-radius:11px;margin-bottom:9px;background:var(--wh);overflow:hidden}
+details.fold>summary{padding:13px 16px;font-size:14px;font-weight:700;color:var(--tm);cursor:pointer;
+  list-style:none;display:flex;align-items:center;gap:10px}
+details.fold>summary::-webkit-details-marker{display:none}
+details.fold>summary:hover{background:var(--brl);color:var(--td)}
+details.fold>summary::after{content:'';margin-left:auto;width:7px;height:7px;border:solid var(--mu);
+  border-width:0 2px 2px 0;transform:rotate(45deg) translateY(-2px);transition:transform .16s}
+details.fold[open]>summary::after{transform:rotate(-135deg) translateY(-2px)}
+details.fold[open]>summary{border-bottom:1px solid var(--br)}
+.fold-b{padding:14px 16px}
+.cnt{font-size:11.5px;font-weight:700;color:var(--mu);background:var(--brl);border-radius:20px;padding:2px 8px}
+
+/* ══ SAVOLLAR / ANTI ══ */
+.q{display:flex;gap:10px;font-size:15px;color:var(--tm);padding:9px 0;line-height:1.55;max-width:64ch}
+.q+.q{border-top:1px solid var(--brl)}
+.q:before{content:'';flex:none;width:7px;height:7px;border-radius:50%;background:var(--blue);margin-top:9px}
+.anti{display:flex;gap:10px;font-size:15px;color:var(--tm);padding:9px 0;line-height:1.55;max-width:64ch}
+.anti+.anti{border-top:1px solid var(--brl)}
+.anti:before{content:'\00d7';flex:none;width:19px;height:19px;border-radius:50%;background:var(--red);color:#fff;
+  font-size:13px;font-weight:700;display:grid;place-items:center;margin-top:2px;line-height:1}
+
+/* ══ JADVAL ══ */
+.tb{width:100%;border-collapse:collapse;font-size:14.5px}
+.tb th{background:var(--brl);padding:10px 13px;text-align:left;font-size:11.5px;font-weight:700;
+       letter-spacing:.05em;text-transform:uppercase;color:var(--mu)}
+.tb td{padding:10px 13px;border-top:1px solid var(--br);color:var(--tm)}
+.tb td:last-child{text-align:right;font-weight:700;color:var(--td);white-space:nowrap}
+.tb-wrap{overflow-x:auto;border:1px solid var(--br);border-radius:10px}
+
+/* ══ PILLS ══ */
+.pills{display:flex;gap:9px;flex-wrap:wrap}
+.pill{padding:11px 17px;border-radius:10px;border:1px solid var(--br);font-size:14px;font-weight:600;color:var(--tm);background:var(--wh)}
+.pill:hover{border-color:var(--blue)}
+.pill[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+
+/* ══ NAV ══ */
+.navf{display:flex;justify-content:space-between;gap:10px}
+.navb{padding:13px 22px;border-radius:11px;font-size:15px;font-weight:600;border:1px solid var(--br);color:var(--tm);background:var(--wh)}
+.navb:hover:not(:disabled){background:var(--brl)}
+.navb.pri{background:var(--blue);border-color:var(--blue);color:#fff}
+.navb.pri:hover:not(:disabled){background:var(--blue-d)}
+.navb:disabled{opacity:.4;cursor:not-allowed}
+
+/* ══ O'NG PANEL ══ */
+.rail{position:sticky;top:74px;display:flex;flex-direction:column;gap:14px}
+.panel{background:var(--wh);border:1px solid var(--br);border-radius:14px;padding:16px;box-shadow:var(--shadow-sm)}
+.panel-h{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--mu);margin-bottom:9px}
+.ta{width:100%;border:1px solid var(--br);background:var(--bg);border-radius:10px;padding:11px 13px;
+    font-size:14.5px;line-height:1.55;resize:vertical;min-height:84px}
+.ta:focus-visible{outline:2px solid var(--blue);outline-offset:-1px;border-color:transparent}
+.rail-scroll{max-height:calc(100vh - 210px);overflow-y:auto}
+
+/* ══ XEI ══ */
+.xei-sub{font-size:12.5px;color:var(--mu);line-height:1.5;margin-bottom:15px}
+.ax{margin-bottom:18px}
+.ax-h{display:flex;align-items:baseline;gap:8px;margin-bottom:9px}
+.ax-l{font-family:var(--f);font-size:14px;font-weight:700;color:var(--td);flex:1}
+.ax-v{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums}
+.ax-v.lo{color:var(--red)}.ax-v.mid{color:var(--yellow)}.ax-v.hi{color:var(--green)}.ax-v.un{color:var(--tl)}
+.lv{display:flex;flex-direction:column;gap:7px}
+.lv button{text-align:left;padding:11px 13px;border-radius:10px;border:1px solid var(--br);background:var(--wh);transition:all .12s}
+.lv button:hover{border-color:var(--blue);background:var(--blue-l)}
+.lv button[aria-pressed=true]{background:var(--blue);border-color:var(--blue);color:#fff}
+.lv-n{display:block;font-size:14px;font-weight:700;color:var(--td);margin-bottom:2px}
+.lv button[aria-pressed=true] .lv-n{color:#fff}
+.lv-e{display:block;font-size:12px;line-height:1.45;color:var(--mu)}
+.lv button[aria-pressed=true] .lv-e{color:rgba(255,255,255,.88)}
+.fine{margin-top:9px}
+.fine>summary{font-size:12px;font-weight:700;color:var(--blue);cursor:pointer;list-style:none;padding:4px 0}
+.fine>summary::-webkit-details-marker{display:none}
+.scale{display:grid;grid-template-columns:repeat(11,1fr);gap:3px;margin-top:8px}
+.scale button{height:34px;border-radius:6px;background:var(--brl);font-size:12px;font-weight:700;color:var(--mu)}
+.scale button:hover{background:var(--br);color:var(--td)}
+.scale button[aria-pressed=true]{background:var(--blue);color:#fff}
+.fld{width:100%;border:1px solid var(--br);background:var(--bg);border-radius:9px;padding:11px 12px;font-size:14px;margin-bottom:9px}
+.sig{display:flex;align-items:center;gap:10px;font-size:13.5px;color:var(--tm);padding:8px 9px;border-radius:8px;cursor:pointer}
+.sig:hover{background:var(--brl)}
+.sig:has(input:focus-visible){outline:2px solid var(--blue);outline-offset:1px}
+.sig input{width:18px;height:18px;accent-color:var(--blue);flex:none;cursor:pointer}
+.sig b{margin-left:auto;font-weight:700;font-size:12px;color:var(--mu);font-variant-numeric:tabular-nums}
+.probe{font-size:12.5px;color:var(--mu);background:var(--bg);border-radius:9px;padding:10px 12px;margin-top:9px;line-height:1.55}
+.probe b{color:var(--tm);font-weight:700}
+.xei-tot{border-top:1px solid var(--br);margin-top:6px;padding-top:13px;display:flex;align-items:baseline;gap:8px}
+.xei-tot-l{font-size:12px;font-weight:700;color:var(--mu);text-transform:uppercase;letter-spacing:.05em;flex:1}
+.xei-tot-v{font-family:var(--f);font-size:25px;font-weight:700;letter-spacing:-.5px}
+
+/* ══ NARX ══ */
+.pr{border:2px solid var(--blue);border-radius:15px;overflow:hidden;margin-bottom:16px}
+.pr-h{background:var(--blue);color:#fff;padding:18px 22px}
+.pr-k{font-size:11.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;opacity:.88}
+.pr-p{font-family:var(--f);font-size:38px;font-weight:700;letter-spacing:-1.2px;line-height:1.1;margin-top:3px}
+.pr-f{font-size:15px;opacity:.92;margin-top:3px}
+.pr-b{padding:18px 20px;background:var(--wh)}
+.pr-why{font-size:13px;color:var(--mu);line-height:1.6;margin-bottom:14px;font-variant-numeric:tabular-nums}
+.pr-alt{display:flex;align-items:center;gap:10px;font-size:14px;color:var(--tm);background:var(--bg);border-radius:10px;padding:12px 14px;margin-top:12px}
+.locked{text-align:center;padding:34px 22px;color:var(--mu);font-size:15px;line-height:1.6;background:var(--bg);border:1px dashed var(--br);border-radius:13px}
+.locked b{display:block;font-family:var(--f);color:var(--td);font-size:17px;margin-bottom:6px}
+.rules{list-style:none;max-width:70ch}
+.rules li{display:flex;gap:11px;font-size:15px;color:var(--tm);padding:10px 0;line-height:1.55}
+.rules li+li{border-top:1px solid var(--brl)}
+.rules li:before{content:'';flex:none;width:7px;height:7px;border-radius:50%;background:var(--yellow);margin-top:9px}
+.oc{display:flex;gap:10px;flex-wrap:wrap}
+.oc button{flex:1;min-width:130px;padding:15px;border-radius:11px;border:2px solid var(--br);font-size:15px;font-weight:700;color:var(--tm);background:var(--wh)}
+.oc button[data-v=paid]:hover,.oc button[data-v=paid][aria-pressed=true]{background:var(--green);border-color:var(--green);color:#fff}
+.oc button[data-v=thinking]:hover,.oc button[data-v=thinking][aria-pressed=true]{background:var(--yellow);border-color:var(--yellow);color:#fff}
+.oc button[data-v=refused]:hover,.oc button[data-v=refused][aria-pressed=true]{background:var(--red);border-color:var(--red);color:#fff}
+
+/* ══ PASTKI PANEL (mobil/tablet) — darsda skroll qilmaslik uchun ══ */
+.dock{display:none;position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--wh);
+      border-top:1px solid var(--br);box-shadow:var(--shadow-up);
+      padding:9px 12px calc(9px + env(safe-area-inset-bottom));gap:9px;align-items:center}
+.dock-x{flex:1;display:flex;align-items:center;gap:9px;padding:10px 12px;border-radius:11px;background:var(--bg);border:1px solid var(--br);min-width:0}
+.dock-x:hover{border-color:var(--blue)}
+.dock-lbl{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mu)}
+.dock-v{font-size:16px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--td);white-space:nowrap}
+.dock-v em{font-style:normal;color:var(--tl);font-weight:600}
+.dock-price{font-size:13.5px;font-weight:700;color:var(--blue);white-space:nowrap;margin-left:auto}
+.dock-note{flex:none;width:48px;height:48px;border-radius:11px;background:var(--bg);border:1px solid var(--br);
+           display:grid;place-items:center;position:relative}
+.dock-note:hover{border-color:var(--blue)}
+.dock-note svg{width:20px;height:20px;stroke:var(--tm);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.dock-note[data-has]:after{content:'';position:absolute;top:8px;right:8px;width:7px;height:7px;border-radius:50%;background:var(--blue)}
+
+/* ══ SHEET ══ */
+.sheet-ov{position:fixed;inset:0;background:rgba(15,23,42,.5);z-index:70}
+.sheet-ov[hidden]{display:none}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:71;background:var(--wh);
+       border-radius:18px 18px 0 0;box-shadow:var(--shadow-up);max-height:86vh;display:flex;flex-direction:column;
+       animation:up .22s ease-out}
+.sheet[hidden]{display:none}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet-h{display:flex;align-items:center;gap:12px;padding:14px 18px;border-bottom:1px solid var(--br);flex:none}
+.sheet-grip{position:absolute;top:7px;left:50%;transform:translateX(-50%);width:38px;height:4px;border-radius:2px;background:var(--br)}
+.sheet-t{font-family:var(--f);font-size:16px;font-weight:700;flex:1}
+.sheet-b{padding:16px 18px calc(20px + env(safe-area-inset-bottom));overflow-y:auto;flex:1}
+.x-btn{width:34px;height:34px;border-radius:9px;color:var(--mu);font-size:22px;line-height:1;flex:none}
+.x-btn:hover{background:var(--brl);color:var(--td)}
+
+/* ══ MODAL ══ */
+.ov{position:fixed;inset:0;background:rgba(15,23,42,.55);z-index:90;padding:20px;overflow-y:auto}
+.ov[hidden]{display:none}
+.md{background:var(--wh);border-radius:17px;max-width:780px;margin:40px auto;box-shadow:var(--shadow-md);overflow:hidden}
+.md-h{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--br)}
+.md-t{font-family:var(--f);font-size:18px;font-weight:700;flex:1}
+.md-b{padding:20px;max-height:min(70vh,700px);overflow-y:auto}
+.hist{width:100%;border-collapse:collapse;font-size:14px}
+.hist th{text-align:left;padding:9px 11px;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--mu);border-bottom:1px solid var(--br)}
+.hist td{padding:11px;border-bottom:1px solid var(--brl);color:var(--tm)}
+.hist tr:hover td{background:var(--bg)}
+.hist-wrap{overflow-x:auto}
+.tag{display:inline-block;padding:3px 9px;border-radius:6px;font-size:11.5px;font-weight:700}
+.tag.paid{background:var(--green-l);color:var(--green)}
+.tag.thinking{background:var(--yellow-l);color:var(--yellow)}
+.tag.refused{background:var(--red-l);color:var(--red)}
+.tag.none{background:var(--brl);color:var(--mu)}
+.st-row{display:grid;grid-template-columns:1fr 140px;gap:12px;align-items:center;padding:9px 0;border-bottom:1px solid var(--brl);font-size:14px;color:var(--tm)}
+.st-row input{border:1px solid var(--br);background:var(--bg);border-radius:8px;padding:9px 11px;font-size:14px;width:100%;text-align:right;font-variant-numeric:tabular-nums}
+.empty{text-align:center;padding:40px 20px;color:var(--mu);font-size:15px;line-height:1.6}
+.toast{position:fixed;bottom:calc(22px + var(--bar));left:50%;transform:translateX(-50%) translateY(120px);
+  background:var(--td);color:var(--bg);padding:12px 20px;border-radius:11px;font-size:14px;font-weight:600;
+  z-index:100;transition:transform .24s;box-shadow:var(--shadow-md);max-width:90vw;text-align:center}
+.toast.on{transform:translateX(-50%) translateY(0)}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ══ RESPONSIVE ══ */
+@media (max-width:1180px){
+  .wrap{grid-template-columns:1fr;gap:14px;--bar:76px}
+  .rail{display:none}
+  .dock{display:flex}
+  .steps{position:static;display:flex;gap:6px;overflow-x:auto;padding:7px;scrollbar-width:thin}
+  .step{flex:none;width:auto;flex-direction:column;gap:5px;min-width:84px;text-align:center;padding:10px 9px}
+  .step-t{font-size:12px}
+  .step-bar,.step-pct{display:none}
+}
+@media (max-width:640px){
+  .hd-btn,.hd-sp{display:none}
+  .hd-more{display:block}
+  .hd-name{max-width:none}
+  .hd-brand span{display:none}
+}
+@media (max-width:560px){
+  body{font-size:15px}
+  .wrap{padding:14px 12px calc(46px + var(--bar))}
+  .card{padding:18px 15px;border-radius:13px}
+  .c-title{font-size:22px}
+  .c-goal{font-size:14.5px}
+  .scr-b{font-size:17px;padding:15px 16px}
+  .pr-p{font-size:31px}
+  .pr-h{padding:16px 18px}
+  .scale{grid-template-columns:repeat(11,1fr);gap:2px}
+  .scale button{height:38px;font-size:11px}
+  .navb{flex:1;padding:14px 10px;text-align:center}
+  .oc button{min-width:100%}
+  .md{margin:0;border-radius:14px}
+  .ov{padding:10px}
+}
+
+/* ══ PRINT ══ */
+@media print{
+  .hd,.steps,.rail,.navf,.scr-c,.dock,.toast,.ov,.sheet,.sheet-ov,.live{display:none!important}
+  body{background:#fff;color:#000;font-size:11pt}
+  .wrap{display:block;max-width:none;padding:0}
+  .card{border:none;box-shadow:none;padding:0 0 20pt;page-break-inside:avoid}
+  details.fold{border:none}
+  details.fold>summary::after{display:none}
+  .print-all{display:block!important}
+}
+.print-all{display:none}
+</style>
+</head>
+<body>
+
+<header class="hd">
+  <div class="hd-brand"><i aria-hidden="true">M</i><span>Ustozlar yo'riqnomasi</span></div>
+  <div class="hd-name">
+    <label class="sr" for="fName">O'quvchining ismi</label>
+    <input id="fName" placeholder="O'quvchining ismi..." autocomplete="off">
+  </div>
+  <div class="hd-sp"></div>
+  <div class="hd-timer" id="fTimer" title="Dars boshlanganidan beri o'tgan vaqt">00:00</div>
+  <button class="hd-btn" onclick="openAbout()">MyTeacher haqida</button>
+  <button class="hd-btn" onclick="openHist()">Tarix</button>
+  <button class="hd-btn pri" onclick="newSession()">Yangi sessiya</button>
+  <div class="hd-more">
+    <button id="fMoreBtn" aria-haspopup="menu" aria-expanded="false" aria-label="Menyu" onclick="toggleMenu()">&#8942;</button>
+    <div class="hd-menu" id="fMenu" role="menu" hidden>
+      <button role="menuitem" onclick="toggleMenu();openAbout()">MyTeacher haqida</button>
+      <button role="menuitem" onclick="toggleMenu();openHist()">Tarix</button>
+      <button role="menuitem" onclick="toggleMenu();newSession()">Yangi sessiya</button>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+  <nav class="steps" id="fSteps" aria-label="Dars bosqichlari"></nav>
+
+  <main>
+    <div id="fStage"></div>
+    <div class="navf">
+      <button class="navb" id="fPrev" onclick="go(-1)">&larr; Orqaga</button>
+      <button class="navb pri" id="fNext" onclick="go(1)">Keyingi bosqich &rarr;</button>
+    </div>
+  </main>
+
+  <aside class="rail" aria-label="Yon panel">
+    <div class="panel">
+      <div class="panel-h">Izoh — faqat siz ko'rasiz</div>
+      <label class="sr" for="fNote">Sessiya izohi</label>
+      <textarea class="ta" id="fNote" placeholder="O'quvchi haqida eslab qolish kerak bo'lgan narsalar..."></textarea>
+    </div>
+    <div class="panel rail-scroll">
+      <div class="panel-h">XEI paneli</div>
+      <div class="xei-sub">Dars davomida to'ldirib boring. To'g'ridan-to'g'ri so'ramang — gap orasida aniqlang.</div>
+      <div id="fXei"></div>
+    </div>
+  </aside>
+</div>
+
+<div class="dock" id="fDock">
+  <button class="dock-x" onclick="openSheet('xei')" aria-label="XEI panelini ochish">
+    <span><span class="dock-lbl">XEI</span><br><span class="dock-v" id="fDockV">—</span></span>
+    <span class="dock-price" id="fDockP"></span>
+  </button>
+  <button class="dock-note" id="fDockNote" onclick="openSheet('note')" aria-label="Izoh yozish">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z"/></svg>
+  </button>
+</div>
+
+<div class="sheet-ov" id="fSheetOv" hidden onclick="closeSheet()"></div>
+<div class="sheet" id="fSheet" role="dialog" aria-modal="true" aria-labelledby="fSheetT" hidden>
+  <div class="sheet-grip" aria-hidden="true"></div>
+  <div class="sheet-h"><div class="sheet-t" id="fSheetT"></div>
+    <button class="x-btn" onclick="closeSheet()" aria-label="Yopish">&times;</button></div>
+  <div class="sheet-b" id="fSheetB"></div>
+</div>
+
+<div class="ov" id="fOv" hidden onclick="if(event.target===this)closeMd()">
+  <div class="md" role="dialog" aria-modal="true" aria-labelledby="fMdT">
+    <div class="md-h"><div class="md-t" id="fMdT"></div>
+      <button class="x-btn" onclick="closeMd()" aria-label="Yopish">&times;</button></div>
+    <div class="md-b" id="fMdB"></div>
+  </div>
+</div>
+
+<div class="print-all" id="fPrintAll"></div>
+<div class="toast" id="fToast" role="status" aria-live="polite"></div>
+<div class="sr" id="fLive" role="status" aria-live="polite"></div>
+
+<script>
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════════
+   KONTENT KONFIGURATSIYASI
+   Matnlarni, savollarni, narxlarni shu yerdan o'zgartiring.
+   ══════════════════════════════════════════════════════════════════ */
+const GUIDE = {
+
+stages:[
+{
+  id:0, short:"Tayyorgarlik", title:"Darsgacha", kick:"Bosqich 0",
+  goal:"Lid keldi, dars hali boshlanmadi. Shu 5 daqiqa keyingi 45 daqiqani belgilaydi.",
+  notes:[{type:"key", t:"Onlaynda \"bino\" yo'q",
+    b:"Oflayn markazda o'quvchini ushlab qoladigan narsa — interyer va estetika. Onlaynda bunday bino yo'q. Sizning <b>muomalangiz, yordamga tayyorligingiz, mehringiz va professionalizmingiz</b> — bu yerda binoning o'rnini bosadi. Birinchi 3 daqiqada shu his uyg'onmasa, qolgani ishlamaydi."}],
+  checks:[
+    "O'quvchining ismi, yoshi va aloqa raqami yozib olindi",
+    "Lid qayerdan kelgani ko'rildi (Instagram / Telegram / tanish)",
+    "Dars vaqti tasdiqlandi va link yuborildi",
+    "Kamera, mikrofon, yorug'lik va fon tekshirildi",
+    "MyTeacher ilovasi ochiq va ekranda ko'rsatishga tayyor"
+  ]
+},
+{
+  id:1, short:"Tanishuv", title:"Salomlashuv va tanishuv", kick:"Bosqich 1",
+  goal:"Ishonch va iliqlik. Konspekt bo'yicha onlaynda o'quvchini ushlab qoladigan asosiy faktor — aynan shu.",
+  scripts:[
+    {l:"Ochilish — 20 soniya", t:"Assalomu alaykum, {ISM}! Tanishganimdan xursandman. Men {USTOZ}, MyTeacher'da ingliz tili ustoziman. Bugungi darsni siz bilan men o'taman."},
+    {l:"Ko'prik — darsning tuzilishi", t:"{ISM}, bugun biz shunday qilamiz: avval bir-birimiz bilan tanishib olamiz va sizga ingliz tili aynan nima uchun kerakligini tushunib olaman. Keyin sizga eng qulay usulni topamiz va kichik bir dars qilamiz. Oxirida esa sizning holatingizga mos yo'l xaritasini beraman. Hech narsadan hayiqmang — bu imtihon emas."},
+    {l:"Agar o'quvchi uyalsa yoki gapirmasa", t:"{ISM}, birinchi darsda hamma shunday bo'ladi, bu juda normal. Men sizni tuzatish uchun emas, yordam berish uchun o'tiribman. Xato qilsangiz ham hech narsa bo'lmaydi — biz shuning uchun yig'ilganmiz."}
+  ],
+  anti:[
+    "Darrov \"qaysi tarif kerak?\" deb so'rash — hali erta, ishonch qurilmagan",
+    "Bir ovozda monolog qilish, o'quvchiga gapirtirmaslik",
+    "Rasmiy va sovuq ton — onlaynda bu darhol seziladi"
+  ],
+  checks:[
+    "O'quvchiga ismi bilan murojaat qildim",
+    "O'zimni qisqa tanishtirdim (2 gapdan oshmadi)",
+    "Darsning tuzilishini aytib berdim",
+    "O'quvchi kamida bir marta jilmaydi yoki ochildi"
+  ],
+  focusNote:"Shu bosqichda <b>Imkoniyat</b> signallari ochiladi: o'quvchi qayerdan, qanday qurilmadan ulangan, fon qanday, gapirish uslubi qanday."
+},
+{
+  id:2, short:"Ehtiyoj", title:"Ehtiyojlarni aniqlash", kick:"Bosqich 2",
+  goal:"O'quvchi ingliz tilini nima uchun o'rganayotganini va bu qanchalik jiddiyligini aniqlash. Bu XEI dagi Ehtiyoj o'qining asosi.",
+  questions:[
+    "Ingliz tili sizga aynan qaysi ishda kerak bo'lib qolyapti?",
+    "Buni qachongacha uddalashingiz kerak? — eng muhim savol, muddat ehtiyojni ochadi",
+    "Ilgari o'rganib ko'rganmisiz? Nima to'xtatgan edi?",
+    "Agar 3 oydan keyin bemalol gapira olsangiz, hayotingizda nima o'zgaradi?"
+  ],
+  table:{ head:["Nima eshitilsa","Ehtiyoj balli"], rows:[
+    ["Green card yutgan, Amerikaga ketyapti","10"],
+    ["Chetga chiqib ishlash bo'yicha <b>qat'iy qaror</b> bor (orzu emas)","10"],
+    ["Sertifikat bo'lmasa ishdan bo'shashi mumkin","10"],
+    ["O'qituvchi — kasbi bo'yicha zarur","9–10"],
+    ["\"Hayotimni boshqattan qurishim kerak\" — qat'iy","9–10"],
+    ["\"Hamma o'rganyapti, menam o'rganib qo'yishim kerak\"","5–6"],
+    ["\"Biroz qiziqishim bor\"","5–6"],
+    ["\"Shunchaki bir qiziqdim-da\"","0–2"]
+  ]},
+  notes:[{type:"yellow", t:"Orzu bilan qarorni farqlang",
+    b:"\"Chetga chiqsam deyman\" — bu <b>orzu</b>, ball 5–6. \"Hujjatlarim topshirilgan, iyunda ketaman\" — bu <b>qaror</b>, ball 10. Farqi: qarorda sana, hujjat yoki majburiyat bo'ladi."}],
+  checks:[
+    "O'quvchi ingliz tili nimaga kerakligini o'z so'zi bilan aytdi",
+    "Muddat bormi-yo'qmi aniqlandi",
+    "Oldingi urinishlari va nima to'xtatgani so'raldi",
+    "Ehtiyoj balli XEI panelida belgilandi"
+  ],
+  focusNote:"Shu bosqichda <b>Ehtiyoj</b> ballini qo'ying. Muddat bor bo'lsa — ball yuqori."
+},
+{
+  id:3, short:"Usul", title:"O'rganish usulini tanlash", kick:"Bosqich 3",
+  goal:"O'quvchiga qulay o'rganish usulini va materialini aniqlash.",
+  notes:[{type:"key", t:"Asosiy qoida",
+    b:"Agar o'quvchida hozir o'zi o'rganib yurgan va yaxshi qabul qiladigan kitob yoki material bo'lsa — <b>o'shandan o'tish afzal</b>. Tajriba shuni ko'rsatadiki, yangi materialni o'quvchi har doim ham iliq qabul qilavermaydi."}],
+  questions:[
+    "Hozir qanday kitob yoki material bilan shug'ullanyapsiz?",
+    "O'zingizga qaysi usul qulay: gapirib o'rganish, yozib o'rganish, yoki ko'rib o'rganish?",
+    "Oldin qaysi darslar sizga yoqqan edi? Nimasi bilan yoqqan?"
+  ],
+  method:true,
+  checks:[
+    "O'quvchining hozirgi materiali so'raldi",
+    "Unga qulay o'rganish uslubi aniqlandi",
+    "Material bo'yicha qaror qabul qilindi"
+  ],
+  focusNote:"Shu bosqichda <b>Xohish</b> ochiladi. O'z materiali haqida qiziqib gapirsa — Xohish yuqori. \"Bilmadim, nima desangiz shu\" — Xohish past."
+},
+{
+  id:4, short:"Dars", title:"Prezentatsiya va dars o'tish", kick:"Bosqich 4",
+  goal:"Haqiqiy qiymat berish. O'quvchi aynan shu yerda \"men bu odam bilan o'rganaman\" degan qarorga keladi.",
+  table:{ head:["Blok","Vaqt","Mazmun"], rows:[
+    ["Kichik g'alaba","5–7 daq","O'quvchi darrov gapirib yoki tushunib qoladigan bitta aniq narsa"],
+    ["Ilovani ko'rsatish","3–5 daq","Sun'iy intellekt qismi — mustaqil mashq, chat, tekshirish"],
+    ["Yo'l xaritasi","2–3 daq","\"Sizning holatingizda 3 oyda bu yergacha chiqamiz\""]
+  ]},
+  notes:[{type:"red", t:"Ilovani ko'rsatishni o'tkazib yubormang",
+    b:"MyTeacher ilovasidagi <b>sun'iy intellekt</b> — shunchaki qo'shimcha emas, u darslar orasidagi bo'shliqni to'ldiradi. Bu keyingi bosqichdagi past tarif skriptining asosiy tayanchi. Ko'rsatmasangiz, 350 minglik taklifni asoslay olmaysiz."}],
+  scripts:[{l:"Yo'l xaritasi — dars oxirida",
+    t:"{ISM}, hozir men sizning darajangizni ko'rdim. Sizning holatingizda birinchi oyda o'zingizni tanishtirish va kundalik savol-javobni yopamiz. Ikkinchi oyda — o'z fikringizni bemalol aytadigan bo'lasiz. Uchinchi oyga borib esa siz aytgan maqsadingiz uchun yetarli darajaga chiqamiz. Lekin buning bitta sharti bor — muntazamlik."}],
+  checks:[
+    "O'quvchi kamida bir marta o'zi ingliz tilida gapirdi",
+    "Bitta aniq \"men buni uddaladim\" momenti bo'ldi",
+    "Ilova va AI qismi ekranda ko'rsatildi",
+    "O'quvchiga shaxsiy yo'l xaritasi aytildi"
+  ]
+},
+{
+  id:5, short:"Narx", title:"Narx aytish va to'lov", kick:"Bosqich 5 — eng muhim",
+  goal:"O'quvchi qizib turgan zahoti to'lovga olib chiqish.",
+  notes:[
+    {type:"key", t:"Nega narxni ustoz aytadi?",
+     b:"Oflayn maktabda narx aytish ustozga yuklangan edi va ustozlar buni noqulay qabul qilardi. \"Ustoz narx aytmasin\" degan taklif tushdi — <b>lekin qabul qilinmadi.</b> Sabab: onlaynda o'quvchi qizib turgan zahoti, <b>5–10 daqiqa ichida</b> to'lamasa, hayotga chalg'ib to'lovni umuman qilmay ketishi mumkin. Shuning uchun vaziyatga qarab to'lovni <b>imkon qadar ustoz o'zi qildiradi</b>."},
+    {type:"plain", t:"Tarif gridi — bu narxlar ro'yxati",
+     b:"Bizda tarif <b>dars soniga</b> bog'langan: 1 marta 350 000, 6 marta 850 000. Bu hamma uchun bir xil. Sizda flexible bo'lgan narsa — <b>qaysi tarifni taklif qilish</b>, aytiladigan raqam emas. Griddan tashqari narx aytmang: ikki o'quvchi gaplashib qolsa, obro' masalasi chiqadi."}
+  ],
+  price:true,
+  checks:[
+    "Narx aytildi va tarif tushuntirildi",
+    "To'lov linki yoki karta ma'lumoti yuborildi",
+    "O'quvchi ekranda turganida to'lov qilishga taklif qilindi",
+    "Keyingi dars sanasi kelishildi"
+  ]
+}
+],
+
+/* ─── XEI ─── */
+xei:{
+  weights:{e:0.45, x:0.30, i:0.25},
+  axes:{
+    x:{ label:"Xohish", hint:"O'rganishni sevadimi?",
+        levels:[
+          {v:2,  n:"Past",   e:"\"Nima desangiz shu\". Befarq ton, savol bermaydi."},
+          {v:6,  n:"O'rta",  e:"Qiziqish bor, lekin harakat yo'q. Gapirsa qiziqadi, o'zi boshlamaydi."},
+          {v:9,  n:"Yuqori", e:"O'zi qiziqib gapiradi, material olib yuribdi, savol beradi."}
+        ]},
+    e:{ label:"Ehtiyoj", hint:"Qanchalik zarur? Muddat bormi?",
+        levels:[
+          {v:1,  n:"Past",   e:"\"Shunchaki bir qiziqdim-da\". Muddat yo'q, majburiyat yo'q."},
+          {v:6,  n:"O'rta",  e:"\"Hamma o'rganyapti, menam kerak\". Orzu bor, qaror yo'q."},
+          {v:10, n:"Yuqori", e:"Green card, qat'iy qaror, ish talabi. Aniq sana yoki majburiyat bor."}
+        ]}
+  },
+  regions:[
+    {key:"",       label:"Hudud tanlanmagan", base:null},
+    {key:"tosh",   label:"Toshkent shahri", base:10},
+    {key:"vodiy",  label:"Vodiy (Farg'ona, Andijon, Namangan)", base:9},
+    {key:"sambux", label:"Samarqand, Buxoro", base:8},
+    {key:"voha",   label:"Voha hududlari", base:7},
+    {key:"chekka", label:"Boshqa yoki chekka tumanlar", base:5}
+  ],
+  signals:[
+    {key:"iphone", label:"iPhone ishlatadi", delta:1},
+    {key:"car",    label:"Mashinada yuradi", delta:1},
+    {key:"job",    label:"Lavozimi yoki kasbi yuqori", delta:1},
+    {key:"nojob",  label:"Talaba yoki hozir ishlamaydi", delta:-2},
+    {key:"family", label:"Yagona daromad, oilasi katta", delta:-1}
+  ],
+  probeI:"<b>To'g'ridan-to'g'ri so'ramang.</b> Gap orasida aniqlang:<br>&bull; \"Darsni qaysi vaqtda qilsak qulay — ishdan keyinmi?\" &rarr; ish bormi<br>&bull; \"Yo'lda bo'lsangiz ham ulana olasizmi?\" &rarr; transport<br>&bull; \"Internetingiz qanday, uzilib qolmaydimi?\" &rarr; hudud va sharoit"
+},
+
+/* ─── NARXLAR ─── */
+pricing:{
+  tiers:[
+    {level:1, perWeek:1, price:350000},{level:2, perWeek:2, price:450000},
+    {level:3, perWeek:3, price:550000},{level:4, perWeek:4, price:650000},
+    {level:5, perWeek:5, price:750000},{level:6, perWeek:6, price:850000}
+  ],
+  caps:[{maxI:3,level:1},{maxI:5,level:2},{maxI:7,level:3},{maxI:8,level:4},{maxI:9,level:5},{maxI:10,level:6}],
+  capsX:[{maxX:3,level:2},{maxX:5,level:4},{maxX:10,level:6}],
+  min:350000, max:1200000
+},
+
+scripts:{
+  low_ai:{ name:"AI urg'usi", for:"Imkoniyat past, Xohish yoki Ehtiyoj yuqori",
+    text:"{ISM} aka/opa, sizga to'g'risini aytaman. Mana hozir sizga bu juda zarur bo'lib turibdi. Sizga ilovaning ichidagi sun'iy intellektning o'zi ham juda katta yordam bera oladi. Men esa siz bilan haftada {N} marta dars qilaman, mashqlarni so'rab olaman. Siz faqat o'z vaqtida mustaqil kirib, ketma-ket bajarib tursangiz bo'ldi. Zarurat bo'lganda ilova ichidan chatlashib ham turamiz.\n\nOyiga {NARX} — bu sizning holatingizga eng to'g'ri keladigan variant.",
+    focus:"Kam narx — kam qiymat emas. AI darslar orasidagi bo'shliqni to'ldiradi, siz esa nazorat qilasiz."},
+  mid_balance:{ name:"Muvozanat urg'usi", for:"Barcha o'qlar o'rtacha",
+    text:"{ISM}, sizning maqsadingizga qarab haftada {N} marta dars eng to'g'ri bo'ladi. Bunda siz o'rganganingizni unutishga ulgurmaysiz — darslar orasida ilova sizni mashq qildirib turadi, men esa har darsda xatolaringizni yopib boraman. Bu tezlik siz aytgan muddatga yetib borishga yetadi.\n\nOyiga {NARX}.",
+    focus:"Ritm va muntazamlik — asosiy argument. Unutishga ulgurmaydi."},
+  high_daily:{ name:"Har kunlik urg'usi", for:"Imkoniyat va Ehtiyoj yuqori",
+    text:"{ISM}, sizning holatingizda vaqt tig'iz va masala jiddiy. Men o'zim sizga Yakshanbadan tashqari har kuni dars o'taman va darslaringizda yordam berib turaman. Har kuni gaplashsangiz, til ochilishi butunlay boshqacha tezlikda ketadi — bu eng tez yo'l.\n\nOyiga {NARX}.",
+    focus:"Bu yerda AI emas, siz o'zingiz asosiy qiymat. Shaxsiy, kunlik hamrohlik."}
+},
+
+priceRules:[
+  "Narxni <b>aytib bo'lgach jim turing.</b> Birinchi gapirgan — yon beradi.",
+  "Uzr so'ramang, narxni pasaytirib aytmang. \"Atigi\", \"jami-yo'g'i\" degan so'zlar kerak emas.",
+  "Chegirma so'ralsa: narxni tushirmang, <b>dars sonini kamaytiring</b> — tarif pastga tushadi, qiymat saqlanadi.",
+  "To'lovni <b>hoziroq</b>, o'quvchi ekranda turganida qildiring."
+],
+
+warns:[
+  {when:v=>v.e!==null&&v.e<=2, type:"red", t:"Ehtiyoj yo'q",
+   b:"Narx aytish o'rniga ehtiyojni oshirishga qayting. Bu odam hozirgi holatda sotib olmaydi — nima uchun kerakligini o'zi aytmaguncha davom etmang."},
+  {when:v=>v.x!==null&&v.e!==null&&v.x<=3&&v.e>=8, type:"yellow", t:"Zarur, lekin sevmaydi",
+   b:"Intensiv tarif bermang — tashlab ketadi. Past tarif va AI qo'llab-quvvatlash to'g'ri keladi."},
+  {when:v=>v.i!==null&&v.e!==null&&v.i<=3&&v.e>=8, type:"key", t:"Klassik holat",
+   b:"Juda zarur, imkoniyat kam. 350 000 va AI urg'usi skriptidan foydalaning — bu eng ko'p uchraydigan va eng yaxshi ishlaydigan holat."},
+  {when:v=>v.x>=9&&v.e>=9&&v.i>=9, type:"green", t:"Eng kuchli holat",
+   b:"Har kunlik tarifni ishonch bilan taklif qiling. Pasaytirmang — bu odam qiymatni ko'radi."}
+],
+
+about:[
+  {q:"MyTeacher nima?", a:"MyTeacher — onlayn ingliz tili o'rganish platformasi. Ilgari turli uslublarda dars berib ko'rilgan, hozir esa <b>sun'iy intellekt asosidagi yangi tizim, yangi ilova va yangi metodologiya</b> yo'lga qo'yilmoqda."},
+  {q:"Oddiy kurslardan farqi nima?", a:"Ikkita. Birinchidan, dars ustoz bilan yakkama-yakka — guruhda emas. Ikkinchidan, darslar orasida ilovaning sun'iy intellekti o'quvchi bilan ishlaydi: mashq beradi, xatoni tekshiradi, savolga javob beradi. Ya'ni o'quvchi haftada 1 marta dars qilsa ham, har kuni til bilan ishlaydi."},
+  {q:"Ilovaning sun'iy intellekti nima qiladi?", a:"Mustaqil mashqlar beradi va tekshiradi, talaffuzni tinglaydi, yozgan matnni tuzatadi, va o'quvchi istalgan vaqtda chatda savol bera oladi. Ustoz esa darsda shu ishlarning natijasini ko'rib, kerakli joyini yopadi."},
+  {q:"Tariflar qanday?", a:"Haftadagi dars soniga qarab: 1 marta — 350 000, 2 marta — 450 000, 3 marta — 550 000, 4 marta — 650 000, 5 marta — 750 000, 6 marta (Yakshanbadan tashqari har kuni) — 850 000 so'm. Hammasida ilova va AI qismi to'liq ochiq."},
+  {q:"Darslar necha daqiqa?", a:"<i>To'ldirilishi kerak — eski sotuv skriptlari faylidan.</i>"},
+  {q:"Pulni qaytarish kafolati bormi?", a:"<i>To'ldirilishi kerak — eski sotuv skriptlari faylidan.</i>"},
+  {q:"Ustozlar kimlar?", a:"<i>To'ldirilishi kerak — eski sotuv skriptlari faylidan.</i>"},
+  {q:"Sertifikat beriladimi?", a:"<i>To'ldirilishi kerak — eski sotuv skriptlari faylidan.</i>"}
+],
+
+methods:[
+  {key:"student_material", label:"O'quvchining materiali"},
+  {key:"myteacher", label:"MyTeacher materiali"},
+  {key:"mixed", label:"Aralash"}
+],
+
+timerWarnMin:45
+};
+
+/* ══════════════════════════════════════════════════════════════════
+   HOLAT
+   ══════════════════════════════════════════════════════════════════ */
+const KEY='mt_guide_v1', CFGKEY='mt_guide_cfg_v1', MAX_SESSIONS=50;
+let db={version:1,activeSessionId:null,sessions:[]};
+let S=null, saveT=null, toastT=null, lastFocus=null, sheetKind=null;
+
+function blank(){
+  return {
+    id:'s_'+Date.now(), createdAt:new Date().toISOString(), updatedAt:null,
+    student:{name:'',age:null,phone:'',source:''},
+    stage:0, checks:{}, note:'', method:null,
+    xei:{x:null,e:null,i:{region:'',signals:[],final:null}},
+    pricing:null, offered:null, outcome:null, outcomeAt:null,
+    startedAt:Date.now(), durationSec:0
+  };
+}
+function load(){
+  try{
+    const raw=localStorage.getItem(KEY);
+    if(raw){ const p=JSON.parse(raw); if(p&&p.version===1&&Array.isArray(p.sessions)) db=p; }
+  }catch(e){ console.warn('Sessiya o\'qilmadi:',e); }
+  try{
+    const c=localStorage.getItem(CFGKEY);
+    if(c){ const p=JSON.parse(c);
+      if(p&&Array.isArray(p.tiers)) GUIDE.pricing.tiers=p.tiers;
+      if(p&&p.weights) GUIDE.xei.weights=p.weights; }
+  }catch(e){ console.warn('Sozlama o\'qilmadi:',e); }
+  S=db.sessions.find(s=>s.id===db.activeSessionId);
+  if(!S){ S=blank(); db.sessions.unshift(S); db.activeSessionId=S.id; }
+  if(!S.startedAt) S.startedAt=Date.now();
+  if(S.note==null) S.note='';
+}
+function save(){
+  if(!S) return;
+  S.updatedAt=new Date().toISOString();
+  S.durationSec=Math.floor((Date.now()-S.startedAt)/1000);
+  S.xei.i.final=calcI(S);
+  clearTimeout(saveT);
+  saveT=setTimeout(()=>{
+    try{
+      db.sessions=db.sessions.slice(0,MAX_SESSIONS);
+      localStorage.setItem(KEY,JSON.stringify(db));
+    }catch(e){ toast('Saqlanmadi — brauzer xotirasi to\'lgan bo\'lishi mumkin'); }
+  },300);
+}
+function saveCfg(){
+  try{ localStorage.setItem(CFGKEY,JSON.stringify({tiers:GUIDE.pricing.tiers,weights:GUIDE.xei.weights})); }
+  catch(e){ toast('Sozlama saqlanmadi'); }
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   YORDAMCHILAR
+   ══════════════════════════════════════════════════════════════════ */
+const $=id=>document.getElementById(id);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const money=n=>String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ')+' so\'m';
+const fill=t=>String(t).replace(/\{ISM\}/g,(S.student.name||'').trim()||'...').replace(/\{USTOZ\}/g,'...');
+function toast(m){
+  const el=$('fToast'); el.textContent=m; el.classList.add('on');
+  clearTimeout(toastT); toastT=setTimeout(()=>el.classList.remove('on'),2400);
+}
+function announce(m){ $('fLive').textContent=m; }
+function copyTxt(txt,btn){
+  const done=()=>{ const o=btn.textContent; btn.textContent='Nusxa olindi'; btn.dataset.ok='1';
+    setTimeout(()=>{btn.textContent=o;delete btn.dataset.ok;},1600); };
+  if(navigator.clipboard&&navigator.clipboard.writeText)
+    navigator.clipboard.writeText(txt).then(done).catch(()=>legacyCopy(txt,done));
+  else legacyCopy(txt,done);
+}
+function legacyCopy(txt,done){
+  const ta=document.createElement('textarea');
+  ta.value=txt; ta.style.cssText='position:fixed;opacity:0';
+  document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); done(); }catch(e){ toast('Nusxa olinmadi'); }
+  document.body.removeChild(ta);
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   XEI HISOBI
+   ══════════════════════════════════════════════════════════════════ */
+function calcI(sess){
+  const ss=sess||S;
+  if(!ss||!ss.xei||!ss.xei.i) return null;
+  const r=GUIDE.xei.regions.find(r=>r.key===ss.xei.i.region);
+  if(!r||r.base===null) return null;
+  let v=r.base;
+  GUIDE.xei.signals.forEach(s=>{ if((ss.xei.i.signals||[]).includes(s.key)) v+=s.delta; });
+  return Math.max(0,Math.min(10,v));
+}
+const xeiVals=()=>({x:S.xei.x, e:S.xei.e, i:calcI()});
+const xeiReady=()=>{ const v=xeiVals(); return v.x!==null&&v.e!==null&&v.i!==null; };
+function capFor(i){
+  const c=GUIDE.pricing.caps.slice().sort((a,b)=>a.maxI-b.maxI).find(c=>i<=c.maxI);
+  return c?c.level:GUIDE.pricing.tiers.length;
+}
+function capForX(x){
+  const c=(GUIDE.pricing.capsX||[]).slice().sort((a,b)=>a.maxX-b.maxX).find(c=>x<=c.maxX);
+  return c?c.level:GUIDE.pricing.tiers.length;
+}
+const tierBy=l=>GUIDE.pricing.tiers.find(t=>t.level===l)||null;
+const scriptKey=l=>l<=2?'low_ai':l<=4?'mid_balance':'high_daily';
+
+function calcPrice(){
+  const v=xeiVals();
+  if(v.x===null||v.e===null||v.i===null) return null;
+  const w=GUIDE.xei.weights, maxLevel=GUIDE.pricing.tiers.length;
+  const rawScore=w.e*v.e + w.x*v.x + w.i*v.i;
+  const rawLevel=Math.max(1,Math.min(maxLevel,Math.round(rawScore/10*maxLevel)));
+  const capLevel=capFor(v.i), capXLevel=capForX(v.x);
+  const cap=Math.min(capLevel,capXLevel);
+  const level=Math.min(rawLevel,cap);
+  const t=tierBy(level), altT=(level<cap)?tierBy(level+1):null;
+  return {
+    x:v.x, e:v.e, i:v.i,
+    rawScore:Math.round(rawScore*100)/100, rawLevel, capLevel, capXLevel, cap, level,
+    perWeek:t.perWeek, recommended:t.price,
+    alternative:altT?altT.price:null, altPerWeek:altT?altT.perWeek:null,
+    scriptUsed:scriptKey(level),
+    cappedByI:rawLevel>capLevel, cappedByX:rawLevel>capXLevel&&capXLevel<=capLevel
+  };
+}
+function priceText(p){
+  const sc=GUIDE.scripts[p.scriptUsed];
+  return fill(sc.text).replace(/\{N\}/g,p.perWeek).replace(/\{NARX\}/g,money(p.recommended));
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RENDER — BOSQICHLAR
+   ══════════════════════════════════════════════════════════════════ */
+const stageChecks=st=>st.checks||[];
+const stageDone=st=>{ const c=stageChecks(st); return c.length>0 && c.every((_,i)=>S.checks[st.id+'.'+i]); };
+function totalProgress(){
+  let all=0,on=0;
+  GUIDE.stages.forEach(st=>stageChecks(st).forEach((_,i)=>{all++; if(S.checks[st.id+'.'+i])on++;}));
+  return all?Math.round(on/all*100):0;
+}
+function renderSteps(){
+  const pct=totalProgress();
+  $('fSteps').innerHTML=GUIDE.stages.map(st=>{
+    const cur=st.id===S.stage, done=stageDone(st);
+    return `<button class="step${done?' done':''}"${cur?' aria-current="step"':''} onclick="goTo(${st.id})">
+      <span class="step-n" aria-hidden="true">${done&&!cur?'&#10003;':st.id}</span>
+      <span class="step-t">${esc(st.short)}</span>
+      ${done?'<span class="sr">bajarildi</span>':''}</button>`;
+  }).join('')
+  +`<div class="step-bar"><i style="width:${pct}%"></i></div><div class="step-pct">${pct}% bajarildi</div>`;
+
+  const nav=$('fSteps');
+  if(nav.scrollWidth>nav.clientWidth+4){
+    const on=nav.querySelector('[aria-current=step]');
+    if(on) nav.scrollTo({left:Math.max(0,on.offsetLeft-nav.clientWidth/2+on.offsetWidth/2),behavior:'smooth'});
+  }
+}
+
+function foldBlock(title,count,inner,open){
+  return `<details class="fold"${open?' open':''}>
+    <summary>${esc(title)}${count?` <span class="cnt">${count}</span>`:''}</summary>
+    <div class="fold-b">${inner}</div></details>`;
+}
+
+function renderStage(){
+  const st=GUIDE.stages[S.stage];
+  let h=`<div class="card">
+    <div class="c-kick">${esc(st.kick)}</div>
+    <h1 class="c-title">${esc(st.title)}</h1>
+    <p class="c-goal">${esc(st.goal)}</p>`;
+
+  (st.notes||[]).forEach(n=>{
+    h+=`<div class="sec"><div class="note ${n.type==='plain'?'':n.type}">
+      <span class="note-t">${esc(n.t)}</span>${n.b}</div></div>`;
+  });
+
+  /* Skriptlar — doim ochiq, eng katta shrift */
+  if(st.scripts&&st.scripts.length){
+    h+=`<div class="sec"><div class="sec-h">Nima deyish kerak</div>`;
+    st.scripts.forEach((sc,i)=>{
+      h+=`<div class="scr"><div class="scr-h"><span class="scr-l">${esc(sc.l)}</span>
+        <button class="scr-c" onclick="copyScript(${S.stage},${i},this)">Nusxa olish</button></div>
+        <div class="scr-b">${esc(fill(sc.t))}</div></div>`;
+    });
+    h+=`</div>`;
+  }
+
+  if(st.method){
+    h+=`<div class="sec"><div class="sec-h">Material bo'yicha qaror</div>
+      <div class="pills" role="group" aria-label="Material">`
+      +GUIDE.methods.map(m=>`<button class="pill" aria-pressed="${S.method===m.key}" onclick="setMethod('${m.key}')">${esc(m.label)}</button>`).join('')
+      +`</div></div>`;
+  }
+
+  if(st.price) h+=renderPriceBlock();
+
+  /* Checklist — doim ochiq, haqiqiy checkbox */
+  const cs=stageChecks(st);
+  if(cs.length){
+    h+=`<div class="sec"><div class="sec-h">Checklist</div>`
+      +cs.map((c,i)=>{
+        const k=st.id+'.'+i;
+        return `<label class="chk"><input type="checkbox" ${S.checks[k]?'checked':''}
+          onchange="toggleChk('${k}')"><span>${esc(c)}</span></label>`;
+      }).join('')+`</div>`;
+  }
+
+  /* Yordamchi materiallar — yig'ilgan holda */
+  const folds=[];
+  if(st.questions&&st.questions.length)
+    folds.push(foldBlock('Beriladigan savollar',st.questions.length,
+      st.questions.map(q=>`<div class="q">${esc(q)}</div>`).join(''),false));
+  if(st.table)
+    folds.push(foldBlock('Yo\'riqnoma jadvali',st.table.rows.length,
+      `<div class="tb-wrap"><table class="tb">
+        <thead><tr>${st.table.head.map(x=>`<th>${esc(x)}</th>`).join('')}</tr></thead>
+        <tbody>${st.table.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody>
+      </table></div>`,false));
+  if(st.anti&&st.anti.length)
+    folds.push(foldBlock('Nima qilmaslik kerak',st.anti.length,
+      st.anti.map(a=>`<div class="anti">${esc(a)}</div>`).join(''),false));
+  if(st.focusNote)
+    folds.push(foldBlock('XEI panelida nimani belgilash',0,`<div style="font-size:15px;color:var(--tm);line-height:1.6">${st.focusNote}</div>`,false));
+
+  if(folds.length) h+=`<div class="sec">${folds.join('')}</div>`;
+
+  h+=`</div>`;
+  $('fStage').innerHTML=h;
+
+  $('fPrev').disabled=S.stage===0;
+  $('fNext').disabled=S.stage===GUIDE.stages.length-1;
+  $('fNext').textContent=S.stage===GUIDE.stages.length-1?'Oxirgi bosqich':'Keyingi bosqich →';
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RENDER — NARX
+   ══════════════════════════════════════════════════════════════════ */
+function renderPriceBlock(){
+  if(!xeiReady()){
+    const v=xeiVals(), miss=[];
+    if(v.x===null)miss.push('Xohish'); if(v.e===null)miss.push('Ehtiyoj'); if(v.i===null)miss.push('Imkoniyat');
+    return `<div class="sec"><div class="sec-h">Tarif taklifi</div>
+      <div class="locked"><b>Avval XEI ni to'ldiring</b>
+      Narx aytishdan oldin uchta narsa aniqlangan bo'lishi shart.<br>
+      Yetishmayapti: <b style="display:inline">${esc(miss.join(', '))}</b></div></div>`;
+  }
+  const p=calcPrice(); S.pricing=p;
+  const sc=GUIDE.scripts[p.scriptUsed], w=GUIDE.xei.weights;
+
+  let h=`<div class="sec"><div class="sec-h">Tarif taklifi</div>
+  <div class="pr">
+    <div class="pr-h">
+      <div class="pr-k">Tavsiya etilgan tarif</div>
+      <div class="pr-p">${money(p.recommended)}</div>
+      <div class="pr-f">Haftada ${p.perWeek} marta${p.perWeek===6?' — Yakshanbadan tashqari har kuni':''}</div>
+    </div>
+    <div class="pr-b">
+      <div class="pr-why">Hisob: ${w.e}&times;E(${p.e}) + ${w.x}&times;X(${p.x}) + ${w.i}&times;I(${p.i}) = <b>${p.rawScore}</b>
+        &rarr; ${p.rawLevel}-daraja${p.level<p.rawLevel?` &rarr; shift bilan <b>${p.level}</b>`:''}
+        ${p.cappedByX?`<br><b>Diqqat:</b> Xohish past (${p.x}) — intensiv tarif bermang, tashlab ketadi.`
+          :p.cappedByI?`<br><b>Diqqat:</b> ehtiyoji bo'yicha ko'proq dars kerak edi, lekin imkoniyati yo'l qo'ymaydi.`:''}</div>
+      <div class="scr"><div class="scr-h">
+        <span class="scr-l">Podacha skripti &mdash; ${esc(sc.name)}</span>
+        <button class="scr-c" onclick="copyPrice(this)">Nusxa olish</button></div>
+        <div class="scr-b">${esc(priceText(p))}</div></div>
+      <div class="note" style="margin-top:11px"><span class="note-t">Urg'u qayerga</span>${esc(sc.focus)}</div>
+      ${p.alternative?`<div class="pr-alt">Agar yaxshi ketsa, bir pog'ona yuqori: <b>&nbsp;${money(p.alternative)}</b>&nbsp;&mdash; haftada ${p.altPerWeek} marta</div>`:''}
+    </div>
+  </div>`;
+
+  h+=`<div class="sec-h" style="margin-top:20px">Narx aytish qoidalari</div>
+    <ul class="rules">${GUIDE.priceRules.map(r=>`<li><span>${r}</span></li>`).join('')}</ul>`;
+
+  h+=`<div class="sec-h" style="margin-top:20px">Natija</div>
+    <div class="oc" role="group" aria-label="Sinov darsi natijasi">`
+    +[['paid','To’ladi'],['thinking','O’ylab ko’raman'],['refused','Yo’q']]
+      .map(([v,l])=>`<button data-v="${v}" aria-pressed="${S.outcome===v}" onclick="setOutcome('${v}')">${l}</button>`).join('')
+    +`</div></div>`;
+  return h;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   RENDER — XEI (panel va sheet uchun bitta HTML)
+   ══════════════════════════════════════════════════════════════════ */
+const ballCls=v=>v===null?'un':v<=3?'lo':v<=7?'mid':'hi';
+
+function xeiHTML(){
+  const v=xeiVals(), X=GUIDE.xei;
+  let h='';
+
+  ['x','e'].forEach(k=>{
+    const a=X.axes[k];
+    h+=`<div class="ax"><div class="ax-h">
+      <span class="ax-l">${esc(a.label)}</span>
+      <span class="ax-v ${ballCls(v[k])}">${v[k]===null?'&mdash;':v[k]}</span></div>
+      <div class="lv" role="group" aria-label="${esc(a.label)} — ${esc(a.hint)}">`
+      +a.levels.map(L=>`<button data-fk="lv:${k}:${L.v}" aria-pressed="${v[k]===L.v}" onclick="setAx('${k}',${L.v})">
+         <span class="lv-n">${esc(L.n)}</span><span class="lv-e">${esc(L.e)}</span></button>`).join('')
+      +`</div>
+      <details class="fine" data-fold="fine:${k}"${foldOpen['fine:'+k]?' open':''}><summary data-fk="sum:${k}">Aniqroq ball qo'yish (0–10)</summary>
+        <div class="scale" role="group" aria-label="${esc(a.label)} balli">`
+        +Array.from({length:11},(_,n)=>`<button data-fk="sc:${k}:${n}" aria-pressed="${v[k]===n}" onclick="setAx('${k}',${n})">${n}</button>`).join('')
+        +`</div></details></div>`;
+  });
+
+  h+=`<div class="ax"><div class="ax-h">
+    <span class="ax-l">Imkoniyat</span>
+    <span class="ax-v ${ballCls(v.i)}">${v.i===null?'&mdash;':v.i}</span></div>
+    <label class="sr" for="fRegion">Hudud</label>
+    <select class="fld" id="fRegion" data-fk="region" onchange="setRegion(this.value)">
+      ${X.regions.map(r=>`<option value="${r.key}"${S.xei.i.region===r.key?' selected':''}>${esc(r.label)}${r.base!==null?' ('+r.base+')':''}</option>`).join('')}
+    </select>`
+    +X.signals.map(s=>`<label class="sig">
+      <input type="checkbox" data-fk="sig:${s.key}"${S.xei.i.signals.includes(s.key)?' checked':''} onchange="setSig('${s.key}',this.checked)">
+      <span>${esc(s.label)}</span><b>${s.delta>0?'+':''}${s.delta}</b></label>`).join('')
+    +`<div class="probe">${X.probeI}</div></div>`;
+
+  const tot=(v.x!==null&&v.e!==null&&v.i!==null)?(v.x+v.e+v.i):null;
+  h+=`<div class="xei-tot"><span class="xei-tot-l">Umumiy</span>
+    <span class="xei-tot-v ${tot===null?'un':tot<=12?'lo':tot<=21?'mid':'hi'}">${tot===null?'— / 30':tot+' / 30'}</span></div>`;
+
+  GUIDE.warns.forEach(wr=>{
+    let hit=false; try{ hit=wr.when(v); }catch(e){}
+    if(hit) h+=`<div class="note ${wr.type}" style="margin-top:11px">
+      <span class="note-t">${esc(wr.t)}</span>${esc(wr.b)}</div>`;
+  });
+  return h;
+}
+
+/* Ochilgan "aniqroq ball" bo'limi qayta chizishda yopilib qolmasin */
+const foldOpen={};
+/* Qayta chizishdan keyin fokusni va skrollni o'sha joyiga qaytarish */
+function withFocus(root,paint){
+  if(!root) return paint();
+  root.querySelectorAll('details[data-fold]').forEach(d=>{ foldOpen[d.dataset.fold]=d.open; });
+  const act=document.activeElement;
+  const fk=(root.contains(act)&&act.dataset)?act.dataset.fk:null;
+  const scroll=root.scrollTop;
+  paint();
+  if(fk){
+    const el=root.querySelector('[data-fk="'+CSS.escape(fk)+'"]');
+    if(el) el.focus({preventScroll:true});
+  }
+  root.scrollTop=scroll;
+}
+function renderXei(){
+  withFocus($('fXei'), ()=>{ $('fXei').innerHTML=xeiHTML(); });
+  if(sheetKind==='xei') withFocus($('fSheetB'), ()=>{ $('fSheetB').innerHTML=xeiSheetHTML(); });
+  renderDock();
+}
+const xeiSheetHTML=()=>`<div class="xei-sub">To'g'ridan-to'g'ri so'ramang \u2014 gap orasida aniqlang.</div>`+xeiHTML();
+
+function renderDock(){
+  const v=xeiVals();
+  const f=n=>n===null?'<em>—</em>':n;
+  $('fDockV').innerHTML=`X ${f(v.x)} · E ${f(v.e)} · I ${f(v.i)}`;
+  const p=xeiReady()?calcPrice():null;
+  $('fDockP').textContent=p?money(p.recommended):'';
+  const n=$('fDockNote');
+  if((S.note||'').trim()) n.dataset.has='1'; else delete n.dataset.has;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   HODISALAR
+   ══════════════════════════════════════════════════════════════════ */
+function rerender(){ renderSteps(); renderStage(); renderXei(); }
+function refreshPrice(){ if(GUIDE.stages[S.stage].price) renderStage(); renderDock(); }
+
+function goTo(i){
+  if(i<0||i>=GUIDE.stages.length) return;
+  S.stage=i; save(); renderSteps(); renderStage();
+  window.scrollTo({top:0,behavior:'smooth'});
+  announce(GUIDE.stages[i].title);
+}
+const go=d=>goTo(S.stage+d);
+function toggleChk(k){ S.checks[k]=!S.checks[k]; save(); renderSteps(); }
+function setMethod(k){ S.method=S.method===k?null:k; save(); renderStage(); }
+function setAx(a,n){ S.xei[a]=S.xei[a]===n?null:n; save(); renderXei(); refreshPrice(); }
+function setRegion(k){ S.xei.i.region=k; save(); renderXei(); refreshPrice(); }
+function setSig(k,on){
+  const a=S.xei.i.signals, j=a.indexOf(k);
+  if(on){ if(j<0) a.push(k); } else if(j>-1) a.splice(j,1);
+  save(); renderXei(); refreshPrice();
+}
+function setNote(v){
+  S.note=v; save(); renderDock();
+  const r=$('fNote'); if(r&&r.value!==v) r.value=v;
+  if(sheetKind==='note'){ const t=$('fSheetB').querySelector('textarea'); if(t&&t.value!==v) t.value=v; }
+}
+function setOutcome(v){
+  S.outcome=S.outcome===v?null:v;
+  S.outcomeAt=S.outcome?new Date().toISOString():null;
+  if(S.outcome==='paid'&&S.pricing) S.offered=S.pricing.recommended;
+  save(); renderStage();
+  if(S.outcome==='paid') toast('Tabriklaymiz! Natija saqlandi.');
+}
+const copyScript=(sid,i,btn)=>copyTxt(fill(GUIDE.stages[sid].scripts[i].t),btn);
+const copyPrice=btn=>{ if(S.pricing) copyTxt(priceText(S.pricing),btn); };
+
+function newSession(){
+  const used=S&&(Object.keys(S.checks).length||S.student.name||S.note);
+  if(used&&!confirm('Yangi sessiya ochilsinmi? Joriy sessiya tarixda saqlanib qoladi.')) return;
+  S=blank(); db.sessions.unshift(S); db.activeSessionId=S.id;
+  $('fName').value=''; $('fNote').value='';
+  save(); rerender(); window.scrollTo({top:0});
+  toast('Yangi sessiya ochildi');
+}
+function openSession(id){
+  const s=db.sessions.find(x=>x.id===id); if(!s) return;
+  S=s; db.activeSessionId=id;
+  if(!S.startedAt) S.startedAt=Date.now();
+  if(S.note==null) S.note='';
+  $('fName').value=S.student.name||''; $('fNote').value=S.note;
+  closeMd(); save(); rerender(); window.scrollTo({top:0});
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   SHEET (mobil pastki panel)
+   ══════════════════════════════════════════════════════════════════ */
+function openSheet(kind){
+  sheetKind=kind; lastFocus=document.activeElement;
+  $('fSheetT').textContent = kind==='xei' ? 'XEI paneli' : 'Izoh';
+  $('fSheetB').innerHTML = kind==='xei'
+    ? xeiSheetHTML()
+    : `<label class="sr" for="fNoteM">Sessiya izohi</label>
+       <textarea class="ta" id="fNoteM" style="min-height:160px"
+         placeholder="O'quvchi haqida eslab qolish kerak bo'lgan narsalar...">${esc(S.note||'')}</textarea>`;
+  $('fSheetOv').hidden=false; $('fSheet').hidden=false;
+  if(kind==='note'){ const t=$('fNoteM'); t.addEventListener('input',e=>setNote(e.target.value)); t.focus(); }
+  else { const b=$('fSheetB').querySelector('button'); if(b) b.focus(); }
+}
+function closeSheet(){
+  sheetKind=null; $('fSheetOv').hidden=true; $('fSheet').hidden=true;
+  if(lastFocus&&lastFocus.focus) lastFocus.focus();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MODALLAR
+   ══════════════════════════════════════════════════════════════════ */
+function showMd(title,body){
+  lastFocus=document.activeElement;
+  $('fMdT').textContent=title; $('fMdB').innerHTML=body; $('fOv').hidden=false;
+  const f=$('fOv').querySelector('.x-btn'); if(f) f.focus();
+}
+function closeMd(){
+  if($('fOv').hidden) return;
+  $('fOv').hidden=true;
+  if(lastFocus&&lastFocus.focus) lastFocus.focus();
+}
+function trapFocus(e){
+  const box=!$('fSheet').hidden?$('fSheet'):(!$('fOv').hidden?$('fOv'):null);
+  if(!box||e.key!=='Tab') return;
+  const f=[...box.querySelectorAll('a[href],button,input,select,textarea,summary,[tabindex]:not([tabindex="-1"])')]
+    .filter(el=>!el.disabled&&el.offsetParent!==null);
+  if(!f.length) return;
+  const first=f[0], last=f[f.length-1];
+  if(e.shiftKey&&document.activeElement===first){ e.preventDefault(); last.focus(); }
+  else if(!e.shiftKey&&document.activeElement===last){ e.preventDefault(); first.focus(); }
+}
+
+function openAbout(){
+  showMd('MyTeacher haqida',
+    GUIDE.about.map(a=>`<details class="fold"><summary>${esc(a.q)}</summary>
+      <div class="fold-b" style="font-size:15px;color:var(--tm);line-height:1.62">${a.a}</div></details>`).join('')
+    +`<div class="note yellow" style="margin-top:16px"><span class="note-t">Eslatma</span>
+      Bir nechta javob hali to'ldirilmagan. Eski sotuv skriptlari fayli kelgach, kodning yuqorisidagi
+      <b>GUIDE.about</b> ro'yxatiga yoziladi.</div>`);
+}
+
+function openHist(){
+  const rows=db.sessions.filter(s=>s.student.name||Object.keys(s.checks).length);
+  const lbl={paid:'To’ladi',thinking:'O’ylaydi',refused:'Yo’q'};
+  let body;
+  if(!rows.length){
+    body=`<div class="empty">Hali sessiya yo'q.<br>Birinchi sinov darsingizni o'tkazing.</div>`;
+  } else {
+    const paid=rows.filter(s=>s.outcome==='paid').length;
+    const closed=rows.filter(s=>s.outcome).length;
+    body=`<div class="note key" style="margin-bottom:16px"><span class="note-t">Natijalaringiz</span>
+      Jami sessiya: <b>${rows.length}</b> &nbsp;&bull;&nbsp; Yopilgan: <b>${closed}</b> &nbsp;&bull;&nbsp;
+      To'lov: <b>${paid}</b> &nbsp;&bull;&nbsp; Konversiya: <b>${closed?Math.round(paid/closed*100):0}%</b></div>
+      <div class="hist-wrap"><table class="hist">
+      <thead><tr><th>Sana</th><th>O'quvchi</th><th>XEI</th><th>Tarif</th><th>Natija</th></tr></thead><tbody>`
+      +rows.map(s=>{
+        const d=new Date(s.createdAt);
+        const v=[s.xei.x,s.xei.e,calcI(s)];
+        const xs=v.every(n=>n!==null&&n!==undefined)?v.join(' / '):'—';
+        const oc=s.outcome||'none';
+        return `<tr onclick="openSession('${s.id}')" style="cursor:pointer" tabindex="0"
+            onkeydown="if(event.key==='Enter')openSession('${s.id}')">
+          <td>${d.getDate()}.${String(d.getMonth()+1).padStart(2,'0')}.${d.getFullYear()}</td>
+          <td><b>${esc(s.student.name||'Ismsiz')}</b></td>
+          <td>${xs}</td>
+          <td>${s.pricing?money(s.pricing.recommended):'—'}</td>
+          <td><span class="tag ${oc}">${lbl[s.outcome]||'Ochiq'}</span></td></tr>`;
+      }).join('')+`</tbody></table></div>
+      <div class="note yellow" style="margin-top:16px"><span class="note-t">Diqqat</span>
+      Bu ma'lumot faqat shu brauzerda saqlanadi va oxirgi ${MAX_SESSIONS} ta sessiya bilan cheklangan.
+      Boshqa qurilmada ko'rinmaydi.</div>`;
+  }
+  showMd('Sessiyalar tarixi',body);
+}
+
+function openSettings(){
+  const w=GUIDE.xei.weights;
+  showMd('Sozlamalar',
+    `<div class="note red"><span class="note-t">Ehtiyot bo'ling</span>
+      Bu qiymatlar barcha hisob-kitobga ta'sir qiladi. Faqat rasmiy o'zgarish bo'lganda tahrirlang.</div>
+     <div class="sec-h" style="margin-top:18px">Tariflar (UZS)</div>`
+    +GUIDE.pricing.tiers.map(t=>`<div class="st-row"><span>Haftada ${t.perWeek} marta</span>
+      <input type="number" step="10000" min="0" value="${t.price}" aria-label="Haftada ${t.perWeek} marta narxi"
+        onchange="setTier(${t.level},this.value)"></div>`).join('')
+    +`<div class="sec-h" style="margin-top:20px">Formula koeffitsiyentlari</div>
+     <div class="st-row"><span>Ehtiyoj (E)</span><input type="number" step="0.05" min="0" value="${w.e}" aria-label="Ehtiyoj koeffitsiyenti" onchange="setW('e',this.value)"></div>
+     <div class="st-row"><span>Xohish (X)</span><input type="number" step="0.05" min="0" value="${w.x}" aria-label="Xohish koeffitsiyenti" onchange="setW('x',this.value)"></div>
+     <div class="st-row"><span>Imkoniyat (I)</span><input type="number" step="0.05" min="0" value="${w.i}" aria-label="Imkoniyat koeffitsiyenti" onchange="setW('i',this.value)"></div>
+     <div class="note yellow" style="margin-top:16px">Uchta koeffitsiyent yig'indisi <b>1.00</b> bo'lishi kerak.
+       Hozirgi yig'indi: <b id="wsum">${(w.e+w.x+w.i).toFixed(2)}</b></div>
+     <button class="navb" style="margin-top:16px" onclick="resetCfg()">Standart qiymatlarga qaytarish</button>`);
+}
+function setTier(level,val){
+  const t=tierBy(level), n=parseInt(val,10);
+  if(!t) return;
+  if(isNaN(n)||n<0){ toast('Noto\'g\'ri narx'); return; }
+  t.price=n; saveCfg(); toast('Narx saqlandi'); refreshPrice();
+}
+function setW(k,val){
+  const n=parseFloat(val);
+  if(isNaN(n)||n<0){ toast('Noto\'g\'ri qiymat'); return; }
+  GUIDE.xei.weights[k]=n; saveCfg();
+  const w=GUIDE.xei.weights, el=$('wsum');
+  if(el) el.textContent=(w.e+w.x+w.i).toFixed(2);
+  refreshPrice();
+}
+function resetCfg(){
+  if(!confirm('Narxlar va koeffitsiyentlar standart holatga qaytarilsinmi?')) return;
+  try{ localStorage.removeItem(CFGKEY); }catch(e){}
+  location.reload();
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   MENYU / TAYMER / CHOP ETISH
+   ══════════════════════════════════════════════════════════════════ */
+function toggleMenu(){
+  const m=$('fMenu'), b=$('fMoreBtn'), on=m.hidden;
+  m.hidden=!on; b.setAttribute('aria-expanded',String(on));
+}
+document.addEventListener('click',e=>{
+  if(!$('fMenu').hidden && !e.target.closest('.hd-more')) toggleMenu();
+});
+
+let warned=false;
+function renderTimer(){
+  const sec=Math.floor((Date.now()-S.startedAt)/1000);
+  const m=Math.floor(sec/60), s=sec%60, el=$('fTimer');
+  el.textContent=String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+  if(m>=GUIDE.timerWarnMin){
+    el.classList.add('warn');
+    if(!warned){ warned=true; toast('Vaqt ketyapti — narx bosqichiga o\'ting'); }
+  } else { el.classList.remove('warn'); warned=false; }
+}
+
+function renderPrintAll(){
+  $('fPrintAll').innerHTML=GUIDE.stages.map(st=>{
+    let h=`<div class="card"><div class="c-kick">${esc(st.kick)}</div>
+      <h2 class="c-title">${esc(st.title)}</h2><p class="c-goal">${esc(st.goal)}</p>`;
+    (st.notes||[]).forEach(n=>h+=`<div class="note"><span class="note-t">${esc(n.t)}</span>${n.b}</div>`);
+    (st.scripts||[]).forEach(sc=>h+=`<div class="scr"><div class="scr-h"><span class="scr-l">${esc(sc.l)}</span></div>
+      <div class="scr-b">${esc(sc.t)}</div></div>`);
+    if(st.questions) h+=st.questions.map(q=>`<div class="q">${esc(q)}</div>`).join('');
+    if(st.table) h+=`<table class="tb"><thead><tr>${st.table.head.map(x=>`<th>${esc(x)}</th>`).join('')}</tr></thead>
+      <tbody>${st.table.rows.map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    (st.anti||[]).forEach(a=>h+=`<div class="anti">${esc(a)}</div>`);
+    (st.checks||[]).forEach(c=>h+=`<label class="chk"><input type="checkbox" disabled><span>${esc(c)}</span></label>`);
+    return h+`</div>`;
+  }).join('')
+  +`<div class="card"><h2 class="c-title">Narx podacha skriptlari</h2>`
+  +Object.values(GUIDE.scripts).map(sc=>`<div class="scr"><div class="scr-h">
+     <span class="scr-l">${esc(sc.name)} &mdash; ${esc(sc.for)}</span></div>
+     <div class="scr-b">${esc(sc.text)}</div></div>`).join('')+`</div>`;
+}
+
+/* ══════════════════════════════════════════════════════════════════
+   KLAVIATURA
+   ══════════════════════════════════════════════════════════════════ */
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    if(!$('fSheet').hidden) return closeSheet();
+    if(!$('fOv').hidden) return closeMd();
+    if(!$('fMenu').hidden) return toggleMenu();
+  }
+  if(!$('fSheet').hidden||!$('fOv').hidden) return trapFocus(e);
+  const tag=(e.target.tagName||'').toLowerCase();
+  if(tag==='input'||tag==='textarea'||tag==='select'||e.metaKey||e.ctrlKey||e.altKey) return;
+  if(e.key==='ArrowRight'){ e.preventDefault(); go(1); }
+  else if(e.key==='ArrowLeft'){ e.preventDefault(); go(-1); }
+});
+
+/* ══════════════════════════════════════════════════════════════════
+   ISHGA TUSHIRISH
+   ══════════════════════════════════════════════════════════════════ */
+(function init(){
+  load();
+  $('fName').value=S.student.name||'';
+  $('fNote').value=S.note||'';
+  $('fName').addEventListener('input',e=>{ S.student.name=e.target.value; save(); renderStage(); });
+  $('fNote').addEventListener('input',e=>setNote(e.target.value));
+
+  let taps=0,tapT=null;
+  document.querySelector('.hd-brand').addEventListener('click',()=>{
+    taps++; clearTimeout(tapT); tapT=setTimeout(()=>taps=0,700);
+    if(taps>=3){ taps=0; openSettings(); }
+  });
+
+  rerender(); renderPrintAll(); renderTimer();
+  setInterval(renderTimer,1000);
+  window.addEventListener('beforeunload',()=>{ clearTimeout(saveT); save(); });
+})();
+</script>
+</body>
+</html>
