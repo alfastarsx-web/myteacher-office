@@ -1,0 +1,1296 @@
+<title>MyTeacher CEFR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Fredoka:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-a:#e9f3f2; --bg-b:#e0e7f1;
+  --app:#f3f7f7; --surface:#ffffff; --surface-2:#eef4f4; --surface-3:#e6eeee;
+  --ink:#0f1c24; --ink-soft:#596b74; --ink-faint:#8b9aa1; --line:#e2eaec;
+  --brand:#0ea5a4; --brand-deep:#0a7f7e; --brand-tint:#d8f1f0;
+  --violet:#7c6bf5; --violet-tint:#e9e6fd;
+  --gold:#f6b93b; --fire:#ff7a45; --heart:#fb5a6a; --heart-tint:#ffe1e5;
+  --good:#16b364; --good-tint:#d8f6e6; --bad:#f0453a; --bad-tint:#fde0de;
+  --shadow:0 10px 30px -12px rgba(15,28,36,.28);
+  --shadow-sm:0 2px 0 rgba(15,28,36,.06);
+}
+:root:not([data-theme="light"]){
+  @media (prefers-color-scheme:dark){
+    --bg-a:#081217; --bg-b:#0a0f1c;
+    --app:#0c161b; --surface:#132229; --surface-2:#0f1c22; --surface-3:#1b2d34;
+    --ink:#eaf3f4; --ink-soft:#93a7ae; --ink-faint:#6d828a; --line:#243a41;
+    --brand:#22c8bd; --brand-deep:#12a89c; --brand-tint:#0e3532;
+    --violet:#9a8bff; --violet-tint:#241f45;
+    --gold:#ffca55; --fire:#ff8a5c; --heart:#ff6b79; --heart-tint:#3a1f24;
+    --good:#2fce7c; --good-tint:#123222; --bad:#ff6257; --bad-tint:#3a1c1a;
+    --shadow:0 16px 40px -16px rgba(0,0,0,.6);
+    --shadow-sm:0 2px 0 rgba(0,0,0,.25);
+  }
+}
+:root[data-theme="dark"]{
+  --bg-a:#081217; --bg-b:#0a0f1c;
+  --app:#0c161b; --surface:#132229; --surface-2:#0f1c22; --surface-3:#1b2d34;
+  --ink:#eaf3f4; --ink-soft:#93a7ae; --ink-faint:#6d828a; --line:#243a41;
+  --brand:#22c8bd; --brand-deep:#12a89c; --brand-tint:#0e3532;
+  --violet:#9a8bff; --violet-tint:#241f45;
+  --gold:#ffca55; --fire:#ff8a5c; --heart:#ff6b79; --heart-tint:#3a1f24;
+  --good:#2fce7c; --good-tint:#123222; --bad:#ff6257; --bad-tint:#3a1c1a;
+  --shadow:0 16px 40px -16px rgba(0,0,0,.6);
+  --shadow-sm:0 2px 0 rgba(0,0,0,.25);
+}
+
+*{box-sizing:border-box}
+body{
+  margin:0; background:
+    radial-gradient(120% 90% at 15% 0%, var(--bg-a), transparent 60%),
+    radial-gradient(120% 90% at 100% 100%, var(--bg-b), transparent 55%),
+    var(--bg-b);
+  min-height:100vh; color:var(--ink);
+  font-family:"Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+  display:flex; align-items:center; justify-content:center; padding:26px 16px;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{font-family:"Sora","Plus Jakarta Sans",sans-serif; margin:0; text-wrap:balance}
+button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit}
+.num{font-family:"Fredoka",sans-serif; font-variant-numeric:tabular-nums}
+:focus-visible{outline:2.5px solid var(--brand); outline-offset:2px; border-radius:8px}
+
+/* ---------- device frame ---------- */
+.stage{width:100%; max-width:412px; display:flex; flex-direction:column; align-items:center; gap:16px}
+.phone{
+  width:100%; max-width:400px; height:min(846px,92vh);
+  background:var(--app); border-radius:42px; position:relative; overflow:hidden;
+  box-shadow:var(--shadow), 0 0 0 10px rgba(15,28,36,.85), 0 0 0 12px rgba(255,255,255,.06);
+  display:flex; flex-direction:column;
+}
+:root[data-theme="dark"] .phone{box-shadow:var(--shadow), 0 0 0 10px #05090c, 0 0 0 12px rgba(255,255,255,.05)}
+.notch{position:absolute; top:0; left:50%; transform:translateX(-50%); width:132px; height:26px;
+  background:rgba(15,28,36,.9); border-radius:0 0 16px 16px; z-index:60}
+:root[data-theme="dark"] .notch{background:#05090c}
+.brandline{display:flex; align-items:center; gap:9px}
+.brandline .logo{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;
+  background:linear-gradient(150deg,var(--brand),var(--brand-deep)); color:#fff; box-shadow:var(--shadow-sm)}
+.brandline b{font-family:"Sora"; font-size:15px; letter-spacing:-.02em}
+.themebtn{margin-left:auto; width:34px;height:34px;border-radius:10px; background:var(--surface-2);
+  display:grid;place-items:center; color:var(--ink-soft); font-size:15px}
+
+/* ---------- screen scaffold ---------- */
+.screen{display:none; flex-direction:column; height:100%; overflow:hidden}
+.screen.active{display:flex}
+.scroll{flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch}
+.scroll::-webkit-scrollbar{width:0}
+
+/* ---------- top HUD ---------- */
+.hud{padding:34px 16px 12px; display:flex; align-items:center; gap:8px; background:var(--app);
+  position:sticky; top:0; z-index:20}
+.stat{display:flex; align-items:center; gap:5px; font-weight:800; font-size:14px; padding:6px 9px;
+  border-radius:12px; background:var(--surface); box-shadow:var(--shadow-sm)}
+.stat .ico{font-size:15px; line-height:1}
+.stat.level{background:linear-gradient(135deg,var(--brand),var(--brand-deep)); color:#fff}
+.stat.streak{color:var(--fire)} .stat.gem{color:var(--brand)} .stat.xp{color:var(--gold)}
+.hearts{color:var(--heart)}
+.stat .num{font-size:15px}
+
+/* ---------- LEARN / path ---------- */
+.levelbar{margin:2px 16px 6px; background:var(--surface); border-radius:18px; padding:14px 16px;
+  box-shadow:var(--shadow-sm); display:flex; flex-direction:column; gap:9px}
+.levelbar .row{display:flex; align-items:center; justify-content:space-between}
+.levelbar .cefr{display:flex; align-items:center; gap:8px; font-family:"Sora"; font-weight:800; font-size:16px}
+.pill{font-size:11px; font-weight:800; letter-spacing:.04em; text-transform:uppercase;
+  padding:3px 8px; border-radius:999px; background:var(--brand-tint); color:var(--brand-deep)}
+.progress{height:10px; border-radius:999px; background:var(--surface-3); overflow:hidden}
+.progress > i{display:block; height:100%; border-radius:999px;
+  background:linear-gradient(90deg,var(--brand),var(--gold))}
+.levelbar small{color:var(--ink-soft); font-weight:600}
+
+.unit-head{margin:16px 16px 4px; background:linear-gradient(135deg,var(--brand),var(--brand-deep));
+  color:#fff; border-radius:18px; padding:14px 16px; box-shadow:var(--shadow-sm);
+  display:flex; align-items:center; justify-content:space-between; gap:10px}
+.unit-head .t{display:flex; flex-direction:column; gap:2px}
+.unit-head .k{font-size:11px; text-transform:uppercase; letter-spacing:.09em; opacity:.85; font-weight:700}
+.unit-head h3{font-size:16px}
+.unit-head .g{width:40px;height:40px;border-radius:12px;background:rgba(255,255,255,.18);
+  display:grid;place-items:center;font-size:19px; flex:none}
+
+.path{position:relative; padding:22px 0 8px; display:flex; flex-direction:column; align-items:center; gap:20px}
+.path::before{content:""; position:absolute; top:12px; bottom:8px; left:50%; width:4px;
+  transform:translateX(-50%); border-radius:4px;
+  background:repeating-linear-gradient(var(--line) 0 9px, transparent 9px 17px)}
+.node{position:relative; z-index:2; display:flex; flex-direction:column; align-items:center; gap:7px}
+.node .disc{width:66px;height:60px;border-radius:50%; display:grid; place-items:center; font-size:24px;
+  color:#fff; transition:transform .12s; user-select:none}
+.node .disc:active{transform:translateY(2px)}
+.node.done .disc{background:var(--brand); box-shadow:0 5px 0 var(--brand-deep)}
+.node.locked .disc{background:var(--surface-3); color:var(--ink-faint); box-shadow:0 5px 0 var(--line)}
+.node.current .disc{background:linear-gradient(160deg,var(--gold),var(--fire));
+  box-shadow:0 6px 0 #d98a2f, 0 0 0 6px var(--surface), 0 0 0 10px var(--gold)}
+.node.checkpoint .disc{width:82px;height:66px;border-radius:22px;
+  background:linear-gradient(160deg,var(--violet),#5a4bd6); box-shadow:0 6px 0 #443597}
+.node.checkpoint.locked .disc{background:var(--surface-3); box-shadow:0 5px 0 var(--line)}
+.node .cap{font-size:11px;font-weight:800;color:var(--ink-soft); letter-spacing:.02em}
+.node.current .cap{color:var(--fire)}
+.startbub{position:absolute; top:-30px; background:var(--surface); color:var(--fire); font-weight:800;
+  font-size:11px; letter-spacing:.05em; padding:5px 11px; border-radius:11px; box-shadow:var(--shadow-sm);
+  animation:bob 1.4s ease-in-out infinite}
+.startbub::after{content:""; position:absolute; bottom:-5px; left:50%; transform:translateX(-50%) rotate(45deg);
+  width:9px;height:9px; background:var(--surface)}
+.node .off1{transform:translateX(-58px)} .node .off2{transform:translateX(58px)}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+@media (prefers-reduced-motion:reduce){.startbub{animation:none}}
+
+/* ---------- bottom sheet ---------- */
+.sheet-wrap{position:absolute; inset:0; z-index:50; display:none}
+.sheet-wrap.open{display:block}
+.sheet-scrim{position:absolute; inset:0; background:rgba(8,14,18,.5); backdrop-filter:blur(2px)}
+.sheet{position:absolute; left:0; right:0; bottom:0; background:var(--surface);
+  border-radius:26px 26px 0 0; padding:18px 18px 22px; box-shadow:var(--shadow);
+  transform:translateY(0); animation:up .28s cubic-bezier(.2,.8,.2,1)}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.sheet .grip{width:40px;height:4px;border-radius:4px;background:var(--line);margin:0 auto 14px}
+.sheet h3{font-size:19px}
+.sheet .meta{display:flex; gap:8px; margin:8px 0 14px; flex-wrap:wrap}
+.tag{font-size:12px; font-weight:700; padding:5px 10px; border-radius:999px;
+  background:var(--surface-2); color:var(--ink-soft); display:flex; gap:5px; align-items:center}
+.tag.xp{background:var(--brand-tint); color:var(--brand-deep)}
+.btn{width:100%; padding:15px; border-radius:16px; font-weight:800; font-size:15px; letter-spacing:.02em;
+  background:var(--brand); color:#fff; box-shadow:0 4px 0 var(--brand-deep); transition:transform .1s}
+.btn:active{transform:translateY(2px); box-shadow:0 2px 0 var(--brand-deep)}
+.btn.ghost{background:var(--surface-2); color:var(--ink-soft); box-shadow:0 4px 0 var(--line)}
+
+/* ---------- LESSON ---------- */
+.lesson-top{padding:34px 16px 10px; display:flex; align-items:center; gap:12px}
+.lesson-top .x{font-size:22px; color:var(--ink-faint); width:26px}
+.lp{flex:1; height:14px; border-radius:999px; background:var(--surface-3); overflow:hidden}
+.lp > i{display:block; height:100%; background:linear-gradient(90deg,var(--brand),var(--good)); border-radius:999px;
+  transition:width .35s cubic-bezier(.3,1,.4,1)}
+.q-area{flex:1; overflow-y:auto; padding:8px 18px 14px}
+.q-kick{font-size:12px; text-transform:uppercase; letter-spacing:.1em; font-weight:800; color:var(--violet)}
+.q-title{font-size:22px; font-family:"Sora"; margin:6px 0 4px; line-height:1.25}
+.q-sub{color:var(--ink-soft); font-weight:600; margin-bottom:6px}
+.speaker{margin:14px 0; display:flex; align-items:center; gap:14px; padding:16px; border-radius:18px;
+  background:var(--violet-tint); color:var(--violet)}
+.speaker .play{width:52px;height:52px;border-radius:16px;background:var(--violet);color:#fff;
+  display:grid;place-items:center;font-size:20px; flex:none; box-shadow:0 4px 0 #5a4bd6}
+.speaker .wave{display:flex; align-items:center; gap:3px; height:26px}
+.speaker .wave span{width:3px; background:currentColor; border-radius:3px; opacity:.5}
+.opts{display:flex; flex-direction:column; gap:11px; margin-top:6px}
+.opt{display:flex; align-items:center; gap:13px; padding:15px 16px; border-radius:16px;
+  background:var(--surface); border:2px solid var(--line); font-weight:700; font-size:15.5px; text-align:left;
+  box-shadow:0 2px 0 var(--line); transition:.12s}
+.opt .kbd{width:26px;height:26px;border-radius:8px; border:2px solid var(--line); color:var(--ink-faint);
+  display:grid;place-items:center; font-size:12px; font-weight:800; flex:none}
+.opt.sel{border-color:var(--brand); background:var(--brand-tint); box-shadow:0 2px 0 var(--brand)}
+.opt.sel .kbd{border-color:var(--brand); color:var(--brand-deep)}
+.opt.ok{border-color:var(--good); background:var(--good-tint); box-shadow:0 2px 0 var(--good)}
+.opt.no{border-color:var(--bad); background:var(--bad-tint); box-shadow:0 2px 0 var(--bad)}
+.opt[disabled]{cursor:default}
+
+/* word bank */
+.answer-line{min-height:54px; border-bottom:2px dashed var(--line); margin:10px 0 16px;
+  display:flex; flex-wrap:wrap; gap:8px; align-content:flex-start; padding-bottom:8px}
+.bank{display:flex; flex-wrap:wrap; gap:9px}
+.chip{padding:11px 14px; border-radius:13px; background:var(--surface); border:2px solid var(--line);
+  font-weight:700; font-size:15px; box-shadow:0 2px 0 var(--line)}
+.chip.used{opacity:.25; pointer-events:none}
+.chip.placed{background:var(--brand-tint); border-color:var(--brand)}
+
+.feedback{padding:16px 18px calc(16px + env(safe-area-inset-bottom)); border-radius:22px 22px 0 0}
+.feedback.hidden{display:none}
+.feedback.good{background:var(--good-tint)} .feedback.bad{background:var(--bad-tint)}
+.feedback .fb-row{display:flex; align-items:center; gap:11px; margin-bottom:11px}
+.feedback .fb-ico{width:40px;height:40px;border-radius:50%; display:grid;place-items:center; font-size:20px; color:#fff; flex:none}
+.feedback.good .fb-ico{background:var(--good)} .feedback.bad .fb-ico{background:var(--bad)}
+.feedback h4{font-size:16px; font-family:"Sora"}
+.feedback.good h4{color:var(--good)} .feedback.bad h4{color:var(--bad)}
+.feedback p{margin:2px 0 0; font-size:13px; color:var(--ink-soft); font-weight:600}
+.lesson-foot{padding:14px 18px calc(16px + env(safe-area-inset-bottom)); border-top:1px solid var(--line)}
+.lesson-foot.none{border-color:transparent}
+
+/* result */
+.result{flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  text-align:center; padding:30px 24px; gap:6px}
+.result .burst{font-size:64px; animation:pop .5s cubic-bezier(.2,1.4,.4,1)}
+@keyframes pop{from{transform:scale(.3);opacity:0}to{transform:scale(1);opacity:1}}
+.result h2{font-size:26px; margin-top:6px}
+.result .sub{color:var(--ink-soft); font-weight:600; margin-bottom:14px}
+.rewards{display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; width:100%; margin:8px 0 26px}
+.reward{background:var(--surface); border-radius:18px; padding:14px 8px; box-shadow:var(--shadow-sm)}
+.reward .rv{font-size:22px; font-weight:800}
+.reward .rk{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--ink-faint); font-weight:800; margin-top:3px}
+.reward.xp .rv{color:var(--gold)} .reward.streak .rv{color:var(--fire)} .reward.acc .rv{color:var(--good)}
+
+/* ---------- LEAGUE ---------- */
+.league-hero{margin:2px 16px 6px; text-align:center; padding:10px 0}
+.league-hero .badge{width:76px;height:76px;border-radius:24px;margin:0 auto 8px;
+  background:linear-gradient(160deg,var(--gold),var(--fire)); display:grid;place-items:center; font-size:38px;
+  box-shadow:0 8px 22px -8px var(--fire)}
+.league-hero h2{font-size:21px}
+.league-hero .row{display:flex; align-items:center; justify-content:center; gap:6px; color:var(--ink-soft);
+  font-weight:700; font-size:13px; margin-top:4px}
+.promo-note{margin:6px 16px; display:flex; align-items:center; gap:8px; font-size:12px; font-weight:800;
+  color:var(--good); text-transform:uppercase; letter-spacing:.05em}
+.promo-note::before,.promo-note::after{content:""; height:2px; flex:1; background:var(--good); opacity:.25; border-radius:2px}
+.demo-note{color:var(--heart)} .demo-note::before,.demo-note::after{background:var(--heart)}
+.rank{display:flex; align-items:center; gap:12px; margin:0 16px; padding:12px 14px; border-radius:16px}
+.rank + .rank{margin-top:8px}
+.rank .pos{width:24px; text-align:center; font-weight:800; font-size:15px; color:var(--ink-soft)}
+.rank .av{width:42px;height:42px;border-radius:13px; display:grid;place-items:center; font-size:19px; color:#fff; flex:none}
+.rank .nm{font-weight:800; font-size:15px; flex:1}
+.rank .nm small{display:block; font-weight:600; font-size:12px; color:var(--ink-faint)}
+.rank .pts{font-weight:800; color:var(--gold)}
+.rank.me{background:var(--brand-tint); box-shadow:0 2px 0 var(--brand)}
+.rank.me .pos{color:var(--brand-deep)}
+.rank .medal{font-size:18px}
+
+/* ---------- PROFILE ---------- */
+.pro-head{padding:34px 16px 8px; display:flex; align-items:center; gap:14px}
+.pro-head .av{width:64px;height:64px;border-radius:20px; display:grid;place-items:center; font-size:30px;
+  color:#fff; background:linear-gradient(150deg,var(--violet),#5a4bd6); box-shadow:var(--shadow-sm); flex:none}
+.pro-head h2{font-size:20px}
+.pro-head .who{color:var(--ink-soft); font-weight:600; font-size:13px}
+.pro-head .lv{margin-top:5px}
+.card{margin:12px 16px; background:var(--surface); border-radius:20px; padding:16px; box-shadow:var(--shadow-sm)}
+.card > .ct{font-size:12px; text-transform:uppercase; letter-spacing:.08em; font-weight:800; color:var(--ink-faint); margin-bottom:12px}
+.radar-wrap{display:flex; justify-content:center}
+.tiles{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:12px 16px}
+.tile{background:var(--surface); border-radius:18px; padding:14px; box-shadow:var(--shadow-sm);
+  display:flex; align-items:center; gap:11px}
+.tile .ti{width:40px;height:40px;border-radius:12px; display:grid;place-items:center; font-size:19px; flex:none}
+.tile .tv{font-size:20px; font-weight:800; line-height:1}
+.tile .tk{font-size:11.5px; color:var(--ink-soft); font-weight:700; margin-top:2px}
+.tile.a .ti{background:var(--heart-tint); color:var(--heart)}
+.tile.b .ti{background:var(--brand-tint); color:var(--brand)}
+.tile.c .ti{background:var(--violet-tint); color:var(--violet)}
+.tile.d .ti{background:var(--good-tint); color:var(--good)}
+.badges{display:flex; gap:12px; overflow-x:auto; padding-bottom:4px}
+.badges::-webkit-scrollbar{height:0}
+.bdg{flex:none; width:74px; text-align:center}
+.bdg .bi{width:60px;height:60px;border-radius:19px;margin:0 auto 6px; display:grid;place-items:center; font-size:27px;
+  box-shadow:var(--shadow-sm)}
+.bdg.on .bi{background:linear-gradient(160deg,var(--gold),var(--fire)); color:#fff}
+.bdg.off .bi{background:var(--surface-3); color:var(--ink-faint); filter:grayscale(1)}
+.bdg small{font-size:10.5px; font-weight:700; color:var(--ink-soft); line-height:1.2; display:block}
+
+/* mentor strip */
+.mentor{margin:12px 16px 4px; background:linear-gradient(135deg,var(--violet),#5a4bd6); color:#fff;
+  border-radius:20px; padding:16px; display:flex; gap:12px; align-items:center; box-shadow:var(--shadow-sm)}
+.mentor .mi{width:44px;height:44px;border-radius:14px;background:rgba(255,255,255,.18);display:grid;place-items:center;font-size:22px;flex:none}
+.mentor .mt b{font-size:14px} .mentor .mt p{margin:2px 0 0; font-size:12px; opacity:.9; font-weight:500}
+
+/* ---------- MOCK EXAM ---------- */
+.exam-hero{margin:2px 16px 4px; background:var(--surface); border-radius:20px; padding:16px; box-shadow:var(--shadow-sm)}
+.exam-hero .top{display:flex; align-items:center; gap:11px; margin-bottom:13px}
+.exam-hero .em{width:44px;height:44px;border-radius:13px; flex:none; color:#fff; display:grid;place-items:center; font-size:22px;
+  background:linear-gradient(150deg,var(--brand),var(--brand-deep))}
+.exam-hero h3{font-size:16px}
+.exam-hero .who{font-size:12px; color:var(--ink-soft); font-weight:600; margin-top:2px}
+.lvsel{display:flex; gap:8px; margin:0 0 12px}
+.lvsel button{flex:1; padding:10px 0; border-radius:12px; font-weight:800; font-size:13px;
+  background:var(--surface-2); color:var(--ink-soft); box-shadow:0 2px 0 var(--line)}
+.lvsel button.on{background:var(--brand); color:#fff; box-shadow:0 2px 0 var(--brand-deep)}
+.examstats{display:flex; gap:8px}
+.examstats .es{flex:1; text-align:center; background:var(--surface-2); border-radius:13px; padding:10px 4px}
+.examstats .es b{display:block; font-size:15px; font-family:"Fredoka"}
+.examstats .es small{font-size:10.5px; color:var(--ink-soft); font-weight:700}
+.bandscale{position:relative; margin-top:15px; padding-top:11px}
+.bandscale .track{display:flex; height:16px; border-radius:8px; overflow:hidden}
+.bandscale .track span{flex:1; display:grid; place-items:center; font-size:9px; font-weight:800; color:#fff}
+.bandscale .s1{background:#93a7ae}.bandscale .s2{background:var(--gold)}
+.bandscale .s3{background:var(--brand)}.bandscale .s4{background:var(--violet)}
+.bandscale .bmark{position:absolute; top:0; width:0;height:0; transform:translateX(-50%);
+  border-left:6px solid transparent; border-right:6px solid transparent; border-top:8px solid var(--ink)}
+.exam-last{text-align:center; font-size:12px; color:var(--ink-soft); font-weight:700; margin-top:9px}
+.exam-last b{color:var(--brand)}
+.seclist{display:flex; flex-direction:column}
+.secrow{display:flex; align-items:center; gap:12px; padding:11px 2px; border-bottom:1px solid var(--line)}
+.secrow:last-child{border-bottom:none}
+.secrow .si{width:38px;height:38px;border-radius:11px; flex:none; display:grid;place-items:center; font-size:17px; background:var(--surface-2)}
+.secrow .sinfo{flex:1; min-width:0}
+.secrow .sinfo b{font-size:14px}
+.secrow .sinfo small{display:block; font-size:11px; color:var(--ink-soft); font-weight:600; margin-top:1px}
+.secrow .sband{font-weight:800; font-size:12px; padding:4px 9px; border-radius:999px; background:var(--brand-tint); color:var(--brand-deep); flex:none}
+.seg{display:flex; gap:6px; background:var(--surface-2); padding:4px; border-radius:12px; margin-bottom:13px}
+.seg button{flex:1; padding:9px 0; border-radius:9px; font-weight:800; font-size:12.5px; color:var(--ink-soft)}
+.seg button.on{background:var(--surface); color:var(--brand); box-shadow:var(--shadow-sm)}
+.thint{font-size:12.5px; color:var(--ink-soft); font-weight:600; margin:0 0 12px; line-height:1.45}
+.para{background:var(--surface-2); border-radius:13px; padding:12px 12px 10px; margin-bottom:10px; transition:.15s}
+.para p{margin:0 0 9px; font-size:12.5px; line-height:1.5}
+.para select{width:100%; padding:11px; border-radius:10px; border:2px solid var(--line); background:var(--surface);
+  color:var(--ink); font-family:inherit; font-weight:700; font-size:12.5px}
+.para.ok{box-shadow:0 0 0 2px var(--good)} .para.no{box-shadow:0 0 0 2px var(--bad)}
+.kwt .orig{font-size:14px; font-weight:700; line-height:1.4}
+.kwt .key{display:inline-block; padding:5px 12px; border-radius:9px; background:var(--violet-tint); color:var(--violet);
+  font-weight:800; font-size:13px; letter-spacing:.06em; margin:11px 0 9px}
+.kwt .gap{font-size:14px; line-height:1.7}
+.kwt input{width:100%; margin-top:12px; padding:13px; border-radius:12px; border:2px solid var(--line);
+  background:var(--surface); color:var(--ink); font-family:inherit; font-weight:700; font-size:14px}
+.kwt input.ok{border-color:var(--good); background:var(--good-tint)}
+.kwt input.no{border-color:var(--bad); background:var(--bad-tint)}
+.examfb{margin-top:13px; padding:12px 14px; border-radius:14px; font-size:12.5px; font-weight:700; line-height:1.5}
+.examfb.good{background:var(--good-tint); color:var(--good)} .examfb.bad{background:var(--bad-tint); color:var(--bad)}
+.examfb.hidden{display:none}
+
+/* ---------- FULL MOCK RUN (overlay) ---------- */
+.mockrun{position:absolute; inset:0; z-index:80; background:var(--app); display:flex; flex-direction:column}
+.mr-top{padding:34px 16px 8px; display:flex; align-items:center; gap:12px}
+.mr-top .x{font-size:21px; color:var(--ink-faint); width:24px}
+.mr-sec{line-height:1.2}
+.mr-sec b{font-weight:800; font-size:14px}
+.mr-sec small{display:block; font-weight:700; font-size:11px; color:var(--ink-soft)}
+.mr-timer{margin-left:auto; font-family:"Fredoka",sans-serif; font-weight:700; font-size:15px; padding:6px 12px;
+  border-radius:12px; background:var(--surface); box-shadow:var(--shadow-sm); color:var(--ink)}
+.mr-timer.warn{color:var(--bad); background:var(--bad-tint)}
+.mr-steps{display:flex; gap:4px; padding:2px 16px 8px}
+.mr-steps i{height:5px; flex:1; border-radius:3px; background:var(--surface-3)}
+.mr-steps i.done{background:var(--good)} .mr-steps i.cur{background:var(--brand)}
+.mr-body{flex:1; overflow-y:auto; padding:8px 18px 14px}
+.mr-body .q-kick{color:var(--brand)}
+.mr-passage{background:var(--surface-2); border-radius:13px; padding:13px; font-size:12.5px; line-height:1.55; margin:10px 0 14px}
+.mr-foot{padding:14px 18px calc(16px + env(safe-area-inset-bottom)); border-top:1px solid var(--line); display:flex; gap:10px}
+.mr-foot .btn{flex:1}
+.mr-input{width:100%; padding:13px; border-radius:12px; border:2px solid var(--line); background:var(--surface);
+  color:var(--ink); font-family:inherit; font-weight:700; font-size:14px; margin-top:12px}
+.mr-ta{width:100%; min-height:148px; resize:vertical; padding:13px; border-radius:14px; border:2px solid var(--line);
+  background:var(--surface); color:var(--ink); font-family:inherit; font-size:14px; line-height:1.5; margin-top:8px}
+.mr-wc{font-size:12px; font-weight:700; color:var(--ink-soft); margin-top:8px; text-align:right}
+.mr-wc.ok{color:var(--good)}
+.mr-rec{display:flex; flex-direction:column; align-items:center; gap:13px; padding:24px 0 10px}
+.mr-rec .mic{width:76px;height:76px;border-radius:50%; background:var(--violet); color:#fff; display:grid;place-items:center;
+  font-size:31px; box-shadow:0 6px 0 #5a4bd6}
+.mr-rec .mic.on{background:var(--bad); box-shadow:0 6px 0 #b3352c; animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.07)}}
+@media (prefers-reduced-motion:reduce){.mr-rec .mic.on{animation:none}}
+.mr-rec small{font-weight:700; color:var(--ink-soft); font-size:12.5px}
+.mr-result{flex:1; overflow-y:auto; padding:24px 20px}
+.mr-result .big{text-align:center; margin-bottom:16px}
+.mr-result .big .em{font-size:52px; display:block}
+.mr-result .big h2{font-size:23px; margin-top:4px}
+.mr-result .verdict{display:inline-block; margin-top:10px; padding:6px 16px; border-radius:999px; font-weight:800; font-size:14px}
+.mr-result .verdict.pass{background:var(--good-tint); color:var(--good)}
+.mr-result .verdict.fail{background:var(--bad-tint); color:var(--bad)}
+.mr-scorebox{background:var(--surface); border-radius:18px; padding:16px; box-shadow:var(--shadow-sm); margin-bottom:12px; text-align:center}
+.mr-scorebox .sc{font-family:"Fredoka",sans-serif; font-size:38px; font-weight:700; color:var(--brand); line-height:1}
+.mr-scorebox .scl{font-size:12px; color:var(--ink-soft); font-weight:700; margin-top:5px}
+.mr-secscore{background:var(--surface); border-radius:16px; padding:4px 14px; box-shadow:var(--shadow-sm); margin-bottom:12px}
+.mr-secscore .r{display:flex; align-items:center; gap:10px; padding:11px 0; border-bottom:1px solid var(--line)}
+.mr-secscore .r:last-child{border-bottom:none}
+.mr-secscore .r .si{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;font-size:15px;background:var(--surface-2);flex:none}
+.mr-secscore .r .nm{flex:1; font-weight:700; font-size:13.5px}
+.mr-secscore .r .nm small{display:block;font-weight:600;font-size:11px;color:var(--ink-faint)}
+.mr-secscore .r .bd{font-weight:800; font-size:12px; padding:4px 10px; border-radius:999px; background:var(--brand-tint); color:var(--brand-deep); flex:none}
+.mr-plan{background:var(--gold); color:#4a3600; border-radius:16px; padding:14px; font-weight:700; font-size:12.5px; margin-bottom:14px; line-height:1.5}
+
+/* ---------- bottom nav ---------- */
+.nav{display:flex; background:var(--surface); border-top:1px solid var(--line);
+  padding:8px 6px calc(8px + env(safe-area-inset-bottom))}
+.nav button{flex:1; display:flex; flex-direction:column; align-items:center; gap:3px; padding:6px 0;
+  color:var(--ink-faint); font-size:10.5px; font-weight:800; letter-spacing:.02em; border-radius:12px}
+.nav button .ni{font-size:21px; line-height:1}
+.nav button.on{color:var(--brand)}
+.nav button.on .ni{transform:translateY(-1px)}
+
+.caption{color:var(--ink-soft); font-size:12.5px; text-align:center; max-width:360px; line-height:1.5; font-weight:500}
+.caption b{color:var(--ink)}
+</style>
+
+<div class="stage">
+  <div class="brandline">
+    <span class="logo">🦉</span><b>MyTeacher CEFR</b>
+    <button class="themebtn" id="themeBtn" aria-label="Rejimni almashtirish">◑</button>
+  </div>
+
+  <div class="phone">
+    <div class="notch"></div>
+
+    <!-- ============ LEARN ============ -->
+    <section class="screen active" data-screen="learn">
+      <div class="scroll">
+        <div class="hud">
+          <span class="stat level">B1</span>
+          <span class="stat streak"><span class="ico">🔥</span><span class="num">24</span></span>
+          <span class="stat gem"><span class="ico">💎</span><span class="num">340</span></span>
+          <span class="stat xp"><span class="ico">⚡</span><span class="num">1 240</span></span>
+          <span class="stat hearts"><span class="ico">❤️</span><span class="num" id="heartHud">5</span></span>
+        </div>
+
+        <div class="levelbar">
+          <div class="row">
+            <span class="cefr">🎯 B1 — Intermediate</span>
+            <span class="pill">42%</span>
+          </div>
+          <div class="progress"><i style="width:42%"></i></div>
+          <small>Unit 5 / 12 · keyingi checkpoint'gacha 2 dars</small>
+        </div>
+
+        <div class="unit-head">
+          <div class="t"><span class="k">Unit 5 · Bo'lim</span><h3>Travel &amp; Experiences</h3></div>
+          <span class="g">✈️</span>
+        </div>
+
+        <div class="path" id="path"></div>
+      </div>
+
+      <!-- bottom sheet -->
+      <div class="sheet-wrap" id="sheetWrap">
+        <div class="sheet-scrim" data-close></div>
+        <div class="sheet">
+          <div class="grip"></div>
+          <h3 id="sheetTitle">Have you ever…?</h3>
+          <div class="meta">
+            <span class="tag">🕐 ~6 daqiqa</span>
+            <span class="tag">📚 14 mashq</span>
+            <span class="tag xp">⚡ +30 XP</span>
+          </div>
+          <button class="btn" id="startLesson">Boshlash</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ LESSON ============ -->
+    <section class="screen" data-screen="lesson">
+      <div class="lesson-top">
+        <button class="x" data-goto="learn" aria-label="Yopish">✕</button>
+        <div class="lp"><i id="lpFill" style="width:0%"></i></div>
+        <span class="stat hearts"><span class="ico">❤️</span><span class="num" id="heartLesson">5</span></span>
+      </div>
+      <div class="q-area" id="qArea"></div>
+      <div class="feedback hidden" id="feedback"></div>
+      <div class="lesson-foot" id="lessonFoot">
+        <button class="btn" id="checkBtn" disabled style="opacity:.5">Tekshirish</button>
+      </div>
+    </section>
+
+    <!-- ============ LEAGUE ============ -->
+    <section class="screen" data-screen="league">
+      <div class="scroll">
+        <div class="hud"><span class="stat level">Liga</span>
+          <span class="stat" style="color:var(--gold)"><span class="ico">🏆</span>Gold</span>
+          <span class="stat" style="margin-left:auto;color:var(--ink-soft)"><span class="ico">⏳</span>2k 14s</span>
+        </div>
+        <div class="league-hero">
+          <div class="badge">🏆</div>
+          <h2>Gold League</h2>
+          <div class="row"><span>30 ta o'quvchi · haftalik reyting</span></div>
+        </div>
+        <div class="promo-note">Ko'tarilish zonasi · Top 7</div>
+        <div id="leagueTop"></div>
+        <div class="promo-note demo-note" style="margin-top:14px">Tushish zonasi · pastki 5</div>
+        <div id="leagueBottom"></div>
+        <div style="height:14px"></div>
+      </div>
+    </section>
+
+    <!-- ============ PROFILE ============ -->
+    <section class="screen" data-screen="profile">
+      <div class="scroll">
+        <div class="pro-head">
+          <span class="av">🧑‍🎓</span>
+          <div>
+            <h2>Sardor X.</h2>
+            <div class="who">@sardor · MyTeacher’da 24 kun</div>
+            <div class="lv"><span class="pill">CEFR: B1 · 42%</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Skill balansi (CEFR)</div>
+          <div class="radar-wrap" id="radarWrap"></div>
+        </div>
+
+        <div class="tiles">
+          <div class="tile a"><span class="ti">🔥</span><div><div class="tv num">24</div><div class="tk">Kunlik streak</div></div></div>
+          <div class="tile b"><span class="ti">⚡</span><div><div class="tv num">1 240</div><div class="tk">Umumiy XP</div></div></div>
+          <div class="tile c"><span class="ti">📖</span><div><div class="tv num">862</div><div class="tk">O'rganilgan so'z</div></div></div>
+          <div class="tile d"><span class="ti">✅</span><div><div class="tv num">148</div><div class="tk">Tugatilgan dars</div></div></div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Yutuqlar</div>
+          <div class="badges">
+            <div class="bdg on"><div class="bi">🔥</div><small>24 kun streak</small></div>
+            <div class="bdg on"><div class="bi">🎓</div><small>A2 tugadi</small></div>
+            <div class="bdg on"><div class="bi">🎙️</div><small>50 Speaking</small></div>
+            <div class="bdg on"><div class="bi">💯</div><small>10 Perfect</small></div>
+            <div class="bdg off"><div class="bi">🏆</div><small>Diamond liga</small></div>
+            <div class="bdg off"><div class="bi">📅</div><small>100 kun</small></div>
+          </div>
+        </div>
+
+        <div class="mentor">
+          <span class="mi">🧑‍🏫</span>
+          <div class="mt"><b>Nazoratchi mentor: Diyora M.</b><p>“Speaking’da progress zo‘r! Past tense’ni takrorlaymiz.” · 2 kun oldin</p></div>
+        </div>
+        <div style="height:16px"></div>
+      </div>
+    </section>
+
+    <!-- ============ MOCK EXAM ============ -->
+    <section class="screen" data-screen="mock">
+      <div class="scroll">
+        <div class="hud">
+          <span class="stat level">Mock</span>
+          <span class="stat" style="color:var(--brand)"><span class="ico">🎓</span>Milliy Sertifikat</span>
+          <span class="stat" style="margin-left:auto;color:var(--ink-soft)"><span class="ico">🎯</span>60%</span>
+        </div>
+
+        <div class="exam-hero">
+          <div class="top">
+            <span class="em">📋</span>
+            <div><h3>Multilevel — sinov imtihoni</h3>
+              <div class="who">Bilim va malakalarni baholash agentligi formati</div></div>
+          </div>
+          <div class="lvsel">
+            <button data-lv="B1">B1</button>
+            <button class="on" data-lv="B2">B2</button>
+            <button data-lv="C1">C1</button>
+          </div>
+          <div class="examstats">
+            <div class="es"><b>5</b><small>bo'lim</small></div>
+            <div class="es"><b>~3s 35m</b><small>davomiylik</small></div>
+            <div class="es"><b>2 yil</b><small>amal muddati</small></div>
+          </div>
+          <div class="bandscale">
+            <div class="bmark" style="left:64%"></div>
+            <div class="track"><span class="s1">A2</span><span class="s2">B1</span><span class="s3">B2</span><span class="s4">C1</span></div>
+          </div>
+          <div class="exam-last">Oxirgi sinov: <b>56 / 75 standart ball · B2</b></div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Imtihon bo'limlari</div>
+          <div class="seclist">
+            <div class="secrow"><span class="si">🎧</span><div class="sinfo"><b>Listening</b><small>~30 savol · 30 daq · MCQ, matching, gap-fill</small></div><span class="sband">B2</span></div>
+            <div class="secrow"><span class="si">📖</span><div class="sinfo"><b>Reading</b><small>~30 savol · 70 daq · headings, T/F/NG, gapped</small></div><span class="sband">B2</span></div>
+            <div class="secrow"><span class="si">🔤</span><div class="sinfo"><b>Use of English</b><small>~30 savol · 35 daq · cloze, word form, key word</small></div><span class="sband" style="background:var(--gold);color:#5a4300">B1</span></div>
+            <div class="secrow"><span class="si">✍️</span><div class="sinfo"><b>Writing</b><small>2 topshiriq · 50 daq · xat + essay · AI baho</small></div><span class="sband">B2</span></div>
+            <div class="secrow"><span class="si">🎙️</span><div class="sinfo"><b>Speaking</b><small>3 qism · 15 daq · interview, monolog, muhokama</small></div><span class="sband" style="background:var(--gold);color:#5a4300">B1</span></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="ct">Imtihon mashqi · real task turlari</div>
+          <div class="seg">
+            <button class="on" data-seg="match">Matching headings</button>
+            <button data-seg="kwt">Key word</button>
+          </div>
+          <div id="examTask"></div>
+          <button class="btn" id="examCheck" style="margin-top:14px">Tekshirish</button>
+          <div class="examfb hidden" id="examFb"></div>
+        </div>
+
+        <div class="mentor" id="startMock" role="button" tabindex="0" style="background:linear-gradient(135deg,var(--brand),var(--brand-deep));cursor:pointer">
+          <span class="mi">🚀</span>
+          <div class="mt"><b>To'liq mock imtihonni boshlang</b><p>5 bo'lim · real vaqt · standart ball + CEFR daraja bashorati</p></div>
+          <span style="margin-left:auto;font-size:20px">›</span>
+        </div>
+        <div style="height:16px"></div>
+      </div>
+    </section>
+
+    <!-- ============ FULL MOCK RUN ============ -->
+    <div class="mockrun" id="mockRun" hidden>
+      <div class="mr-top">
+        <button class="x" id="mrClose" aria-label="Imtihondan chiqish">✕</button>
+        <div class="mr-sec"><b id="mrSec">Listening</b><small id="mrCount">1 / 8</small></div>
+        <div class="mr-timer" id="mrTimer">20:00</div>
+      </div>
+      <div class="mr-steps" id="mrSteps"></div>
+      <div class="mr-body" id="mrBody"></div>
+      <div class="mr-foot" id="mrFoot"></div>
+    </div>
+
+    <!-- ============ NAV ============ -->
+    <nav class="nav">
+      <button class="on" data-goto="learn"><span class="ni">🗺️</span>O'rganish</button>
+      <button data-goto="mock"><span class="ni">🎓</span>Imtihon</button>
+      <button data-goto="league"><span class="ni">🏆</span>Liga</button>
+      <button data-goto="profile"><span class="ni">📊</span>Profil</button>
+    </nav>
+  </div>
+
+  <p class="caption"><b>Interaktiv prototip.</b> Yo'ldagi nuqtalarni, darsni (javob → darhol feedback) va yuqoridagi ◑ tugmasi bilan tungi rejimni sinab ko'ring.</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const $ = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+
+  /* ---- theme toggle ---- */
+  const root = document.documentElement;
+  $("#themeBtn").addEventListener("click", () => {
+    const cur = root.getAttribute("data-theme");
+    const isDark = cur ? cur === "dark"
+      : window.matchMedia("(prefers-color-scheme:dark)").matches;
+    root.setAttribute("data-theme", isDark ? "light" : "dark");
+  });
+
+  /* ---- nav / screens ---- */
+  function goto(name){
+    $$(".screen").forEach(s => s.classList.toggle("active", s.dataset.screen === name));
+    $$(".nav button").forEach(b => b.classList.toggle("on", b.dataset.goto === name));
+  }
+  document.addEventListener("click", e => {
+    const t = e.target.closest("[data-goto]");
+    if(t){ goto(t.dataset.goto); }
+    if(e.target.closest("[data-close]")) $("#sheetWrap").classList.remove("open");
+  });
+
+  /* ---- learning path ---- */
+  const nodes = [
+    {ic:"💬", cap:"Dars 1", state:"done"},
+    {ic:"📝", cap:"Dars 2", state:"done"},
+    {ic:"🎧", cap:"Dars 3", state:"done"},
+    {ic:"⭐", cap:"Dars 4", state:"current", title:"Have you ever…?"},
+    {ic:"🎙️", cap:"Speaking", state:"locked"},
+    {ic:"🎁", cap:"Checkpoint", state:"locked", type:"checkpoint"},
+    {ic:"📖", cap:"Dars 6", state:"locked"},
+  ];
+  const offset = ["", "off2", "", "off1", "", "", "off2"];
+  const path = $("#path");
+  nodes.forEach((n,i) => {
+    const el = document.createElement("div");
+    el.className = "node " + n.state + (n.type === "checkpoint" ? " checkpoint" : "");
+    el.innerHTML =
+      (n.state === "current" ? '<span class="startbub">BOSHLASH</span>' : "") +
+      '<div class="disc '+offset[i]+'">'+(n.state==="locked"?"🔒":n.ic)+'</div>' +
+      '<span class="cap '+offset[i]+'">'+n.cap+'</span>';
+    if(n.state !== "locked"){
+      el.querySelector(".disc").addEventListener("click", () => {
+        $("#sheetTitle").textContent = n.title || (n.cap + " — Travel");
+        $("#sheetWrap").classList.add("open");
+      });
+    }
+    path.appendChild(el);
+  });
+  $("#startLesson").addEventListener("click", () => {
+    $("#sheetWrap").classList.remove("open");
+    startLesson();
+  });
+
+  /* ---- lesson engine ---- */
+  const QUESTIONS = [
+    {
+      kick:"Grammatika · Present Perfect",
+      title:"Bo'sh joyni to'ldiring",
+      sub:"“I ___ never been to London.”",
+      type:"mc",
+      options:["have","has","had","having"],
+      answer:0,
+      why:"1-shaxs (I) uchun Present Perfect’da <b>have</b> ishlatiladi."
+    },
+    {
+      kick:"Listening · eshiting",
+      title:"Nima deyilyapti?",
+      sub:"Audio’ni tinglang va to'g'ri javobni tanlang",
+      type:"listen",
+      options:["She has visited Paris twice.","She is visiting Paris today.","She will visit Paris soon."],
+      answer:0,
+      audio:"She has visited Paris twice.",
+      why:"“has visited” — bu Present Perfect: tajriba haqida."
+    },
+    {
+      kick:"Gap tuzish",
+      title:"Jumlani to'g'ri tartibda tuzing",
+      sub:"“Men hech qachon sushi tatib ko‘rmaganman.”",
+      type:"build",
+      bank:["tried","have","I","never","sushi"],
+      answer:["I","have","never","tried","sushi"],
+      why:"To'g'ri tartib: <b>I have never tried sushi.</b>"
+    }
+  ];
+  let qi = 0, correctCount = 0, selected = null, placed = [];
+  const qArea = $("#qArea"), fb = $("#feedback"), foot = $("#lessonFoot"), check = $("#checkBtn");
+
+  function startLesson(){
+    qi = 0; correctCount = 0;
+    setHearts(5);
+    goto("lesson");
+    renderQ();
+  }
+  function setHearts(n){ $("#heartLesson").textContent = n; $("#heartHud").textContent = n; }
+
+  function renderQ(){
+    selected = null; placed = [];
+    fb.className = "feedback hidden";
+    foot.className = "lesson-foot";
+    foot.innerHTML = '<button class="btn" id="checkBtn" disabled style="opacity:.5">Tekshirish</button>';
+    bindCheck();
+    $("#lpFill").style.width = (qi / QUESTIONS.length * 100) + "%";
+    const q = QUESTIONS[qi];
+    let html = '<div class="q-kick">'+q.kick+'</div><div class="q-title">'+q.title+'</div><div class="q-sub">'+q.sub+'</div>';
+
+    if(q.type === "listen"){
+      html += '<div class="speaker"><button class="play" id="playBtn" aria-label="Tinglash">▶</button>'+
+        '<div class="wave" id="wave"></div></div>';
+    }
+    if(q.type === "mc" || q.type === "listen"){
+      html += '<div class="opts">';
+      q.options.forEach((o,idx) => {
+        html += '<button class="opt" data-idx="'+idx+'"><span class="kbd">'+(idx+1)+'</span>'+o+'</button>';
+      });
+      html += '</div>';
+    }
+    if(q.type === "build"){
+      html += '<div class="answer-line" id="answerLine"></div><div class="bank" id="bank"></div>';
+    }
+    qArea.innerHTML = html;
+    qArea.scrollTop = 0;
+
+    if(q.type === "listen"){
+      const wave = $("#wave");
+      wave.innerHTML = Array.from({length:16}, () =>
+        '<span style="height:'+(8+Math.round(Math.random()*18))+'px"></span>').join("");
+      $("#playBtn").addEventListener("click", () => speak(q.audio));
+    }
+    if(q.type === "mc" || q.type === "listen"){
+      $$(".opt").forEach(op => op.addEventListener("click", () => {
+        $$(".opt").forEach(x => x.classList.remove("sel"));
+        op.classList.add("sel");
+        selected = +op.dataset.idx;
+        enableCheck();
+      }));
+    }
+    if(q.type === "build") buildBank(q);
+  }
+
+  function buildBank(q){
+    const bank = $("#bank"), line = $("#answerLine");
+    q.bank.forEach((w,i) => {
+      const c = document.createElement("button");
+      c.className = "chip"; c.textContent = w; c.dataset.w = w; c.dataset.i = i;
+      c.addEventListener("click", () => {
+        c.classList.add("used");
+        const p = document.createElement("button");
+        p.className = "chip placed"; p.textContent = w;
+        p.addEventListener("click", () => { p.remove(); c.classList.remove("used");
+          placed = placed.filter(x => x.i !== c.dataset.i); enableCheck(); });
+        p.dataset.i = c.dataset.i;
+        line.appendChild(p);
+        placed.push({w:w, i:c.dataset.i});
+        enableCheck();
+      });
+      bank.appendChild(c);
+    });
+  }
+
+  function enableCheck(){
+    const q = QUESTIONS[qi];
+    const ready = q.type === "build" ? placed.length === q.answer.length : selected !== null;
+    check.disabled = !ready;
+    check.style.opacity = ready ? "1" : ".5";
+  }
+  function bindCheck(){ $("#checkBtn").addEventListener("click", onCheck); }
+
+  function onCheck(){
+    const q = QUESTIONS[qi];
+    let ok;
+    if(q.type === "build"){
+      ok = placed.map(p => p.w).join(" ") === q.answer.join(" ");
+      $$(".answer-line .chip").forEach(c => c.classList.add(ok ? "ok" : "no"));
+    } else {
+      ok = selected === q.answer;
+      $$(".opt").forEach(op => {
+        op.disabled = true;
+        if(+op.dataset.idx === q.answer) op.classList.add("ok");
+        else if(+op.dataset.idx === selected) op.classList.add("no");
+      });
+    }
+    if(ok){ correctCount++; }
+    else { setHearts(Math.max(0, +$("#heartLesson").textContent - 1)); }
+
+    fb.className = "feedback " + (ok ? "good" : "bad");
+    fb.innerHTML =
+      '<div class="fb-row"><span class="fb-ico">'+(ok?"✓":"✕")+'</span>'+
+      '<div><h4>'+(ok?"Ajoyib! 🎉":"Xato — o‘rganamiz")+'</h4><p>'+q.why+'</p></div></div>';
+    foot.className = "lesson-foot none";
+    foot.innerHTML = '<button class="btn" id="nextBtn">'+
+      (qi < QUESTIONS.length-1 ? "Davom etish" : "Yakunlash")+'</button>';
+    $("#nextBtn").addEventListener("click", () => {
+      qi++;
+      if(qi < QUESTIONS.length) renderQ(); else finish();
+    });
+  }
+
+  function finish(){
+    $("#lpFill").style.width = "100%";
+    const acc = Math.round(correctCount / QUESTIONS.length * 100);
+    qArea.innerHTML =
+      '<div class="result">'+
+        '<div class="burst">🎉</div>'+
+        '<h2>Dars tugadi!</h2>'+
+        '<div class="sub">Travel &amp; Experiences · Dars 4</div>'+
+        '<div class="rewards">'+
+          '<div class="reward xp"><div class="rv num">+30</div><div class="rk">XP</div></div>'+
+          '<div class="reward streak"><div class="rv num">25 🔥</div><div class="rk">Streak</div></div>'+
+          '<div class="reward acc"><div class="rv num">'+acc+'%</div><div class="rk">Aniqlik</div></div>'+
+        '</div>'+
+      '</div>';
+    fb.className = "feedback hidden";
+    foot.className = "lesson-foot";
+    foot.innerHTML = '<button class="btn" data-goto="learn">Yo‘lga qaytish</button>';
+  }
+
+  /* tiny TTS for the listening demo (best-effort) */
+  function speak(text){
+    try{
+      if(!("speechSynthesis" in window)) return;
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "en-US"; u.rate = .9;
+      speechSynthesis.cancel(); speechSynthesis.speak(u);
+    }catch(e){}
+  }
+
+  /* ---- league ---- */
+  const avs = ["🦊","🐼","🐨","🦁","🐯","🐸","🐵","🦉","🐺","🐰","🐻","🦄"];
+  const cols = ["#0ea5a4","#7c6bf5","#ff7a45","#16b364","#fb5a6a","#f6b93b","#0a7f7e","#5a4bd6","#e8734a"];
+  const top = [
+    {n:"Malika R.",x:940},{n:"Jasur T.",x:880},{n:"Nigora S.",x:820},
+    {n:"Sardor X.",x:760,me:true},{n:"Bekzod A.",x:690},{n:"Kamola D.",x:640},{n:"Aziz M.",x:610}
+  ];
+  const bottom = [{n:"Shohruh N.",x:180},{n:"Dilnoza P.",x:150},{n:"Ulug‘bek Q.",x:120}];
+  function rankRow(r, pos){
+    const medal = pos===1?"🥇":pos===2?"🥈":pos===3?"🥉":"";
+    return '<div class="rank'+(r.me?" me":"")+'">'+
+      '<span class="pos">'+(medal||pos)+'</span>'+
+      '<span class="av" style="background:'+cols[(pos-1)%cols.length]+'">'+avs[(pos-1)%avs.length]+'</span>'+
+      '<span class="nm">'+r.n+(r.me?' <small>Siz</small>':'')+'</span>'+
+      '<span class="pts num">'+r.x+' ⚡</span></div>';
+  }
+  $("#leagueTop").innerHTML = top.map((r,i)=>rankRow(r,i+1)).join("");
+  $("#leagueBottom").innerHTML = bottom.map((r,i)=>rankRow(r,i+28)).join("");
+
+  /* ---- radar chart ---- */
+  (function radar(){
+    const labels = ["Grammar","Vocab","Listening","Reading","Speaking","Writing"];
+    const vals   = [72, 80, 65, 78, 54, 60];
+    const cx=150, cy=145, R=96, N=labels.length, rings=[.25,.5,.75,1];
+    const pt = (i, r) => {
+      const a = -Math.PI/2 + i*2*Math.PI/N;
+      return [cx + Math.cos(a)*R*r, cy + Math.sin(a)*R*r];
+    };
+    let svg = '<svg viewBox="0 0 300 290" width="290" height="280" role="img" aria-label="CEFR skill radar">';
+    rings.forEach(rr => {
+      const p = labels.map((_,i)=>pt(i,rr).map(v=>v.toFixed(1)).join(",")).join(" ");
+      svg += '<polygon points="'+p+'" fill="none" stroke="var(--line)" stroke-width="1"/>';
+    });
+    labels.forEach((_,i)=>{ const [x,y]=pt(i,1);
+      svg += '<line x1="'+cx+'" y1="'+cy+'" x2="'+x.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke="var(--line)" stroke-width="1"/>'; });
+    const dp = vals.map((v,i)=>pt(i,v/100).map(n=>n.toFixed(1)).join(",")).join(" ");
+    svg += '<polygon points="'+dp+'" fill="var(--brand)" fill-opacity="0.22" stroke="var(--brand)" stroke-width="2.5"/>';
+    vals.forEach((v,i)=>{ const [x,y]=pt(i,v/100);
+      svg += '<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="3.5" fill="var(--brand)"/>'; });
+    labels.forEach((lb,i)=>{ const [x,y]=pt(i,1.2);
+      const anchor = Math.abs(x-cx)<8 ? "middle" : (x>cx ? "start":"end");
+      svg += '<text x="'+x.toFixed(1)+'" y="'+(y+4).toFixed(1)+'" text-anchor="'+anchor+'" '+
+        'font-family="Plus Jakarta Sans,sans-serif" font-size="11.5" font-weight="700" fill="var(--ink-soft)">'+lb+'</text>';
+      svg += '<text x="'+x.toFixed(1)+'" y="'+(y+17).toFixed(1)+'" text-anchor="'+anchor+'" '+
+        'font-family="Fredoka,sans-serif" font-size="11" font-weight="600" fill="var(--brand)">'+vals[i]+'</text>';
+    });
+    svg += '</svg>';
+    $("#radarWrap").innerHTML = svg;
+  })();
+
+  /* ---- mock exam interactive tasks ---- */
+  (function mock(){
+    const examTask = $("#examTask"), examFb = $("#examFb"), examCheck = $("#examCheck");
+    if(!examTask) return;
+    let mode = "match";
+
+    const HEADINGS = ["— sarlavhani tanlang —",
+      "The rise of public transport","Working from home","The cost of city living","Travelling abroad"];
+    const PARAS = [
+      {t:"More people than ever are choosing buses and trains over private cars, easing traffic in major cities.", a:"The rise of public transport"},
+      {t:"Many companies now allow staff to complete their daily tasks from home, cutting expensive office costs.", a:"Working from home"},
+      {t:"Rents and property prices in the capital have climbed sharply, pushing many families out to the suburbs.", a:"The cost of city living"}
+    ];
+    const KWT = {
+      orig:"“They cancelled the match because of the rain.”",
+      key:"CALLED",
+      pre:"The match", post:"because of the rain.",
+      accept:["was called off","has been called off","got called off","is called off"]
+    };
+
+    function renderMatch(){
+      let h = '<p class="thint">Har bir paragrafga mos sarlavhani tanlang — bittasi <b>ortiqcha</b> (distractor).</p>';
+      PARAS.forEach(p => {
+        h += '<div class="para" data-a="'+p.a+'"><p>'+p.t+'</p><select aria-label="Sarlavha">'+
+          HEADINGS.map(x => '<option>'+x+'</option>').join("") + '</select></div>';
+      });
+      examTask.innerHTML = h;
+    }
+    function renderKwt(){
+      examTask.innerHTML =
+        '<p class="thint">Berilgan so\'zdan foydalanib, ikkinchi jumlani birinchisi bilan bir xil ma\'noda tugating.</p>'+
+        '<div class="kwt"><div class="orig">'+KWT.orig+'</div>'+
+        '<span class="key">'+KWT.key+'</span>'+
+        '<div class="gap">'+KWT.pre+' <b>___________</b> '+KWT.post+'</div>'+
+        '<input id="kwtInput" placeholder="javobingizni yozing…" autocomplete="off" autocapitalize="off"></div>';
+    }
+    function render(){
+      examFb.className = "examfb hidden";
+      examCheck.textContent = "Tekshirish";
+      examCheck.disabled = false; examCheck.style.opacity = "1";
+      if(mode === "match") renderMatch(); else renderKwt();
+    }
+
+    function checkMatch(){
+      let ok = 0;
+      $$("#examTask .para").forEach(pr => {
+        const sel = pr.querySelector("select");
+        const good = sel.value === pr.dataset.a;
+        pr.classList.remove("ok","no");
+        pr.classList.add(good ? "ok" : "no");
+        sel.disabled = true;
+        if(good) ok++;
+      });
+      const pass = ok === PARAS.length;
+      examFb.className = "examfb " + (pass ? "good" : "bad");
+      examFb.innerHTML = pass
+        ? "✓ 3/3 to'g'ri! Matching headings — bu Reading bo'limining tez ball yig'iladigan qismi."
+        : ok + "/3 to'g'ri. Maslahat: har paragrafning <b>asosiy g'oyasini</b> toping, alohida so'zlarga aldanmang.";
+    }
+    function checkKwt(){
+      const inp = $("#kwtInput");
+      const val = inp.value.trim().toLowerCase().replace(/\s+/g," ");
+      const ok = KWT.accept.includes(val);
+      inp.classList.add(ok ? "ok" : "no");
+      inp.disabled = true;
+      examFb.className = "examfb " + (ok ? "good" : "bad");
+      examFb.innerHTML = ok
+        ? "✓ To'g'ri! <b>was called off</b> — passive + phrasal verb."
+        : "To'g'ri javob: <b>was called off</b>. Key word transformation'da grammatik shakl (passive, zamon) muhim.";
+    }
+
+    let checked = false;
+
+    // check / reset cycle
+    examCheck.addEventListener("click", () => {
+      if(!checked){
+        if(mode === "match") checkMatch(); else checkKwt();
+        checked = true; examCheck.textContent = "Yana urinish";
+      } else {
+        checked = false; render();
+      }
+    });
+
+    // segmented control (task type)
+    $$('.seg [data-seg]').forEach(b => b.addEventListener("click", () => {
+      $$('.seg [data-seg]').forEach(x => x.classList.toggle("on", x === b));
+      mode = b.dataset.seg; checked = false; render();
+    }));
+
+    // target-level select — updates hero + drives which Full Mock loads
+    const heroLast = document.querySelector(".exam-last");
+    const heroMark = document.querySelector(".exam-hero .bmark");
+    const LVPOS = {B1:"30%", B2:"64%", C1:"88%"};
+    $$('.lvsel [data-lv]').forEach(b => b.addEventListener("click", () => {
+      $$('.lvsel [data-lv]').forEach(x => x.classList.toggle("on", x === b));
+      const lv = b.dataset.lv;
+      if(heroLast) heroLast.innerHTML = "Maqsad daraja: <b>"+lv+"</b> · o'tish uchun ≥ 60%";
+      if(heroMark) heroMark.style.left = LVPOS[lv] || "64%";
+    }));
+
+    render();
+  })();
+
+  /* ---- FULL MOCK EXAM flow (timed, 5 sections, result) ---- */
+  (function fullMock(){
+    const run = $("#mockRun"); if(!run) return;
+    const body = $("#mrBody"), foot = $("#mrFoot"), steps = $("#mrSteps");
+    const secEl = $("#mrSec"), countEl = $("#mrCount"), timerEl = $("#mrTimer");
+
+    const MOCK_B2 = [
+      {sec:"Listening", kick:"Listening · Part 1", type:"mcq",
+       audio:"Have you booked the meeting room for Thursday? I tried, but it was already taken, so I put us down for Friday morning instead. That works, as long as it's before eleven.",
+       q:"When will the meeting take place first?",
+       options:["Thursday afternoon","Friday morning","Friday afternoon"], answer:1},
+      {sec:"Listening", kick:"Listening · Part 2 · Note completion", type:"gap",
+       audio:"Photography is allowed everywhere except the energy exhibition, where the lighting is sensitive.",
+       q:"Photography is not allowed in the ________ exhibition.",
+       hint:"Audio'ni tinglang · BIR so'z yozing", accept:["energy"]},
+      {sec:"Reading", kick:"Reading · Matching headings", type:"mcq",
+       passage:"For many businesses, the appeal was financial. Smaller offices meant lower rent, reduced energy bills and fewer overheads — savings that went straight to the bottom line.",
+       q:"Choose the best heading for this paragraph.",
+       options:["A change driven by cost","A trend that may not last","The role of technology"], answer:0},
+      {sec:"Reading", kick:"Reading · True / False / Not Given", type:"mcq",
+       passage:"Night trains have made a striking comeback across Europe. Critics argue they remain expensive compared with budget airlines, and that comfort varies widely.",
+       q:"Night-train tickets are always cheaper than budget flights.",
+       options:["True","False","Not Given"], answer:1},
+      {sec:"Use of English", kick:"Use of English · Multiple-choice cloze", type:"mcq",
+       q:"Many people ________ up volunteering to help others.",
+       options:["take","pick","put"], answer:0},
+      {sec:"Use of English", kick:"Use of English · Key word transformation", type:"kwt",
+       orig:"“They cancelled the concert because of the storm.”", key:"OFF",
+       pre:"The concert", post:"because of the storm.",
+       hint:"Berilgan so'zdan foydalaning (2–5 so'z)", accept:["was called off","has been called off","got called off"]},
+      {sec:"Writing", kick:"Writing · Task 2 · Opinion essay", type:"writing",
+       q:"Some people think students should use smartphones in class for learning. Others believe they are a distraction. Discuss both views and give your own opinion.",
+       minWords:120},
+      {sec:"Speaking", kick:"Speaking · Part 2 · Long turn", type:"speaking",
+       q:"Compare two ways of studying — alone at home and in a group at a library — and say why people might choose each. Speak for 1–2 minutes."}
+    ];
+
+    const MOCK_B1 = [
+      {sec:"Listening", kick:"Listening · Part 1", type:"mcq",
+       audio:"Sorry I'm late! The bus didn't come on time, so in the end I had to walk. It took me almost half an hour.",
+       q:"Why was the speaker late?",
+       options:["He missed the bus","The bus did not arrive","He wanted to walk"], answer:1},
+      {sec:"Listening", kick:"Listening · Part 2 · Note completion", type:"gap",
+       audio:"The library is open from nine in the morning until eight in the evening from Monday to Friday.",
+       q:"On weekdays the library closes at ________.",
+       hint:"Audio'ni tinglang · vaqtni yozing", accept:["eight","8","8pm","eight pm","8 pm"]},
+      {sec:"Reading", kick:"Reading · Matching heading", type:"mcq",
+       passage:"Cycling to work has become popular in our city. It is cheap, it keeps you fit, and it does not pollute the air.",
+       q:"Choose the best heading for this paragraph.",
+       options:["The benefits of cycling","A dangerous journey","The high cost of cars"], answer:0},
+      {sec:"Reading", kick:"Reading · True / False / Not Given", type:"mcq",
+       passage:"The museum is free for children under twelve. Adults pay a small entrance fee at the door.",
+       q:"Children under twelve pay to enter the museum.",
+       options:["True","False","Not Given"], answer:1},
+      {sec:"Use of English", kick:"Use of English · Multiple-choice cloze", type:"mcq",
+       q:"She is really good ________ playing the guitar.",
+       options:["at","in","on"], answer:0},
+      {sec:"Use of English", kick:"Use of English · Key word transformation", type:"kwt",
+       orig:"“This is my first visit to Paris.”", key:"BEEN",
+       pre:"I have never", post:"Paris before.",
+       hint:"Berilgan so'zdan foydalaning (2–4 so'z)", accept:["been to"]},
+      {sec:"Writing", kick:"Writing · Part 1 · Informal email", type:"writing",
+       q:"A friend has invited you to visit their city. Write a short email: thank your friend, say when you can come, and ask one question.",
+       minWords:80},
+      {sec:"Speaking", kick:"Speaking · Part 1 · Personal", type:"speaking",
+       q:"Talk about your home town: where it is, what you like about it, and one thing you would change. Speak for about a minute."}
+    ];
+
+    const MOCK_C1 = [
+      {sec:"Listening", kick:"Listening · Part 1", type:"mcq",
+       audio:"While the committee acknowledged the proposal's merits, they felt its costs had been significantly underestimated, and so they decided to postpone any final decision.",
+       q:"What did the committee decide to do?",
+       options:["Reject the proposal outright","Delay the final decision","Approve it with minor changes"], answer:1},
+      {sec:"Listening", kick:"Listening · Part 2 · Note completion", type:"gap",
+       audio:"The lecturer argues that economic growth alone is an inadequate measure of a nation's overall wellbeing.",
+       q:"Economic growth alone is an ________ measure of wellbeing.",
+       hint:"Audio'ni tinglang · BIR so'z", accept:["inadequate"]},
+      {sec:"Reading", kick:"Reading · Matching heading", type:"mcq",
+       passage:"Far from being a modern invention, the practice can be traced back centuries, though its purpose has gradually shifted from the ceremonial to the commercial.",
+       q:"Choose the best heading for this paragraph.",
+       options:["A tradition that has changed its function","A purely ceremonial ritual","A recent commercial trend"], answer:0},
+      {sec:"Reading", kick:"Reading · True / False / Not Given", type:"mcq",
+       passage:"The author concedes that automation will eliminate certain roles, yet insists that, historically, technology has created more jobs than it has destroyed.",
+       q:"The author believes automation will reduce the total number of jobs.",
+       options:["True","False","Not Given"], answer:1},
+      {sec:"Use of English", kick:"Use of English · Multiple-choice cloze", type:"mcq",
+       q:"The new policy came ________ heavy criticism from independent experts.",
+       options:["under","over","across"], answer:0},
+      {sec:"Use of English", kick:"Use of English · Key word transformation", type:"kwt",
+       orig:"“People say he is the best surgeon in the country.”", key:"SAID",
+       pre:"He", post:"the best surgeon in the country.",
+       hint:"Passive tuzilma (3–4 so'z)", accept:["is said to be"]},
+      {sec:"Writing", kick:"Writing · Task 2 · Discursive essay", type:"writing",
+       q:"“Governments should prioritise environmental protection over economic growth.” To what extent do you agree? Justify your position with clear arguments.",
+       minWords:220},
+      {sec:"Speaking", kick:"Speaking · Part 3 · Abstract discussion", type:"speaking",
+       q:"To what extent is individual action effective in tackling global problems such as climate change? Develop and justify your view."}
+    ];
+
+    const MOCKS = {B1:MOCK_B1, B2:MOCK_B2, C1:MOCK_C1};
+    const SEC_ICON = {Listening:"🎧", Reading:"📖", "Use of English":"🔤", Writing:"✍️", Speaking:"🎙️"};
+
+    let idx = 0, answers = [], timer = null, remaining = 0;
+    let MOCK = MOCK_B2, currentLevel = "B2";
+
+    function speak(t){ try{ if(!("speechSynthesis" in window)) return;
+      const u = new SpeechSynthesisUtterance(t); u.lang="en-US"; u.rate=.9;
+      speechSynthesis.cancel(); speechSynthesis.speak(u); }catch(e){} }
+
+    function open(){
+      const selEl = document.querySelector(".lvsel .on");
+      currentLevel = (selEl && selEl.dataset.lv) || "B2";
+      MOCK = MOCKS[currentLevel] || MOCK_B2;
+      idx = 0; answers = MOCK.map(() => null); remaining = 20*60;
+      run.hidden = false; timerEl.hidden = false; timerEl.classList.remove("warn");
+      steps.innerHTML = MOCK.map(() => '<i></i>').join("");
+      startTimer(); render();
+    }
+    function closeRun(){ stopTimer(); try{ speechSynthesis.cancel(); }catch(e){} run.hidden = true; }
+
+    function startTimer(){ tick(); timer = setInterval(() => {
+      remaining--; if(remaining <= 0){ stopTimer(); finish(); return; } tick(); }, 1000); }
+    function stopTimer(){ if(timer){ clearInterval(timer); timer = null; } }
+    function tick(){ const m = Math.floor(remaining/60), s = remaining%60;
+      timerEl.textContent = m + ":" + String(s).padStart(2,"0");
+      timerEl.classList.toggle("warn", remaining <= 60); }
+
+    function markSteps(done){
+      $$("#mrSteps i").forEach((el,i) => {
+        el.classList.toggle("done", done ? true : i < idx);
+        el.classList.toggle("cur", !done && i === idx);
+      });
+    }
+
+    function render(){
+      const s = MOCK[idx];
+      secEl.textContent = s.sec; countEl.textContent = (idx+1) + " / " + MOCK.length;
+      countEl.hidden = false; markSteps(false);
+
+      let h = '<div class="q-kick">'+s.kick+'</div>';
+      if(s.audio) h += '<div class="speaker"><button class="play" id="mrPlay" aria-label="Tinglash">▶</button>'+
+        '<div class="wave">'+Array.from({length:16},()=> '<span style="height:'+(8+Math.round(Math.random()*18))+'px"></span>').join("")+'</div></div>';
+      if(s.passage) h += '<div class="mr-passage">'+s.passage+'</div>';
+      h += '<div class="q-title" style="font-size:18px">'+s.q+'</div>';
+      if(s.hint) h += '<div class="q-sub">'+s.hint+'</div>';
+
+      if(s.type === "mcq"){
+        h += '<div class="opts">'+ s.options.map((o,i) =>
+          '<button class="opt'+(answers[idx]===i?' sel':'')+'" data-i="'+i+'"><span class="kbd">'+(i+1)+'</span>'+o+'</button>').join("") +'</div>';
+      } else if(s.type === "gap"){
+        h += '<input class="mr-input" id="mrInput" placeholder="javob…" autocomplete="off" autocapitalize="off" value="'+(answers[idx]||"")+'">';
+      } else if(s.type === "kwt"){
+        h += '<div class="kwt"><div class="orig">'+s.orig+'</div><span class="key">'+s.key+'</span>'+
+          '<div class="gap">'+s.pre+' <b>___________</b> '+s.post+'</div></div>'+
+          '<input class="mr-input" id="mrInput" placeholder="javob…" autocomplete="off" autocapitalize="off" value="'+(answers[idx]||"")+'">';
+      } else if(s.type === "writing"){
+        const txt = (answers[idx] && answers[idx].text) || "";
+        h += '<textarea class="mr-ta" id="mrTa" placeholder="Insho matnini yozing…">'+txt+'</textarea>'+
+          '<div class="mr-wc" id="mrWc"></div>';
+      } else if(s.type === "speaking"){
+        const rec = answers[idx] && answers[idx].recorded;
+        h += '<div class="mr-rec"><button class="mic'+(rec?" ":"")+'" id="mrMic">🎙️</button>'+
+          '<small id="mrRecTxt">'+(rec?"✓ Javob yozildi (namuna)":"Yozishni boshlash uchun bosing")+'</small></div>';
+      }
+      body.innerHTML = h; body.scrollTop = 0;
+      wire(s);
+      renderFoot();
+    }
+
+    function wire(s){
+      const play = $("#mrPlay"); if(play) play.addEventListener("click", () => speak(s.audio));
+      if(s.type === "mcq"){
+        $$("#mrBody .opt").forEach(op => op.addEventListener("click", () => {
+          $$("#mrBody .opt").forEach(x => x.classList.remove("sel"));
+          op.classList.add("sel"); answers[idx] = +op.dataset.i;
+        }));
+      }
+      const inp = $("#mrInput");
+      if(inp) inp.addEventListener("input", () => { answers[idx] = inp.value; });
+      const ta = $("#mrTa");
+      if(ta){
+        const wc = $("#mrWc"); const upd = () => {
+          const n = ta.value.trim() ? ta.value.trim().split(/\s+/).length : 0;
+          answers[idx] = {text: ta.value, words: n};
+          wc.textContent = n + " so'z · target ≥ " + s.minWords;
+          wc.classList.toggle("ok", n >= s.minWords);
+        };
+        ta.addEventListener("input", upd); upd();
+      }
+      const mic = $("#mrMic");
+      if(mic){
+        let on = false; mic.addEventListener("click", () => {
+          on = !on; mic.classList.toggle("on", on);
+          $("#mrRecTxt").textContent = on ? "● Yozilmoqda… (to'xtatish uchun bosing)" : "✓ Javob yozildi (namuna)";
+          if(!on) answers[idx] = {recorded:true};
+        });
+      }
+    }
+
+    function renderFoot(){
+      const last = idx === MOCK.length - 1;
+      foot.innerHTML = (idx > 0 ? '<button class="btn ghost" id="mrBack">Orqaga</button>' : "") +
+        '<button class="btn" id="mrNext">'+(last ? "Yakunlash" : "Keyingi")+'</button>';
+      const back = $("#mrBack"); if(back) back.addEventListener("click", () => { if(idx>0){ idx--; render(); } });
+      $("#mrNext").addEventListener("click", () => { if(last) finish(); else { idx++; render(); } });
+    }
+
+    function finish(){
+      stopTimer(); try{ speechSynthesis.cancel(); }catch(e){}
+      timerEl.hidden = true; countEl.hidden = true; secEl.textContent = "Natija"; markSteps(true);
+
+      // score objective sections
+      const sec = {};
+      MOCK.forEach((s,i) => {
+        let objective = ["mcq","gap","kwt"].includes(s.type);
+        sec[s.sec] = sec[s.sec] || {c:0, t:0, objective:objective, type:s.type};
+        if(objective){
+          let ok = false; const a = answers[i];
+          if(s.type === "mcq") ok = a === s.answer;
+          else { const v = (a||"").trim().toLowerCase().replace(/\s+/g," "); ok = (s.accept||[]).includes(v); }
+          sec[s.sec].t++; if(ok) sec[s.sec].c++;
+        }
+        if(s.type === "writing") sec[s.sec].words = (answers[i] && answers[i].words) || 0;
+        if(s.type === "speaking") sec[s.sec].recorded = !!(answers[i] && answers[i].recorded);
+        if(s.type === "writing") sec[s.sec].minWords = s.minWords;
+      });
+
+      let c = 0, t = 0;
+      Object.values(sec).forEach(o => { if(o.objective){ c += o.c; t += o.t; } });
+      const ratio = t ? c/t : 0;
+      const std = Math.round(38 + ratio*37);
+      const pass = ratio >= 0.6;
+      const markLeft = Math.min(96, Math.max(4, std/75*100));
+
+      // level-aware band: performance mapped around the target level
+      const CEFR = ["A2","B1","B2","C1","C2"];
+      const ti = Math.max(0, CEFR.indexOf(currentLevel));
+      const bandFor = r => r >= 0.85 ? CEFR[Math.min(ti+1,3)]
+        : r >= 0.6 ? currentLevel
+        : r >= 0.34 ? CEFR[Math.max(ti-1,0)]
+        : CEFR[Math.max(ti-2,0)];
+      const belowLevel = CEFR[Math.max(ti-1,0)];
+      const band = bandFor(ratio);
+
+      // rows
+      const order = ["Listening","Reading","Use of English","Writing","Speaking"];
+      let rows = "";
+      let weakest = null, weakRatio = 2;
+      order.forEach(name => {
+        const o = sec[name]; if(!o) return;
+        let bd, sub;
+        if(o.objective){
+          const r = o.t ? o.c/o.t : 0; bd = bandFor(r); sub = o.c + "/" + o.t + " to'g'ri";
+          if(r < weakRatio){ weakRatio = r; weakest = name; }
+        } else if(o.type === "writing"){
+          bd = o.words >= o.minWords ? currentLevel : belowLevel; sub = o.words + " so'z · AI baho (namuna)";
+        } else {
+          bd = o.recorded ? currentLevel : "—"; sub = o.recorded ? "AI baho (namuna)" : "javob yo'q";
+        }
+        rows += '<div class="r"><span class="si">'+(SEC_ICON[name]||"•")+'</span>'+
+          '<span class="nm">'+name+'<small>'+sub+'</small></span><span class="bd">'+bd+'</span></div>';
+      });
+
+      $("#mrBody").style.display = "none";
+      $("#mrFoot").style.display = "none";
+      let ex = run.querySelector(".mr-result");
+      if(!ex){ ex = document.createElement("div"); ex.className = "mr-result"; run.appendChild(ex); }
+      ex.hidden = false;
+      ex.innerHTML =
+        '<div class="big"><span class="em">'+(pass?"🎓":"💪")+'</span>'+
+          '<h2>'+(pass?"Tabriklaymiz!":"Yaxshi urinish!")+'</h2>'+
+          '<div class="verdict '+(pass?"pass":"fail")+'">'+(pass?"O'TDINGIZ · ≥60%":"O'tish uchun yana mashq")+'</div></div>'+
+        '<div class="mr-scorebox"><div class="sc">'+std+' / 75</div><div class="scl">standart ball · taxminiy daraja <b style="color:var(--brand)">'+band+'</b></div>'+
+          '<div class="bandscale" style="margin-top:12px"><div class="bmark" style="left:'+markLeft+'%"></div>'+
+          '<div class="track"><span class="s1">A2</span><span class="s2">B1</span><span class="s3">B2</span><span class="s4">C1</span></div></div></div>'+
+        '<div class="mr-secscore">'+rows+'</div>'+
+        (weakest ? '<div class="mr-plan">🎯 Fokus tavsiya: <b>'+weakest+'</b> eng zaif bo\'lim. Bu bo\'lim avtomatik <b>SRS + target lesson</b> rejangizga qo\'shildi.</div>' : "")+
+        '<div class="mr-foot" style="border:none;padding:0;display:flex;gap:10px">'+
+          '<button class="btn ghost" id="mrExit">Yopish</button>'+
+          '<button class="btn" id="mrRetry">Qayta urinish</button></div>';
+      $("#mrExit").addEventListener("click", () => { resetResult(); closeRun(); });
+      $("#mrRetry").addEventListener("click", () => { resetResult(); open(); });
+    }
+
+    function resetResult(){
+      const ex = run.querySelector(".mr-result"); if(ex) ex.remove();
+      $("#mrBody").style.display = "";
+      $("#mrFoot").style.display = "";
+    }
+
+    const startCard = $("#startMock");
+    if(startCard){
+      startCard.addEventListener("click", open);
+      startCard.addEventListener("keydown", e => { if(e.key === "Enter" || e.key === " "){ e.preventDefault(); open(); } });
+    }
+    $("#mrClose").addEventListener("click", () => { resetResult(); closeRun(); });
+  })();
+})();
+</script>

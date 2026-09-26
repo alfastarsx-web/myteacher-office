@@ -613,4 +613,63 @@ Premium/subscription: unlimited hearts, double XP, offline downloads, unlimited 
 
 ---
 
-*Hujjat oxiri — v1.0. Keyingi qadam: har faza uchun epic/story breakdown va kontent metodisti bilan A1 Unit-1 pilot lesson yaratish.*
+## 8. MILLIY SERTIFIKAT / MULTILEVEL — MOCK EXAM REJIMI
+
+> **Kontekst (bozor tadqiqoti asosida):** O'zbekistonda asosiy nishon — **Milliy sertifikat (Multilevel)** imtihoni (Bilim va malakalarni baholash agentligi, platforma: milliysertifikat.uz), IELTS emas. Sabab: PF-81 (24.05.2024) farmoni bilan **2025/2026 o'quv yilidan 29 ta bakalavriat yo'nalishiga** sertifikatsiz hujjat topshirib bo'lmaydi; B1+ kirish imtihonida maksimal ball beradi; o'qituvchilarga C1 uchun **50% ustama**. Shu sabab modul CEFR o'rgatish bilan bir qatorda **imtihon-spetsifik "Mock Exam" rejimini** taklif qilishi — kuchli retention va monetizatsiya driveri.
+
+### 8.1 Rejim maqsadi va segmentatsiya
+- **Learning mode** (1–7 bo'limlar) — bosqichma-bosqich o'rgatish (gamified).
+- **Exam mode (yangi)** — real Multilevel formatini simulyatsiya qilib, foydalanuvchini **B1/B2/C1 sertifikat**ga tayyorlash.
+- **Personalar:** abituriyent (maqsad B1/B2, deadline bosimi), o'qituvchi (maqsad C1, ustama uchun), universitet talabasi. Onboarding'dagi "maqsad" savoli aynan shu segmentlarga yo'naltiradi va **maqsad daraja + imtihon sanasi (countdown)** belgilanadi.
+
+### 8.2 Imtihon formati (real strukturaga tekislash)
+Modul quyidagi rasmiy tuzilmani aks ettiradi:
+
+| Bo'lim | Savol/topshiriq | Vaqt | Ball / baholash |
+|---|---|---|---|
+| **Listening** | ~30 | ~30–35 daq | Rasch → 0–75 standart ball |
+| **Reading** | ~30 | ~70 daq | Rasch → 0–75 standart ball |
+| **Use of English** (Lexico-grammatical) | ~30 | ~30–40 daq | Rasch → 0–75 standart ball |
+| **Writing** | 2 topshiriq | ~45–60 daq | Rubrika (kriteriya) bo'yicha |
+| **Speaking** | 3 qism | ~15–20 daq | Rubrika (kriteriya) bo'yicha |
+
+- **O'tish sharti:** maksimal ballning **≥ 60%**. Modul buni vizual "pass line" bilan ko'rsatadi.
+- **Standart ball → CEFR band** mapping (A2/B1/B2/C1) — natija ekranida band-scale bilan.
+- **Sertifikat amal muddati 2 yil** — bu info onboarding va dashboard'da ("sertifikatingiz X sanagacha amal qiladi") ko'rsatiladi.
+
+### 8.3 Imtihon-spetsifik task turlari (majburiy komponentlar)
+1-7 bo'limlardagi generic mashqlarga qo'shimcha, **real imtihonda uchraydigan** turlar alohida komponent sifatida qurilishi shart:
+
+- **Reading:** Matching headings, True/False/Not Given, Gapped text (sentence insertion), Matching information, Multiple choice.
+- **Listening:** Note/gap completion, Speaker-to-statement matching, Multiple choice (audio).
+- **Use of English:** Multiple-choice cloze, Open cloze, **Word formation** (care→careful), **Key word transformation** (jumlani berilgan so'z bilan qayta yozish).
+- **Writing:** Task 1 — rasmiy/norasmiy **xat/email** (~100–150 so'z); Task 2 — **essay/opinion** (~150–250 so'z). Har biri so'z-hisoblagich + AI rubric feedback (4.3).
+- **Speaking:** Part 1 interview (shaxsiy savollar), Part 2 monolog (rasm tasvirlash/taqqoslash, 1–2 daq), Part 3 discussion (fikr asoslash). AI Speaking (4.2) bilan baholanadi.
+
+### 8.4 Baholash va natija (real algoritmga mos)
+- **Listening/Reading/Use of English** — obyektiv, avtomatik; ball → 0–75 standart shkala (Rasch-uslub yaqinlashuv, backend'da item difficulty bilan).
+- **Writing/Speaking** — **AI rubric** (Task achievement, Coherence & cohesion, Grammar range/accuracy, Lexical resource; Speaking'da qo'shimcha Pronunciation, Fluency, Interaction). Bu real platformaning **SI (AI) baholashi** bilan bir xil yondashuv — mahsulot marketing ustunligi.
+- **Natija ekrani:** har bo'lim bo'yicha band + umumiy CEFR daraja bashorati + "kuchli/zaif skill" + "sertifikatgacha tavsiya" (masalan "Speaking B1 → B2 uchun 2 hafta target practice").
+
+### 8.5 Mock Exam UX oqimi
+```
+Exam mode → maqsad daraja (B1/B2/C1) + imtihon sanasi (countdown)
+  → "Diagnostic mock" (qisqartirilgan, darajani baholash)
+  → Section practice (har bo'lim alohida, imtihon task turlari)
+  → "Full Mock Exam" (timed, 5 bo'lim ketma-ket, real vaqt bosimi)
+  → Natija: standart ball + band-scale + skill breakdown + retake tavsiya
+  → Zaif bo'limlar avtomatik "target plan"ga qo'shiladi (SRS + fokus lessonlar)
+```
+
+### 8.6 Acceptance criteria
+- [ ] Exam mode Learning mode'dan alohida kirish nuqtasi (nav) bilan mavjud.
+- [ ] 5 bo'lim real vaqt limiti bilan simulyatsiya qilinadi (timed full mock).
+- [ ] Matching headings, Key word transformation, Word formation, Gapped text kabi imtihon task turlari ishlaydi va avtomatik baholanadi.
+- [ ] Writing/Speaking AI rubric (kriteriya) bo'yicha band beradi.
+- [ ] Natija standart ball (0–75) + CEFR band + pass/fail (60% chizig'i) ko'rsatadi.
+- [ ] Zaif bo'lim natijaga qarab avtomatik "target plan"ga qo'shiladi.
+- [ ] Maqsad daraja + imtihon sanasi countdown foydalanuvchini qaytishga undaydi (retention hook).
+
+---
+
+*Hujjat oxiri — v1.1. Yangilanish: 8-bo'lim (Milliy Sertifikat / Multilevel Mock Exam rejimi) bozor tadqiqoti asosida qo'shildi. Keyingi qadam: har faza uchun epic/story breakdown va A1 Unit-1 + B2 diagnostic mock pilot yaratish.*
