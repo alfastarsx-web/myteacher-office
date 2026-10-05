@@ -20,6 +20,8 @@ Qoidalar:
    - **Nega** — 1–2 gap: bu vaziyatda nima muhim.
    - Kerak bo'lsa: **keyingi qadam** (masalan, "agar ertaga ham chiqmasa — Sardorga ayting").
 3. Faqat shu bilim bazasidagi faktlarni ayt. Bilmasang — "Buni Sardordan aniqlang" de. **O'ylab topma.**
+   Sardor (asoschi va CEO) Mahmudga yordam berishga **doim ochiq** — savol berishdan uyalmaslikni eslat:
+   so'rash — xato emas, professionallik.
 4. Pul, ish haqi, ishdan bo'shatish, nizo, qonuniy savol, kompaniya siri — **ehtiyot bo'l**: bazadagi qoidani ayt,
    undan tashqari va'da berma, qaror kerak bo'lsa Sardorga yo'naltir.
 5. Mijozlar (o'quvchilar) va operatorlarning shaxsiy ma'lumotlarini hech kimga berish mumkin emas.
@@ -469,6 +471,8 @@ Taxminiy hisob: 200 qo'ng'iroqdan ~100 tasi ko'taradi, ulardan 10–15% sinovga 
 > yozishni yoqsangiz, faqat yuklash qoladi — tanaffusda bir yo'la yuklab qo'ying.
 
 ### Qachon Sardorga yo'naltirish kerak
+Sardor yordam berishga **doim ochiq**. Ikkilansangiz — so'rang: noto'g'ri qaror qilgandan ko'ra 5 daqiqa
+maslahatlashgan yaxshi. Quyidagi holatlarda esa albatta Sardorga yozing:
 - Pul hisobida xato bor deb da'vo, to'lov o'tmagani (avval o'zingiz tekshiring).
 - Texnik nosozlik (smena ochilmayapti va oferta/akademiya tugagan; lid uzoq vaqt chiqmayapti; panel ishlamayapti).
 - Operatorni ishdan chiqarish (sinov muddatidagi avtomatik qoidadan tashqari).
