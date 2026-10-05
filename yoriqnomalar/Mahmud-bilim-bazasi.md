@@ -78,8 +78,8 @@ Narx dasturga emas, **haftadagi dars soniga** bog'liq. Aniq tarifni sinov darsid
 ### Kim kim
 | Kim | Vazifasi |
 |---|---|
-| **Sardor** | Kompaniya rahbari (asoschi). Strategiya, pul, qoidalar, texnik masalalar, yakuniy qarorlar. |
-| **Mahmud** (@myteacher_sales) | **Tijorat direktori**: butun sotuv zanjiri (lid → sinov → to'lov) uchun javobgar; operatorlar jamoasini yig'adi, o'rgatadi, nazorat qiladi; kunlik va haftalik hisobot beradi. |
+| **Sardor** | **Asoschi va CEO**. Strategiya, pul, narx va stavkalar, texnik masalalar, yakuniy qarorlar. |
+| **Mahmud** (@myteacher_sales) | **Tijorat direktori**: butun sotuv zanjiri (lid → sinov → to'lov) uchun javobgar; operatorlar jamoasini yig'adi, o'rgatadi, nazorat qiladi; **ustozlar bilan sotuv bo'yicha mustaqil ishlaydi**; kunlik va haftalik hisobot beradi. |
 | **Operatorlar** | Lidlarga qo'ng'iroq qilib, bepul sinov darsiga yozadi, ilovaga kirgizadi, dars oldidan eslatadi. |
 | **Ustozlar (mentorlar)** | Sinov darsini o'tadi, o'quvchi bilan kunlarni kelishib **kurs taklifini** yuboradi, doimiy darslarni o'tadi. Kursni ustoz sotadi. |
 | **Admin** | To'lov cheklarini tasdiqlaydi (odatda 1 soat ichida, 09:00–21:00), obunalarni ochadi. |
@@ -117,19 +117,34 @@ borligini topishi kerak.
 Demak operator **odamni darsga olib kelishdan**, ustoz **sinovni sotuvga aylantirishdan** manfaatdor.
 Mahmudning ishi — ikkalasi orasidagi "uzilish" bo'lmasligini ta'minlash.
 
-### Asosiy ko'rsatkichlar (KPI) va formulalar
-| Ko'rsatkich | Formula | Boshlang'ich mo'ljal* |
+### Asosiy KPI (Sardor belgilagan): 100 lid → 10 sinov darsi → 3 sotuv
+
+| Bosqich | Mo'ljal | Formula |
 |---|---|---|
-| Ko'tarilish | gaplashildi ÷ qo'ng'iroq | ~50% |
-| Sinovga yozish | sinovga yozildi ÷ gaplashildi | 10–15% |
+| **Lid → sinov darsi** | **10%** (100 ta liddan 10 ta) | o'tkazilgan sinov darsi ÷ ishlangan lidlar |
+| **Sinov darsi → sotuv** | **30%** (10 ta sinovdan 3 ta) | to'lov qilganlar ÷ o'tkazilgan sinov darslari |
+| **Lid → sotuv (umumiy)** | **3%** (100 ta liddan 3 ta) | to'lov qilganlar ÷ ishlangan lidlar |
+
+Atamalar:
+- **Ishlangan lid** — operator kamida bir marta qo'ng'iroq qilib, natija tugmasini bosgan lid.
+- **Sinov darsi** — o'quvchi haqiqatan **kelgan** (darsda 20+ daqiqa o'tirgan) dars. Yozilgan, lekin kelmaganlar
+  hisoblanmaydi — shuning uchun yozilgan sinovlar 10 tadan **ko'proq** bo'lishi kerak.
+- **Sotuv** — o'quvchi kursga to'lov qildi va admin tasdiqladi (bron emas, to'liq to'lov).
+
+Hisob misoli (motivatsiya uchun): oyiga 1 000 ta lid → 100 ta sinov → 30 ta sotuv. O'rtacha 550 000 so'mdan —
+oyiga taxminan **16,5 mln so'm** tushum. Har +1% konversiya — sezilarli qo'shimcha pul.
+
+### Yordamchi ko'rsatkichlar (qayerda yo'qotayotganimizni ko'rsatadi)
+| Ko'rsatkich | Formula | Mo'ljal / izoh |
+|---|---|---|
+| Ko'tarilish | gaplashildi ÷ qo'ng'iroq | ~50% (taxminiy) |
+| Sinovga yozish | sinovga yozildi ÷ gaplashildi | yozilganlar kelishi hisobiga 10% sinov darsiga yetadigan darajada |
 | Ilova ✅ | ilovaga kirgan ÷ sinovga yozilgan | 100% ga yaqin (asosiy talab) |
-| Darsga kelish | darsga kelgan (20+ daq) ÷ sinovga yozilgan | iloji boricha yuqori; ilova ✅ va eslatma shuni oshiradi |
-| Sotuv (konversiya) | to'lov qilgan ÷ darsga kelgan | ustoz va taklif sifatiga bog'liq |
+| Darsga kelish | kelgan (20+ daq) ÷ sinovga yozilgan | iloji boricha yuqori; ilova ✅ va eslatma shuni oshiradi |
 | Tez to'lov | 24 soat ichida to'laganlar ÷ to'laganlar | yuqori bo'lsin (ustoz dars oxirida taklif yuborsa oshadi) |
 | Kunlik hajm | jami qo'ng'iroq / sinov | 200+ / 10+ |
 
-\* Mo'ljallar birinchi kunlar uchun taxminiy. Haqiqiy foizlar birinchi haftalarda aniqlanadi va reja shu bo'yicha
-qayta tuziladi. Raqamlarni **o'ylab topmang** — adminkadagi haqiqiy hisobotdan oling.
+Raqamlarni **o'ylab topmang** — adminkadagi haqiqiy hisobotdan oling. KPI'ni o'zgartirish — Sardorning qarori.
 
 ### "Teshik"ni qanday topish (diagnostika)
 | Belgi | Ehtimoliy sabab | Nima qilish |
@@ -138,9 +153,9 @@ qayta tuziladi. Raqamlarni **o'ylab topmang** — adminkadagi haqiqiy hisobotdan
 | Gaplashildi ko'p, sinov kam | Vaqt so'ralmayapti yoki narx bilan sotishga urinilyapti | Yozuvlarni tinglash, skriptni qayta tushuntirish |
 | Sinov ko'p, ilova ✅ kam | "Sinovga yozdi"dan keyin telefon qo'yilyapti | Ilovaga kirgizish qadamlarini qayta o'rgatish; guruhda "Ilova ✅ mi?" |
 | Ilova ✅, lekin darsga kelmayapti | Eslatma qilinmayapti; dars uzoq kunga qo'yilgan | Eslatmalarni tekshirish (17:00), darsni bugun/ertaga qo'yish |
-| Darsga keldi, to'lov yo'q | Ustoz dars oxirida taklif yubormayapti yoki kunlarni kelishmayapti | Sardorga ayting — ustozlar bilan ishlash; "Davom etmoqchiman" so'rovlarini kuzatish |
-| Taklif bor, to'lov kechikyapti | O'quvchi o'ylab qolgan, to'lov usuli tushunarsiz | Bron imkoniyati, to'lov yo'riqnomasi; 24 soat ichida eslatish (ustoz orqali) |
-| Ustoz topilmayapti | Shu soatda bo'sh ustoz kam | Sardorga: ustozlar jadvali (ochiq soatlar) yetarli emas |
+| Darsga keldi, to'lov yo'q (30% dan kam) | Ustoz dars oxirida taklif yubormayapti yoki kunlarni kelishmayapti | Ustoz bilan o'zingiz gaplashing (pastdagi "Ustozlar bilan ishlash"); "Davom etmoqchiman" so'rovlarini kuzatish |
+| Taklif bor, to'lov kechikyapti | O'quvchi o'ylab qolgan, to'lov usuli tushunarsiz | Ustozga ayting: bron imkoniyatini taklif qilsin, 24 soat ichida o'quvchiga yozsin |
+| Ustoz topilmayapti | Shu soatda bo'sh ustoz kam | Ustozlardan o'sha soatlarni jadvalda ochishni so'rang; yetmasa — Sardorga (yangi ustoz kerak) |
 
 ### Tijorat direktorining haftalik ritmi
 - **Har kuni**: 11:00, 13:00, 15:00, 17:00 tekshiruvlari va 19:00 hisoboti (6-bo'lim).
@@ -152,6 +167,7 @@ qayta tuziladi. Raqamlarni **o'ylab topmang** — adminkadagi haqiqiy hisobotdan
   > 📈 {hafta} — sotuv hisoboti
   > Qo'ng'iroq: {N} · Gaplashildi: {N} ({%}) · Sinovga yozildi: {N} ({%}) · Ilova ✅: {N} ({%})
   > Darsga keldi: {N} ({%}) · To'lov: {N} ({%}) · Tushum: {summa}
+  > KPI: lid → sinov {%} (mo'ljal 10%) · sinov → sotuv {%} (mo'ljal 30%)
   > Faol operatorlar: {N} (yangi: {N}, chiqib ketgan: {N})
   > 🔻 Eng zaif bosqich: {bosqich} — sabab: {…} · ➡️ Kelasi hafta: {bitta chora}
 
@@ -160,10 +176,53 @@ qayta tuziladi. Raqamlarni **o'ylab topmang** — adminkadagi haqiqiy hisobotdan
 2. **Skript va o'qitish** — yozuvlarni tinglab, har operatorga bitta aniq maslahat.
 3. **Ilova ✅ intizomi** — "rozi bo'ldi" emas, "ilovaga kirdi" sanaladi.
 4. **Eslatmalar** — darsga kelishni oshiradi.
-5. **Ustozlar bilan aloqa** (Sardor orqali) — taklifni dars oxirida yuborish, tez javob berish.
+5. **Ustozlar bilan ishlash** (mustaqil) — sinovni sotuvga aylantirish: taklifni dars oxirida yuborish, tez javob berish.
 6. **Motivatsiya** — guruhda kun yulduzi, birinchi sinovni nishonlash.
 
 Narx, ish haqi stavkalari, ustoz ulushi va qoidalarni o'zgartirish — **Sardorning qarori**.
+
+### Ustozlar bilan ishlash (Mahmud mustaqil)
+Sinov darsidan keyingi 30% sotuv **ustozga** bog'liq: kursni ustoz sotadi. Mahmud ustozlarga to'g'ridan-to'g'ri
+yozadi, ularni qo'llab-quvvatlaydi va natijani kuzatadi. Ustozlarga buyruq emas — **hamkor** sifatida gapiring:
+ular ham shu sotuvdan pul oladi (24 soatlik bonus va har dars puli).
+
+**Nimani kuzatadi**
+- Sinov darsi o'tdi, lekin **natija belgilanmagan** (ustoz 24 soat ichida belgilamasa, unga −5 ball).
+- Sinovdan keyin **taklif yuborilmagan** yoki o'quvchi "Davom etmoqchiman" bosgan, lekin ustoz javob bermagan.
+- Taklif yuborilgan, 24 soat o'tib ketyapti — to'lov yo'q.
+- Ustoz sinov so'rovlarini **qabul qilmayapti** (15 daqiqa ichida) yoki rad etyapti.
+- Kechki "issiq" soatlarda **ochiq soatlari kam**.
+
+**Ustozlarga eslatiladigan asosiy qoidalar** (ular buni akademiya va qo'llanmada o'qigan)
+- Sinov darsi oxirida o'quvchi bilan **kun va soatni aniq kelishib**, shu yerning o'zida taklif yuborish.
+- O'quvchi "shu vaqtlarni saqlab qo'ying, gaplashib to'layman" desa — bu jiddiy mijoz; soatlar 24 soat band turadi.
+- "O'ylab ko'raman" deganlar ko'pincha qaytmaydi — shuning uchun taklif darsdan keyin darhol.
+- 24 soat ichida to'lasa — ustozga **bitta dars puli bonus**.
+- Bo'lmaydigan soatni oldindan yopish: rad etish −25 ball.
+
+**Tayyor xabarlar ustozlarga**
+
+*Sinovdan keyin taklif yuborilmagan bo'lsa*
+> Assalomu alaykum, {Ism} ustoz! Bugungi sinov darsingiz uchun rahmat. {O'quvchi} bilan keyingi darslar kunini
+> kelishdingizmi? Taklifni hozir yuborsangiz, 24 soat ichida to'lov ehtimoli ancha yuqori — va bonus sizniki 🙂
+
+*O'quvchi "Davom etmoqchiman" bosgan, ustoz javob bermagan*
+> {Ism} ustoz, {o'quvchi} davom etmoqchi ekan — ilovada so'rov qoldirdi. Imkon bo'lsa bugun qo'ng'iroq qilib,
+> kunlarni kelishib taklif yuborsangiz. Issiq paytida ulgurib qolaylik.
+
+*Natija belgilanmagan*
+> {Ism} ustoz, {o'quvchi} bilan sinov darsining natijasini Work'da belgilab qo'ya olasizmi? 24 soat o'tsa ball
+> ayiriladi, shuni eslatib qo'ymoqchi edim.
+
+*Kechki soatlar kam*
+> {Ism} ustoz, kechki 18:00–22:00 da sinov so'rovlari eng ko'p keladi. Jadvalingizda shu soatlardan bir nechtasini
+> ochsangiz, sizga ko'proq o'quvchi tushadi.
+
+*Yaxshi natija — maqtov*
+> {Ism} ustoz, bu hafta {N} ta sinovdan {M} tasi to'lov qildi — zo'r natija! Rahmat 🔥
+
+**Qachon Sardorga**: ustoz bilan nizo, ustozning o'quvchiga qo'pol munosabati yoki platformadan tashqari kelishuvi,
+ulush yoki qoidalar bo'yicha talablar, ustozni chetlatish masalasi.
 
 ---
 
@@ -410,7 +469,7 @@ Taxminiy hisob: 200 qo'ng'iroqdan ~100 tasi ko'taradi, ulardan 10–15% sinovga 
 > yozishni yoqsangiz, faqat yuklash qoladi — tanaffusda bir yo'la yuklab qo'ying.
 
 ### Qachon Sardorga yo'naltirish kerak
-- Pul hisobida xato bor deb da'vo, to'lov o'tmagani.
+- Pul hisobida xato bor deb da'vo, to'lov o'tmagani (avval o'zingiz tekshiring).
 - Texnik nosozlik (smena ochilmayapti va oferta/akademiya tugagan; lid uzoq vaqt chiqmayapti; panel ishlamayapti).
 - Operatorni ishdan chiqarish (sinov muddatidagi avtomatik qoidadan tashqari).
 - Shartlarni o'zgartirish, alohida kelishuv, qonuniy savollar.
