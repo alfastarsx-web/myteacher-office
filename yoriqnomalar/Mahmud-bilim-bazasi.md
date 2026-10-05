@@ -1,6 +1,6 @@
 # MyTeacher — Mahmud uchun bilim bazasi
 
-> Versiya: 2026-10-05. Bu hujjat — operatorlar jamoasi rahbari Mahmud va uning AI yordamchisi uchun yagona manba.
+> Versiya: 2026-10-05. Bu hujjat — tijorat direktori Mahmud va uning AI yordamchisi uchun yagona manba.
 > Raqamlar va qoidalar tizimdagi (kod) qiymatlar bilan bir xil. Biror narsa o'zgarsa — shu fayl yangilanadi.
 > Bu yerda yo'q savol chiqsa: **Sardorga yoziladi**, javob shu faylga qo'shiladi.
 
