@@ -4,6 +4,10 @@
 > Raqamlar va qoidalar tizimdagi (kod) qiymatlar bilan bir xil. Biror narsa o'zgarsa — shu fayl yangilanadi.
 > Bu yerda yo'q savol chiqsa: **Sardorga yoziladi**, javob shu faylga qo'shiladi.
 
+> 🎯 **Eng muhimi — SOTUV.** Kompaniyadagi har bir ish — operatorlar, ustozlar, ilova — bitta natijaga xizmat
+> qiladi: **odam bepul darsga keladi va to'lov qiladi.** Har kuni o'zingizdan so'rang: "Bugun nechta odam to'ladi
+> va ertaga ko'proq to'lashi uchun nima qilaman?"
+
 ---
 
 ## 0. AI yordamchi uchun ko'rsatma
@@ -26,7 +30,13 @@ Qoidalar:
    undan tashqari va'da berma, qaror kerak bo'lsa Sardorga yo'naltir.
 5. Mijozlar (o'quvchilar) va operatorlarning shaxsiy ma'lumotlarini hech kimga berish mumkin emas.
 6. Mahmudni qo'llab-quvvatla: u yaxshi qilgan narsani ham ayt. Lekin xato bo'lsa — muloyim, aniq ayt.
-7. Mahmud "mashq qilaylik" desa — sen operator rolini o'ynaysan (yangi, uyatchan, norozi, kechikkan va h.k.),
+7. **Har doim sotuvni markazda tut.** Har maslahatning oxirida o'zingdan so'ra: "Bu sotuvni oshiradimi?"
+   Mahmud boshqa ishga berilib ketsa (hisobot bezash, uzun yozishma), muloyim qilib asosiy savolga qaytar:
+   "Bugun nechta sinov bo'ldi va nechtasi to'ladi?"
+8. Mahmud biznes atamasini so'rasa — **yangi talabaga tushuntirgandek** javob ber: oddiy so'z bilan ta'rif →
+   MyTeacher misoli (raqam bilan) → "Bu sotuvga qanday ta'sir qiladi?" → kerak bo'lsa bitta tekshiruv savoli.
+   Uzun nazariya yo'q; bitta javob — bitta tushuncha.
+9. Mahmud "mashq qilaylik" desa — sen operator rolini o'ynaysan (yangi, uyatchan, norozi, kechikkan va h.k.),
    Mahmud rahbar sifatida javob beradi; oxirida qisqa baho va maslahat berasan.
 
 ---
@@ -89,7 +99,138 @@ Narx dasturga emas, **haftadagi dars soniga** bog'liq. Aniq tarifni sinov darsid
 
 ---
 
-## 2. Sotuv tizimi: lid → sinov darsi → to'lov (tijorat direktori uchun)
+## 2. Biznes asoslari — eng muhimi: SOTUV
+
+> Bu bo'lim yangi talabaga tushuntirgandek yozilgan. Har tushuncha: oddiy ta'rif → MyTeacher misoli → sotuvga
+> qanday ta'sir qiladi. Misollardagi raqamlar **tushuntirish uchun** (haqiqiy hisobot — adminkada).
+
+### Nega SOTUV eng muhimi
+Kompaniyani bitta daraxt deb tasavvur qiling: ilova, ustozlar, operatorlar, reklama — shoxlar. **Sotuv — ildiz.**
+Ildiz suv bermasa, eng chiroyli shox ham quriydi.
+
+- Ustozlarning ish haqi, operatorlarning bonusi, ilovani yaxshilash, ofis, reklama — **hammasi o'quvchi
+  to'lagan puldan** to'lanadi. Boshqa manba yo'q.
+- Eng zo'r ilova ham, eng yaxshi ustoz ham — **o'quvchi to'lamasa** kompaniya uchun ishlamaydi.
+- Shuning uchun tijorat direktorining bitta asosiy savoli bor: **"Bugun nechta odam to'ladi va ertaga ko'proq
+  to'lashi uchun nima qilaman?"**
+- Har ish sotuvga yo yaqinlashtiradi, yo uzoqlashtiradi. Ish boshlashdan oldin so'rang: **"Bu sotuvni
+  oshiradimi?"** Javob "yo'q" bo'lsa — ehtimol, hozir bu eng muhim ish emas.
+
+Sotuv — bu "odamni aldab pul olish" **emas**. Sotuv — odamga haqiqatan kerak narsani (ingliz tili, yangi ish,
+o'qish, chet el) **olishiga yordam berish**. Biz sotsak — o'quvchi o'sadi, ustoz pul topadi, kompaniya o'sadi.
+Shuning uchun sotuvdan uyalish kerak emas: yaxshi mahsulotni yetkazmaslik — odamga yaxshilik qilmaslik.
+
+### Kompaniyaning asosiy maqsadi
+**Ko'proq odam to'lasin va uzoqroq o'qisin** — shunda kompaniya foyda bilan o'sadi.
+Hozirgi bosqichdagi aniq maqsadlar:
+1. **Sotuv zanjirini ishlatib yuborish**: 100 lid → 10 sinov darsi → 3 sotuv (3-bo'limdagi "Sotuv tizimi").
+2. **Barqaror operatorlar jamoasi**: sinov muddatidan o'tib, har kuni ishlaydigan operatorlar.
+3. **O'quvchilarni ushlab qolish**: to'lagan o'quvchi keyingi oyga ham uzaytirsin.
+4. Keyingi oydan, reklama boshlanganda — shu zanjirni katta hajmga tayyor qilish.
+
+### Asosiy atamalar (lug'at + misol)
+
+**Lid** — mahsulotimizga qiziqish bildirgan, hali to'lamagan odam.
+*Misol:* bepul darsga ariza qoldirgan Ali — lid. *Sotuvga ta'siri:* lid — sotuvning "xom ashyosi"; lid
+bo'lmasa sotuv ham bo'lmaydi.
+
+**Voronka (funnel)** — odamning "qiziqdi"dan "to'ladi"gacha bosib o'tadigan bosqichlari. Har bosqichda kimdir
+tushib qoladi, shuning uchun u yuqorida keng, pastda tor — xuddi voronka (huni) kabi.
+*Misol:* 100 lid → 50 tasi telefonni ko'tardi → 15 tasi sinovga yozildi → 10 tasi darsga keldi → 3 tasi to'ladi.
+
+**Konversiya** — bir bosqichdan keyingisiga o'tganlar ulushi (foizda).
+*Formula:* keyingi bosqichdagilar ÷ oldingi bosqichdagilar × 100%.
+*Misol:* 10 ta sinovdan 3 tasi to'ladi → sinov → sotuv konversiyasi 30%.
+*Sotuvga ta'siri:* lid sonini oshirmasdan ham, konversiyani oshirib ko'proq sotish mumkin. Bu eng arzon o'sish.
+
+**KPI** (asosiy ko'rsatkich) — ish yaxshi ketyaptimi, bilish uchun kuzatiladigan bir nechta raqam.
+*Misol:* bizning KPI — 100 lid → 10 sinov → 3 sotuv. *Muhim:* KPI ko'p bo'lmaydi — 2–3 ta, hamma biladi.
+
+**Tushum (daromad, revenue)** — mijozlar to'lagan pulning jami.
+*Misol:* oyiga 30 o'quvchi × 550 000 = 16 500 000 so'm tushum.
+
+**Foyda** — tushumdan barcha xarajatlar ayirilgandan keyin qolgani.
+*Misol:* 550 000 to'lagan o'quvchidan: ustoz ulushi (60% bo'lsa) 330 000, operator bonusi 5 000 + 15 000,
+soliq va boshqa xarajatlar — qolgani kompaniyaga. *Muhim:* "tushum ko'p" ≠ "foyda ko'p".
+
+**O'rtacha chek (ARPU)** — bitta o'quvchi o'rtacha qancha to'laydi.
+*Formula:* tushum ÷ to'lagan o'quvchilar soni.
+*Misol:* ko'pchilik haftada 3 marta (550 000) olsa — o'rtacha chek ~550 000.
+*Sotuvga ta'siri:* o'quvchiga haftada 2 emas 3 dars kerak bo'lsa, ustoz shuni taklif qiladi — chek oshadi.
+Lekin majburlab emas: o'quvchi ko'tara olmaydigan tarif — ertaga to'xtatish degani.
+
+**Mijozni jalb qilish narxi (CAC)** — bitta to'lagan o'quvchini topish uchun sarflangan pul.
+*Formula:* sotuvga ketgan jami xarajat (operator bonuslari, reklama…) ÷ yangi to'lagan o'quvchilar.
+*Misol:* hozir reklama yo'q, asosiy xarajat — operator bonuslari: 10 sinov × 5 000 + 3 to'lov × 15 000 = 95 000
+so'm → 3 o'quvchi → bitta o'quvchi ~32 000 so'm. Reklama boshlansa, CAC oshadi — shuning uchun konversiyani
+**hozirdan** yaxshi qilish kerak.
+
+**Mijozning umrboqiy qiymati (LTV)** — bitta o'quvchi biz bilan qolgan butun vaqtida qancha pul olib keladi.
+*Formula:* o'rtacha chek × necha oy o'qiydi.
+*Misol:* 550 000 × 4 oy = 2 200 000 so'm. *Qoida:* LTV CAC'dan ancha katta bo'lishi kerak — aks holda har yangi
+o'quvchi zarar.
+
+**Uzaytirish (retention) va ketish (churn)** — to'lagan o'quvchilardan keyingi oyga ham to'laganlar ulushi va
+to'xtatganlar ulushi.
+*Misol:* 30 o'quvchidan 24 tasi keyingi oyga uzaytirdi → retention 80%, churn 20%.
+*Sotuvga ta'siri:* eski o'quvchini ushlab qolish yangisini topishdan **ancha arzon**. Darslar sifatli o'tsa,
+o'quvchi o'sishini his qilsa — o'zi uzaytiradi va do'stini olib keladi.
+
+**Unit-ekonomika** — "bitta o'quvchida biz pul topyapmizmi yoki yo'qotyapmizmi?" degan hisob (LTV va CAC,
+ustoz ulushi, xarajatlar). Bu hisob ijobiy bo'lsa — ko'proq sotish = ko'proq foyda.
+
+**Sotuv tsikli** — liddan to'lovgacha o'tadigan vaqt.
+*Misol:* bugun qo'ng'iroq → ertaga sinov → dars oxirida taklif → 24 soat ichida to'lov = 1–2 kun.
+*Sotuvga ta'siri:* tsikl qanchalik qisqa bo'lsa, odam shunchalik kam "sovib qoladi". Shuning uchun: dars
+bugun/ertaga, taklif dars oxirida, to'lov 24 soat ichida.
+
+**Issiq / sovuq lid** — hozir qiziqib turgan (issiq) va vaqt o'tib sovib qolgan (sovuq) odam.
+*Misol:* hozirgina ariza qoldirgan — issiq; 3 oy oldin qoldirgan — sovuq. Issiq lidga **darhol** qo'ng'iroq qilinadi.
+
+**E'tiroz** — mijozning "yo'q" yoki "keyin" deganining sababi ("qimmat", "vaqtim yo'q", "o'ylab ko'raman").
+*Muhim:* e'tiroz — rad emas, savol. Javobi tayyor bo'lsa, ko'p hollarda "ha"ga aylanadi (9-bo'limdagi jadval).
+
+**CRM / pipeline** — har bir mijoz qaysi bosqichda ekanini ko'rsatadigan tizim. Bizda bu — **admin panel**
+(lid holatlari, sinov darslari, takliflar, to'lovlar).
+
+**Hajm × konversiya × chek** — sotuvni oshirishning faqat uchta yo'li bor:
+1. **Hajm** — ko'proq lid va qo'ng'iroq (ko'proq operator, ko'proq smena soati).
+2. **Konversiya** — har bosqichda kamroq odam yo'qotish (skript, ilova ✅, eslatma, taklifni darhol yuborish).
+3. **Chek / uzaytirish** — o'quvchiga mos tarif va sifatli darslar (u uzoq qoladi).
+Har qanday g'oyani shu uchtadan qaysi biriga ta'sir qilishi bilan baholang.
+
+### Asosiy metrikalar — tijorat direktorining "panel"i
+| Metrika | Nimani ko'rsatadi | Qayerdan olinadi | Qanchalik tez-tez |
+|---|---|---|---|
+| **Sotuvlar soni va tushum** | Asosiy natija | To'lovlar, takliflar | Har kuni |
+| **Lid → sinov** (mo'ljal 10%) | Operatorlar ishining sifati | Operatorlar, sinov darslari | Har kuni |
+| **Sinov → sotuv** (mo'ljal 30%) | Ustozlar va taklif sifati | Sinov darslari, takliflar | Har kuni / haftasiga |
+| **Darsga kelish** | Ilova ✅ va eslatma intizomi | Sinov darslari | Har kuni |
+| **Qo'ng'iroqlar / faol operatorlar** | Hajm | Operatorlar sahifasi | Har kuni |
+| **O'rtacha chek** | Tariflar to'g'ri tanlanyaptimi | To'lovlar | Haftasiga |
+| **Uzaytirish (retention)** | O'quvchilar qolyaptimi | Obunalar | Oyiga |
+| **CAC va LTV** | Sotuv foydalimi | Sardor bilan birga hisoblanadi | Oyiga |
+
+### Tijorat direktorining fikrlash tarzi (5 qoida)
+1. **Raqam bilan o'ylang.** "Yaxshi ketyapti" emas — "bugun 12 sinov, 4 sotuv, konversiya 33%".
+2. **Eng tor joyni tuzating.** Voronkaning qaysi bosqichida eng ko'p odam tushib qolyapti — avval o'shani.
+3. **Bitta haftada bitta o'zgarish.** Ko'p narsani birdan o'zgartirsangiz, nima ishlaganini bilmay qolasiz.
+4. **Har kun sotuvga yaqin bo'ling.** Yozuvlarni tinglang, ustozlar bilan gaplashing, o'quvchi nima deyotganini
+   eshiting — eng yaxshi g'oyalar shu yerdan chiqadi.
+5. **Kichik g'alabalarni nishonlang.** Birinchi sinov, birinchi sotuv, kun yulduzi — jamoa shundan kuch oladi.
+
+### O'zingizni tekshiring (talaba kabi)
+1. 200 ta liddan 16 ta sinov darsi bo'ldi. Lid → sinov konversiyasi qancha? *(Javob: 8% — mo'ljaldan past.)*
+2. 16 ta sinovdan 6 tasi to'ladi. Sinov → sotuv konversiyasi qancha? *(37,5% — mo'ljaldan yuqori.)*
+3. Qo'ng'iroqlar ko'p, sinov kam. Voronkaning qaysi bosqichi "tor"? Birinchi nima qilasiz?
+   *(Gaplashildi → sinov; yozuvlarni tinglab, vaqt so'ralyaptimi tekshiraman.)*
+4. Sotuvni oshirishning uchta yo'li qaysi? *(Hajm, konversiya, chek/uzaytirish.)*
+5. Nega hozir, reklama yo'q paytda, konversiyani yaxshilash muhim? *(Reklama boshlansa har lid pulga tushadi —
+   CAC oshadi; yaxshi konversiya shu pulni tejaydi.)*
+
+---
+
+## 3. Sotuv tizimi: lid → sinov darsi → to'lov (tijorat direktori uchun)
 
 Bu — kompaniyaning pul topadigan asosiy zanjiri. Mahmud har bir bosqichning raqamini bilishi va qayerda "teshik"
 borligini topishi kerak.
@@ -160,7 +301,7 @@ Raqamlarni **o'ylab topmang** — adminkadagi haqiqiy hisobotdan oling. KPI'ni o
 | Ustoz topilmayapti | Shu soatda bo'sh ustoz kam | Ustozlardan o'sha soatlarni jadvalda ochishni so'rang; yetmasa — Sardorga (yangi ustoz kerak) |
 
 ### Tijorat direktorining haftalik ritmi
-- **Har kuni**: 11:00, 13:00, 15:00, 17:00 tekshiruvlari va 19:00 hisoboti (6-bo'lim).
+- **Har kuni**: 11:00, 13:00, 15:00, 17:00 tekshiruvlari va 19:00 hisoboti (7-bo'lim).
 - **Har dushanba**: o'tgan hafta zanjiri — qo'ng'iroq → gaplashildi → sinov → ilova ✅ → keldi → to'lov; eng zaif
   bosqich va unga bitta aniq chora.
 - **Har juma**: eng yaxshi operator va eng yaxshi yozuv — guruhga namuna; sinov muddatidagilar bo'yicha qaror
@@ -228,7 +369,7 @@ ulush yoki qoidalar bo'yicha talablar, ustozni chetlatish masalasi.
 
 ---
 
-## 3. Operator qanday ishga olinadi (Mahmud bilishi kerak)
+## 4. Operator qanday ishga olinadi (Mahmud bilishi kerak)
 
 1. **Ariza** — nomzod vakansiya botiga yozadi, 3 ta qisqa savolga javob beradi (kuniga necha soat, qachondan,
    shartlar mosmi).
@@ -247,7 +388,7 @@ ulush yoki qoidalar bo'yicha talablar, ustozni chetlatish masalasi.
 
 ---
 
-## 4. Operator qancha ishlaydi
+## 5. Operator qancha ishlaydi
 
 | Nima uchun | Summa |
 |---|---|
@@ -275,7 +416,7 @@ ulush yoki qoidalar bo'yicha talablar, ustozni chetlatish masalasi.
 
 ---
 
-## 5. Operatorning ishi — qadamma-qadam
+## 6. Operatorning ishi — qadamma-qadam
 
 ### Bitta qo'ng'iroq
 1. **Smenani boshlash** → lid (mijoz kartasi) o'zi chiqadi. Bir vaqtda bitta lid.
@@ -348,7 +489,7 @@ Keyin "✅ Eslatildi". O'quvchi darsga kelsagina operatorga pul yoziladi — esl
 
 ---
 
-## 6. Mahmudning kuni
+## 7. Mahmudning kuni
 
 ### Maqsad (boshlang'ich)
 Kuniga **200+ qo'ng'iroq** va **10+ sinov darsi**, har bir sinov — **ilova ✅**.
@@ -398,7 +539,7 @@ Taxminiy hisob: 200 qo'ng'iroqdan ~100 tasi ko'taradi, ulardan 10–15% sinovga 
 
 ---
 
-## 7. Operatorlar bilan muloqot — Mahmud uchun qo'llanma
+## 8. Operatorlar bilan muloqot — Mahmud uchun qo'llanma
 
 ### Asosiy tamoyillar (uyalmaslik uchun)
 1. **Siz yolg'iz emassiz**: qoidalar tayyor, raqamlar tizimda. Siz o'zingizdan o'ylab topmaysiz — faqat qoidani
@@ -481,13 +622,13 @@ maslahatlashgan yaxshi. Quyidagi holatlarda esa albatta Sardorga yozing:
 
 ---
 
-## 8. Operatorlar beradigan savollar — tayyor javoblar
+## 9. Operatorlar beradigan savollar — tayyor javoblar
 
 | Savol / holat | Javob |
 |---|---|
 | Smena ochilmayapti | Avval oferta va akademiya testi tugashi kerak. Tugagan bo'lsa — Sardorga. |
 | Lid chiqmayapti | Smena ochiqmi? Sahifani yangilasin. "Navbat kutyapti" uzoq tursa — Sardorga. |
-| Mijoz "qancha turadi?" | Narx matni (5-bo'lim), sotishga urinmaydi, vaqtni so'raydi. |
+| Mijoz "qancha turadi?" | Narx matni (6-bo'lim), sotishga urinmaydi, vaqtni so'raydi. |
 | Mijoz "o'ylab ko'ray" | "Dars bepul va hech narsaga majbur qilmaydi, faqat darajangizni bilib olasiz. Ertaga kechqurun bo'ladimi?" Baribir "keyin" — ⏰ Keyinroq + aniq vaqt. |
 | Mijoz "vaqtim yo'q" | "Dars 45 daqiqa, uydan turib. Kechki 21:00 ham bor." Bo'lmasa — ⏰ Keyinroq. |
 | Mijoz "ingliz tilini bilaman" | "Zo'r! Unda ustoz bilan erkin suhbat, IELTS yoki ish uchun tayyorlov bor." |
@@ -506,7 +647,7 @@ maslahatlashgan yaxshi. Quyidagi holatlarda esa albatta Sardorga yozing:
 
 ---
 
-## 9. Ustozlar va darslar (operatorlar so'rasa — qisqacha)
+## 10. Ustozlar va darslar (operatorlar so'rasa — qisqacha)
 
 - **Sinov darsi** — bepul, 45–60 daqiqa. Ustoz darajani aniqlaydi, oxirida o'quvchi bilan kunlarni kelishib
   **taklif** yuboradi (haftada necha marta, kunlar, soat).
@@ -521,7 +662,7 @@ maslahatlashgan yaxshi. Quyidagi holatlarda esa albatta Sardorga yozing:
 
 ---
 
-## 10. Taqiqlar (hamma uchun)
+## 11. Taqiqlar (hamma uchun)
 
 - Mijoz raqamlari va qo'ng'iroq yozuvlarini boshqalarga berish.
 - Mijozni aldash, bosim o'tkazish, chegirma yoki "bugun oxirgi kun" kabi o'ylab topilgan gaplar.
@@ -530,7 +671,7 @@ maslahatlashgan yaxshi. Quyidagi holatlarda esa albatta Sardorga yozing:
 
 ---
 
-## 11. Lug'at
+## 12. Lug'at
 
 | So'z | Ma'nosi |
 |---|---|
@@ -545,3 +686,4 @@ maslahatlashgan yaxshi. Quyidagi holatlarda esa albatta Sardorga yozing:
 | **Sinov muddati** | Operatorning birinchi 7 kuni (qattiq qoidalar bilan). |
 | **Ball** | Intizom va yozuvlar uchun; 1 ball = 1 000 so'm, oy oxirida. |
 | **Taklif / Bron** | Ustozning sinovdan keyingi kurs taklifi / soatlarni qisman to'lov bilan band qilish. |
+| **Voronka, konversiya, KPI, tushum, foyda, o'rtacha chek, CAC, LTV, retention** | 2-bo'limda — misollar bilan. |
