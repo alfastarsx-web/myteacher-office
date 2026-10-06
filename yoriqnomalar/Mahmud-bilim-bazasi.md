@@ -1,6 +1,6 @@
 # MyTeacher — Mahmud uchun bilim bazasi
 
-> Versiya: 2026-10-05. Bu hujjat — tijorat direktori Mahmud va uning AI yordamchisi uchun yagona manba.
+> Versiya: 2026-10-06. Bu hujjat — tijorat direktori Mahmud va uning AI yordamchisi uchun yagona manba.
 > Raqamlar va qoidalar tizimdagi (kod) qiymatlar bilan bir xil. Biror narsa o'zgarsa — shu fayl yangilanadi.
 > Bu yerda yo'q savol chiqsa: **Sardorga yoziladi**, javob shu faylga qo'shiladi.
 
@@ -63,7 +63,7 @@ ichidagi qo'shimcha mashqlar. To'lov oylik.
 |---|---|---|
 | **MyTeacher ilovasi** (Android: Play Market → "MyTeacher", telefonda nomi "MyAI Teacher"; iPhone: hozircha TestFlight, nomi "AI Teacher") | O'quvchi | Darslarga kirish, **Kurslar** bo'limi (dars vaqti, ustoz, "Darsga kirish" tugmasi, darslar katakchalari, ko'chirish), ustoz bilan chat, so'z boyligi, gapirish va yozish mashqlari, reyting, "battle" o'yinlari |
 | **@MT_yordam_bot** (Telegram) | O'quvchi | Login-parol keladi (SMS yo'q), dars eslatmalari |
-| **Operator paneli** (ai.myteacher.uz/operator) | Operator | Lid navbati, skript, natija tugmalari, daromad, qo'ng'iroq yozuvlari |
+| **Operator paneli** (ai.myteacher.uz/operator) | Operator | Lid navbati, skript, natija tugmalari, daromad |
 | **Ustoz kabineti** (mentor ilovasi) | Ustoz | Jadval (bo'sh soatlar), sinov so'rovlari, darslar, taklif yuborish, hamyon, ball va reyting |
 | **Admin panel** | Sardor, Mahmud | Operatorlar, arizalar, lidlar, sinov darslari, to'lovlarni tasdiqlash, o'quvchilar va ustozlar |
 | **myteacher.uz/bepul-dars** | Yangi odam | Bepul sinov darsiga yozilish sahifasi |
@@ -215,7 +215,7 @@ Har qanday g'oyani shu uchtadan qaysi biriga ta'sir qilishi bilan baholang.
 1. **Raqam bilan o'ylang.** "Yaxshi ketyapti" emas — "bugun 12 sinov, 4 sotuv, konversiya 33%".
 2. **Eng tor joyni tuzating.** Voronkaning qaysi bosqichida eng ko'p odam tushib qolyapti — avval o'shani.
 3. **Bitta haftada bitta o'zgarish.** Ko'p narsani birdan o'zgartirsangiz, nima ishlaganini bilmay qolasiz.
-4. **Har kun sotuvga yaqin bo'ling.** Yozuvlarni tinglang, ustozlar bilan gaplashing, o'quvchi nima deyotganini
+4. **Har kun sotuvga yaqin bo'ling.** Operator qo'ng'iroqlarini yonida eshiting, ustozlar bilan gaplashing, o'quvchi nima deyotganini
    eshiting — eng yaxshi g'oyalar shu yerdan chiqadi.
 5. **Kichik g'alabalarni nishonlang.** Birinchi sinov, birinchi sotuv, kun yulduzi — jamoa shundan kuch oladi.
 
@@ -223,7 +223,7 @@ Har qanday g'oyani shu uchtadan qaysi biriga ta'sir qilishi bilan baholang.
 1. 200 ta liddan 16 ta sinov darsi bo'ldi. Lid → sinov konversiyasi qancha? *(Javob: 8% — mo'ljaldan past.)*
 2. 16 ta sinovdan 6 tasi to'ladi. Sinov → sotuv konversiyasi qancha? *(37,5% — mo'ljaldan yuqori.)*
 3. Qo'ng'iroqlar ko'p, sinov kam. Voronkaning qaysi bosqichi "tor"? Birinchi nima qilasiz?
-   *(Gaplashildi → sinov; yozuvlarni tinglab, vaqt so'ralyaptimi tekshiraman.)*
+   *(Gaplashildi → sinov; qo'ng'iroqni yonida eshitib, vaqt so'ralyaptimi tekshiraman.)*
 4. Sotuvni oshirishning uchta yo'li qaysi? *(Hajm, konversiya, chek/uzaytirish.)*
 5. Nega hozir, reklama yo'q paytda, konversiyani yaxshilash muhim? *(Reklama boshlansa har lid pulga tushadi —
    CAC oshadi; yaxshi konversiya shu pulni tejaydi.)*
@@ -293,7 +293,7 @@ Raqamlarni **o'ylab topmang** — adminkadagi haqiqiy hisobotdan oling. KPI'ni o
 | Belgi | Ehtimoliy sabab | Nima qilish |
 |---|---|---|
 | Qo'ng'iroq kam | Operator kam, smena ochilmagan, natija tugmasi bosilmayapti | Smenadagilar sonini oshirish, "Bugun smena ochmagan" filtri |
-| Gaplashildi ko'p, sinov kam | Vaqt so'ralmayapti yoki narx bilan sotishga urinilyapti | Yozuvlarni tinglash, skriptni qayta tushuntirish |
+| Gaplashildi ko'p, sinov kam | Vaqt so'ralmayapti yoki narx bilan sotishga urinilyapti | Qo'ng'iroqni yonida eshitish, skriptni qayta tushuntirish |
 | Sinov ko'p, ilova ✅ kam | "Sinovga yozdi"dan keyin telefon qo'yilyapti | Ilovaga kirgizish qadamlarini qayta o'rgatish; guruhda "Ilova ✅ mi?" |
 | Ilova ✅, lekin darsga kelmayapti | Eslatma qilinmayapti; dars uzoq kunga qo'yilgan | Eslatmalarni tekshirish (17:00), darsni bugun/ertaga qo'yish |
 | Darsga keldi, to'lov yo'q (30% dan kam) | Ustoz dars oxirida taklif yubormayapti yoki kunlarni kelishmayapti | Ustoz bilan o'zingiz gaplashing (pastdagi "Ustozlar bilan ishlash"); "Davom etmoqchiman" so'rovlarini kuzatish |
@@ -304,7 +304,7 @@ Raqamlarni **o'ylab topmang** — adminkadagi haqiqiy hisobotdan oling. KPI'ni o
 - **Har kuni**: 11:00, 13:00, 15:00, 17:00 tekshiruvlari va 19:00 hisoboti (7-bo'lim).
 - **Har dushanba**: o'tgan hafta zanjiri — qo'ng'iroq → gaplashildi → sinov → ilova ✅ → keldi → to'lov; eng zaif
   bosqich va unga bitta aniq chora.
-- **Har juma**: eng yaxshi operator va eng yaxshi yozuv — guruhga namuna; sinov muddatidagilar bo'yicha qaror
+- **Har juma**: eng yaxshi operator va eng yaxshi suhbat usuli — guruhga namuna; sinov muddatidagilar bo'yicha qaror
   (kim qoladi).
 - **Haftalik hisobot Sardorga (shablon)**:
   > 📈 {hafta} — sotuv hisoboti
@@ -316,7 +316,7 @@ Raqamlarni **o'ylab topmang** — adminkadagi haqiqiy hisobotdan oling. KPI'ni o
 
 ### Tijorat direktori qila oladigan "richaglar"
 1. **Operatorlar soni va smena soatlari** — hajm shundan.
-2. **Skript va o'qitish** — yozuvlarni tinglab, har operatorga bitta aniq maslahat.
+2. **Skript va o'qitish** — qo'ng'iroqlarni yonida eshitib, har operatorga bitta aniq maslahat.
 3. **Ilova ✅ intizomi** — "rozi bo'ldi" emas, "ilovaga kirdi" sanaladi.
 4. **Eslatmalar** — darsga kelishni oshiradi.
 5. **Ustozlar bilan ishlash** (mustaqil) — sinovni sotuvga aylantirish: taklifni dars oxirida yuborish, tez javob berish.
@@ -401,13 +401,9 @@ ulush yoki qoidalar bo'yicha talablar, ustozni chetlatish masalasi.
 - Daromad panelda real vaqtda ko'rinadi ("💰 Bu oy ishlaganingiz", "Bugun 3/5 sinov").
 - **Pul yechish**: balans **100 000 so'mdan** oshsa, kabinetdan Uzcard/Humo kartaga.
 
-### Ballar (1 ball = 1 000 so'm, oy oxirida pulga aylanadi)
+### Intizom ballari (1 ball = 1 000 so'm, oy oxirida pulga aylanadi)
 | Holat | Ball |
 |---|---|
-| Gaplashilgan qo'ng'iroq yozuvi 24 soat ichida yuklandi | +2 |
-| Yozuv yuklanmadi | −2 |
-| Rahbar namunali deb baholadi | +20 |
-| Yaroqsiz yozuv (bo'sh, boshqa suhbat) | −10 |
 | Kunlik minimum (4 soat smena) bajarilmadi | −10 |
 | 6 soat va 20+ gaplashilgan qo'ng'iroq | +10 |
 
@@ -479,14 +475,6 @@ Mijoz "hozir vaqtim yo'q" desa: kamida **Telegram botni hozir ulasin** (30 soniy
 
 Keyin "✅ Eslatildi". O'quvchi darsga kelsagina operatorga pul yoziladi — eslatma **hech qachon o'tkazib yuborilmaydi**.
 
-### Qo'ng'iroqni yozib olish
-- Tizim o'zi yozmaydi: operator **o'z telefonida** yozib oladi va panelning "📼 Bugungi qo'ng'iroqlarim" bo'limiga
-  **24 soat ichida** yuklaydi (faqat gaplashilganlari).
-- Android: Telefon ilovasi → ⋮ → Sozlamalar → "Qo'ng'iroqlarni yozib olish" → "Avtomatik". Bo'lmasa — Play Market'dan
-  "Cube ACR".
-- iPhone (iOS 18.1+): qo'ng'iroq paytida chap tepada yozish tugmasi, har safar qo'lda. Chiqmasa — Android telefondan ishlash.
-- Yuklash: panelni **telefonning o'zida** brauzerda ochadi → qo'ng'iroqni topadi → faylni tanlaydi (Fayllar → Recordings / Call).
-
 ---
 
 ## 7. Mahmudning kuni
@@ -512,15 +500,16 @@ Taxminiy hisob: 200 qo'ng'iroqdan ~100 tasi ko'taradi, ulardan 10–15% sinovga 
 ### Adminkada qayerga qaraydi
 - **Operatorlar** sahifasi — asosiy ekran. Har kartada "BUGUN" qatori (qo'ng'iroq, gaplashdi, yozdi, eslatdi).
   Filtrlar: "Hozir smenada", "Bugun smena ochmagan", "Akademiyani tugatmagan", "Oferta qabul qilinmagan",
-  "Yozuvlar 50% dan kam", "Ro'yxatdan o'tgan → Oxirgi 7 kun".
+  "Ro'yxatdan o'tgan → Oxirgi 7 kun".
 - Karta tepasida "Smenada" va "Hozir: {mijoz}" — operator ayni damda kim bilan gaplashyapti.
 - **Operator arizalari** — nomzodlar, qabul qilinganlar, Xabarlar, AI yordamchi, ommaviy xabar.
 - **Boshqaruv** → "Sinov darslari" ro'yxati.
-- **Yozuvlar** (kartadagi 📼): kuniga 2–3 ta qo'ng'iroqni tinglash, ayniqsa sinovga yozolmayotgan operatornikini.
+- **Qo'ng'iroqlarni eshitish**: kuniga 2–3 marta operator yonida (yoki karnay orqali) eshitish, ayniqsa sinovga
+  yozolmayotgan operatornikini. Tizimda qo'ng'iroq yozuvlari yo'q.
 
 ### Operator qolib ketsa — sababini qanday topish
 - **Qo'ng'iroq kam** (soatiga 5 dan kam): ko'pincha natija tugmasini bosmay o'tiradi yoki tanaffusi uzun → to'g'ridan-to'g'ri so'rash.
-- **Qo'ng'iroq ko'p, sinov yo'q**: bitta yozuvini tinglash. Odatda narx bilan sotishga urinadi yoki vaqtni so'ramaydi.
+- **Qo'ng'iroq ko'p, sinov yo'q**: bitta qo'ng'iroqini yonida eshitish. Odatda narx bilan sotishga urinadi yoki vaqtni so'ramaydi.
 - **Sinov bor, ilova yo'q**: "Sinovga yozdi"dan keyin telefonni qo'yib yuboryapti → ilovaga kirgizish qadamlarini qayta tushuntirish.
 
 ### Telegram guruh
@@ -575,7 +564,7 @@ Taxminiy hisob: 200 qo'ng'iroqdan ~100 tasi ko'taradi, ulardan 10–15% sinovga 
 > akkaunt avtomatik yopiladi. Ertaga 10:00 da chiqa olasizmi?
 
 **Natija yo'q operatorga (3 kun ichida sinov yo'q bo'lsa — 2-kuni yozing)**
-> {Ism}, qo'ng'iroqlaringiz bor — zo'r. Lekin hali sinov yo'q. Bitta yozuvingizni tinglab ko'rdim: suhbat yaxshi,
+> {Ism}, qo'ng'iroqlaringiz bor — zo'r. Lekin hali sinov yo'q. Bitta qo'ng'iroqingizni eshitdim: suhbat yaxshi,
 > faqat oxirida vaqtni so'ramayapsiz. Har suhbat oxirida "Bugun yoki ertaga qaysi vaqt qulay?" deb so'rang.
 > Ertaga birinchi sinovingizni kutaman 💪
 
@@ -606,10 +595,6 @@ Taxminiy hisob: 200 qo'ng'iroqdan ~100 tasi ko'taradi, ulardan 10–15% sinovga 
 > {Ism}, tushunaman, kun og'ir bo'lishi mumkin. Lekin guruhda hurmat bilan yozishimiz kerak. Muammoingiz bo'lsa,
 > menga shaxsiy yozing — birga hal qilamiz.
 > *(Takrorlansa — Sardorga ayting. O'zingiz janjallashmang.)*
-
-**Yozuv yuklamayotgan operatorga**
-> {Ism}, bugun yozuvlaringiz yuklanmagan. Har yozuv uchun +2 ball (2 000 so'm), yuklanmasa −2. Telefonda avtomatik
-> yozishni yoqsangiz, faqat yuklash qoladi — tanaffusda bir yo'la yuklab qo'ying.
 
 ### Qachon Sardorga yo'naltirish kerak
 Sardor yordam berishga **doim ochiq**. Ikkilansangiz — so'rang: noto'g'ri qaror qilgandan ko'ra 5 daqiqa
@@ -664,7 +649,7 @@ maslahatlashgan yaxshi. Quyidagi holatlarda esa albatta Sardorga yozing:
 
 ## 11. Taqiqlar (hamma uchun)
 
-- Mijoz raqamlari va qo'ng'iroq yozuvlarini boshqalarga berish.
+- Mijoz raqamlari va ma'lumotlarini boshqalarga berish.
 - Mijozni aldash, bosim o'tkazish, chegirma yoki "bugun oxirgi kun" kabi o'ylab topilgan gaplar.
 - Mijoz bilan platformadan tashqari kelishish.
 - Ma'lumotlardan shaxsiy maqsadda foydalanish.
@@ -684,6 +669,6 @@ maslahatlashgan yaxshi. Quyidagi holatlarda esa albatta Sardorga yozing:
 | **Oferta** | Operator bilan hamkorlik shartlari. |
 | **Avto-qabul** | Mos nomzodlarni tizim o'zi qabul qilishi (09:00–21:00, kunlik limit). |
 | **Sinov muddati** | Operatorning birinchi 7 kuni (qattiq qoidalar bilan). |
-| **Ball** | Intizom va yozuvlar uchun; 1 ball = 1 000 so'm, oy oxirida. |
+| **Ball** | Intizom uchun; 1 ball = 1 000 so'm, oy oxirida. |
 | **Taklif / Bron** | Ustozning sinovdan keyingi kurs taklifi / soatlarni qisman to'lov bilan band qilish. |
 | **Voronka, konversiya, KPI, tushum, foyda, o'rtacha chek, CAC, LTV, retention** | 2-bo'limda — misollar bilan. |
