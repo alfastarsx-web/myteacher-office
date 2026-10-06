@@ -431,7 +431,7 @@ ulush yoki qoidalar bo'yicha talablar, ustozni chetlatish masalasi.
 
 ### Skript (qisqa)
 1. **Salom**: "Assalomu alaykum, {ism}! Men MyTeacher'dan {ismingiz}. Ingliz tili bo'yicha bepul sinov darsiga
-   qiziqqan ekansiz. 2 daqiqa gaplasha olamizmi? Suhbat sifat nazorati uchun yozib olinadi."
+   qiziqqan ekansiz. 2 daqiqa gaplasha olamizmi?"
 2. **Ehtiyoj**: "Ingliz tili sizga nima uchun kerak: ish, o'qish, chet el yoki o'zingiz uchun? Hozir qaysi darajadasiz?"
 3. **Taklif**: "Bizda shaxsiy ustoz bilan yakkama-yakka onlayn dars. Birinchi dars bepul: ustoz darajangizni aniqlaydi
    va reja tuzib beradi. Telefondan, uydan turib."
@@ -550,8 +550,7 @@ Taxminiy hisob: 200 qo'ng'iroqdan ~100 tasi ko'taradi, ulardan 10–15% sinovga 
 > Bugun birinchi ish kuningiz. Reja oddiy:
 > 1. Hozir sizni jamoa guruhiga qo'shaman.
 > 2. Botdan kelgan login-parol bilan admin panelga kiring (havola guruhda).
-> 3. Oferta va akademiya: 5 ta qisqa modul + 10 savollik test (~40 daqiqa). Shu vaqtda telefoningizda qo'ng'iroqni
->    yozib olishni ham yoqing — qanday qilishni guruhda ko'rsataman.
+> 3. Oferta va akademiya: 5 ta qisqa modul + 10 savollik test (~40 daqiqa).
 > 4. 10:00 da "Smenani boshlash" ni bosasiz va qo'ng'iroqlar boshlanadi.
 > Har bir sinov darsiga kelgan o'quvchi uchun 5 000 so'm, bir kunda 6-sinovdan boshlab 6 000 so'm. To'lov qilsa yana
 > 15 000 so'm sizniki. Savol bo'lsa shu yerga yozing.
